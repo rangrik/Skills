@@ -1,0 +1,51 @@
+flowchart TD
+    BP["Blueprint Doc<br/>behavior · Gherkin scenarios · corner cases"]
+    DD["System Design Doc<br/>tech decisions · assumptions · caveats"]
+
+    BP --> PL
+    DD --> PL
+
+    subgraph PLAN["PHASE 1 — PLANNING (code-blind)"]
+        PL["kite-planner<br/>1 order scenarios for reuse<br/>2 per scenario: pre / post / requirements"]
+        PLS["scenario-planning subagents<br/>(optional fan-out, 1 per scenario)"]
+        PL -. spawns .-> PLS
+        PLS -. merge back .-> PL
+    end
+
+    PL --> PF[("PLAN FILE<br/>ordered scenarios + requirements")]
+
+    PF --> RS
+    subgraph RESEARCH["PHASE 2 — RESEARCH (reads codebase)"]
+        RS["kite-research<br/>does it exist? where to add?"]
+        RSS["research subagents<br/>(N, scenario by scenario)"]
+        RS -. spawns .-> RSS
+        RSS -. merge back .-> RS
+    end
+
+    RS --> PF2[("PLAN FILE augmented<br/>+ codebase references<br/>reuse points · insertion points")]
+
+    PF2 --> IMPL
+    subgraph IMPLEMENT["PHASE 3 — IMPLEMENTATION (loop per scenario)"]
+        IMPL["kite-implementation<br/>implement vertical slice<br/>+ selective critical tests"]
+        SC["kite-scenario-check<br/>verify slice vs Gherkin"]
+        CMT["commit scenario"]
+        IMPL --> SC
+        SC -->|pass| CMT
+        CMT -->|next scenario| IMPL
+    end
+
+    AP{{"kite-architecture-principles<br/>(reference skill)"}}
+    AP -. arch check before commit .-> IMPL
+    AP -. principle violations .-> FR
+
+    CMT --> CODE[("COMMITTED CODE<br/>one commit per scenario")]
+
+    CODE --> FR
+    subgraph REVIEW["PHASE 4 — FINAL REVIEW (adversarial, 9-step)"]
+        FR["kite-feature-review<br/>map changes to scenarios · find orphans<br/>why each scenario is bad"]
+        FRS["adversarial review subagents<br/>(N, one scenario each, in isolation)"]
+        FR -. spawns .-> FRS
+        FRS -. merge back .-> FR
+    end
+
+    FR --> RR[("REVIEW REPORT<br/>per-scenario failures · principle violations<br/>impact · failure Gherkins · orphan changes<br/>missed corner cases")]
