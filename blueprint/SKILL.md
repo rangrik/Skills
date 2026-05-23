@@ -2,20 +2,17 @@
 name: blueprint
 description: >-
   Turn a loosely-stated product problem or feature idea into a complete, unambiguous
-  behavior specification. The skill interviews the user about the intended happy path(s)
-  only, then autonomously enumerates every plausible deviation and edge case — incomplete
-  input, retries and duplicate submissions, rate limits, lost connectivity, abandoned
-  sessions, out-of-order actions, expired sessions, concurrency, empty/boundary states,
-  external failures, and more — proposing graceful product behavior for each, and writes
-  it all up as a markdown spec document plus Cucumber .feature files. Use this whenever
-  the user has a feature idea, problem statement, or PRD and needs it pinned down into
-  concrete behavior; whenever they ask for a behavior blueprint, behavior spec,
-  behavioral specification, interaction spec, acceptance criteria, user-flow spec,
-  Gherkin or Cucumber scenarios, or .feature files; whenever they ask "what are the edge cases" or "what could go wrong"
-  for a feature; or whenever a feature is being described loosely and needs to become a
-  shared source of truth for engineering, design, and QA. Use it even if the user never
-  says the words "behavior spec" — if they are describing how a feature should work and
-  want it made rigorous and complete, this skill applies.
+  behavior specification. Interviews the user about the intended happy path(s), then
+  autonomously enumerates every plausible deviation and edge case — invalid input,
+  retries, rate limits, lost connectivity, abandoned sessions, out-of-order actions,
+  expired sessions, concurrency, boundary states, external failures — and proposes
+  graceful product behavior for each, writing it up as a markdown blueprint plus
+  Cucumber .feature files. Use whenever someone has a feature idea, problem statement,
+  or PRD to pin down into concrete behavior; asks for a behavior blueprint, behavior
+  spec, interaction spec, acceptance criteria, or Gherkin/Cucumber scenarios; asks
+  what the edge cases are or what could go wrong with a feature; or describes a
+  feature loosely and wants it made rigorous and complete — even if they never say
+  the words 'behavior spec'.
 ---
 
 # Blueprint
