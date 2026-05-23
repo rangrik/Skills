@@ -1,0 +1,91 @@
+{
+  "skill_name": "system-design",
+  "notes": "The skill is interactive (interviews via AskUserQuestion) and is built for the Kite repo with the kite-arch-compass companion skill. These evals run autonomously and off-repo: each run is given a behavior-blueprint fixture and produces a system-design document. They test document quality, taxonomy coverage, structure, and principle-grounded reasoning — not the live interview UX, which needs a human.",
+  "evals": [
+    {
+      "id": 0,
+      "name": "github-contributions-widget",
+      "prompt": "Design the system for the GitHub contributions widget — the blueprint is github-contributions-blueprint.md in this folder. We're a Django + Postgres + Celery app with a React frontend. I really want to avoid hammering the GitHub API, so be deliberate about caching and refresh. Write the design doc.",
+      "expected_output": "A <feature>-system-design.md document following the skill's template: all 15 sections filled, a Decision Coverage Checklist covering all 22 taxonomy dimensions, an External Services table covering the GitHub API (rate limits, auth, failure fallback), an explicit caching strategy (~24h TTL, once-per-hour owner refresh cooldown), and Assumptions/Compromises as tables.",
+      "files": ["../system-design-workspace/iteration-1/eval-0-github-contributions-widget/inputs/github-contributions-blueprint.md"],
+      "expectations": [
+        "The output is a single Markdown system-design document, saved with a filename ending in -system-design.md.",
+        "The document contains all 15 template sections: Summary, System Placement, Architecture Decisions, Data Model, External Services, Performance/Scale/Caching, Reliability, Security, Observability, Rollout, Assumptions, Accepted Compromises, Open Risks, Out of Scope, and Decision Coverage Checklist.",
+        "The Decision Coverage Checklist accounts for all 22 taxonomy dimensions (A1-A14 and B1-B8), each marked Resolved, Assumed, or N/A.",
+        "Assumptions are presented as a table rather than buried in prose.",
+        "Accepted Compromises are presented as a table that names the principle each compromise bends.",
+        "At least one architecture decision is written in ADR style (Decision / Why / Alternatives considered / Trade-off accepted), and its rationale cites a named design principle.",
+        "The External Services section identifies the GitHub API and addresses its rate limits, authentication/token handling, and failure fallback.",
+        "The design specifies a caching strategy with an explicit TTL/freshness window (about 24h) and the once-per-hour owner refresh cooldown."
+      ]
+    },
+    {
+      "id": 1,
+      "name": "saved-views",
+      "prompt": "Turn the saved-views blueprint in this folder (saved-views-blueprint.md) into a technical system design. It's a Rails + Postgres app with a React frontend. Write it up as a design document.",
+      "expected_output": "A <feature>-system-design.md document following the skill's template, with a Data Model section specifying concrete tables/columns for saved views and sharing, security handling for read-only shared views and access scoping, all 15 sections, and a complete Decision Coverage Checklist.",
+      "files": ["../system-design-workspace/iteration-1/eval-1-saved-views/inputs/saved-views-blueprint.md"],
+      "expectations": [
+        "The output is a single Markdown system-design document, saved with a filename ending in -system-design.md.",
+        "The document contains all 15 template sections: Summary, System Placement, Architecture Decisions, Data Model, External Services, Performance/Scale/Caching, Reliability, Security, Observability, Rollout, Assumptions, Accepted Compromises, Open Risks, Out of Scope, and Decision Coverage Checklist.",
+        "The Decision Coverage Checklist accounts for all 22 taxonomy dimensions (A1-A14 and B1-B8), each marked Resolved, Assumed, or N/A.",
+        "Assumptions are presented as a table rather than buried in prose.",
+        "Accepted Compromises are presented as a table that names the principle each compromise bends.",
+        "At least one architecture decision is written in ADR style (Decision / Why / Alternatives considered / Trade-off accepted), and its rationale cites a named design principle.",
+        "The Data Model section specifies concrete table(s) and columns for a saved view (filters, sort, column config, owning user, table) and how view sharing is represented.",
+        "The design addresses read-only enforcement for shared views and prevents users from accessing or enumerating views not shared with them."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "weekly-digest-email",
+      "prompt": "I need a system design for the weekly digest email feature — blueprint's in this folder (weekly-digest-blueprint.md). Stack is Postgres, Sidekiq for background jobs, and SendGrid for email delivery. Design it and write the doc.",
+      "expected_output": "A <feature>-system-design.md document following the skill's template, addressing a scheduled background job, idempotency (one digest per user per week), per-user timezone scheduling, SendGrid as an external service with failure handling, all 15 sections, and a complete Decision Coverage Checklist.",
+      "files": ["../system-design-workspace/iteration-1/eval-2-weekly-digest-email/inputs/weekly-digest-blueprint.md"],
+      "expectations": [
+        "The output is a single Markdown system-design document, saved with a filename ending in -system-design.md.",
+        "The document contains all 15 template sections: Summary, System Placement, Architecture Decisions, Data Model, External Services, Performance/Scale/Caching, Reliability, Security, Observability, Rollout, Assumptions, Accepted Compromises, Open Risks, Out of Scope, and Decision Coverage Checklist.",
+        "The Decision Coverage Checklist accounts for all 22 taxonomy dimensions (A1-A14 and B1-B8), each marked Resolved, Assumed, or N/A.",
+        "Assumptions are presented as a table rather than buried in prose.",
+        "Accepted Compromises are presented as a table that names the principle each compromise bends.",
+        "At least one architecture decision is written in ADR style (Decision / Why / Alternatives considered / Trade-off accepted), and its rationale cites a named design principle.",
+        "The design uses a scheduled background job and addresses idempotency so a user receives at most one digest per week even if the job runs twice.",
+        "The design addresses per-user timezone send scheduling and the email-provider (SendGrid) failure behavior (retry, then skip rather than delay)."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "announcement-banner",
+      "prompt": "Here's the blueprint for an admin announcement banner (announcement-banner-blueprint.md in this folder). Design the system for it — it's a fairly small feature, standard Node/Express + Postgres app with a React frontend. Produce the design doc.",
+      "expected_output": "A <feature>-system-design.md document following the skill's template that stays proportional to a small feature: it does not over-engineer, marks several taxonomy dimensions N/A or simple low-risk Assumptions, but still covers banner storage, per-user dismissal, and admin-only authorization, with all 15 sections and a complete Decision Coverage Checklist.",
+      "files": ["../system-design-workspace/iteration-1/eval-3-announcement-banner/inputs/announcement-banner-blueprint.md"],
+      "expectations": [
+        "The output is a single Markdown system-design document, saved with a filename ending in -system-design.md.",
+        "The document contains all 15 template sections: Summary, System Placement, Architecture Decisions, Data Model, External Services, Performance/Scale/Caching, Reliability, Security, Observability, Rollout, Assumptions, Accepted Compromises, Open Risks, Out of Scope, and Decision Coverage Checklist.",
+        "The Decision Coverage Checklist accounts for all 22 taxonomy dimensions (A1-A14 and B1-B8), each marked Resolved, Assumed, or N/A.",
+        "Assumptions are presented as a table rather than buried in prose.",
+        "Accepted Compromises are presented as a table that names the principle each compromise bends.",
+        "At least one architecture decision is written in ADR style (Decision / Why / Alternatives considered / Trade-off accepted), and its rationale cites a named design principle.",
+        "The design stays proportional to a small feature: it does not over-engineer, and several taxonomy dimensions are explicitly marked N/A or simple low-risk Assumptions in the Decision Coverage Checklist.",
+        "The Data Model and Security sections cover banner storage, per-user dismissal state, and admin-only authorization."
+      ]
+    },
+    {
+      "id": 4,
+      "name": "collab-cursors",
+      "prompt": "Grill me on the system design for real-time collaborative cursors and write it up. Blueprint is collab-cursors-blueprint.md in this folder. We've got a Node backend that's REST-only today, Postgres, React frontend.",
+      "expected_output": "A <feature>-system-design.md document following the skill's template that selects a real-time transport over the REST-only baseline, justifies it against the sub-250ms latency expectation, treats cursor/presence state as ephemeral, handles concurrency/disconnect/out-of-order updates, with all 15 sections and a complete Decision Coverage Checklist.",
+      "files": ["../system-design-workspace/iteration-1/eval-4-collab-cursors/inputs/collab-cursors-blueprint.md"],
+      "expectations": [
+        "The output is a single Markdown system-design document, saved with a filename ending in -system-design.md.",
+        "The document contains all 15 template sections: Summary, System Placement, Architecture Decisions, Data Model, External Services, Performance/Scale/Caching, Reliability, Security, Observability, Rollout, Assumptions, Accepted Compromises, Open Risks, Out of Scope, and Decision Coverage Checklist.",
+        "The Decision Coverage Checklist accounts for all 22 taxonomy dimensions (A1-A14 and B1-B8), each marked Resolved, Assumed, or N/A.",
+        "Assumptions are presented as a table rather than buried in prose.",
+        "Accepted Compromises are presented as a table that names the principle each compromise bends.",
+        "At least one architecture decision is written in ADR style (Decision / Why / Alternatives considered / Trade-off accepted), and its rationale cites a named design principle.",
+        "The design selects a real-time transport (e.g. WebSocket or SSE) over the existing REST-only setup and justifies it against the sub-250ms latency expectation.",
+        "The design recognizes cursor/presence state as ephemeral (not persisted to the document store) and handles disconnect and out-of-order cursor updates."
+      ]
+    }
+  ]
+}

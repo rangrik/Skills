@@ -1,0 +1,14 @@
+{
+  "expectations": [
+    {"text": "Produces both deliverables — a markdown behavior spec (.md) and a Cucumber .feature file", "passed": true, "evidence": "Output dir contains transaction-csv-export-behavior-spec.md and transaction-csv-export.feature."},
+    {"text": "The .feature file is well-formed Gherkin (Feature declaration, Scenario blocks, Given/When/Then steps)", "passed": true, "evidence": "transaction-csv-export.feature has a 'Feature:' + 'Background:' header and 29 well-formed Scenario blocks; scenarios identical to the .md."},
+    {"text": "Happy-path scenarios are tagged @happy-path and match the CSV export flow described in the prompt", "passed": true, "evidence": "2 @happy-path scenarios: synchronous date-range export with download, and a large export run as a background job — matches and sensibly extends the prompt's flow."},
+    {"text": "The spec includes a coverage checklist enumerating all 14 deviation taxonomy categories", "passed": true, "evidence": "Section 9 Coverage Checklist has all 14 numbered category rows, each marked Yes with scenario counts."},
+    {"text": "Deviation scenarios span at least 8 distinct deviation categories", "passed": true, "evidence": "All 14 distinct category tags present across 27 deviation scenarios."},
+    {"text": "Deviation scenario Then-steps specify concrete graceful product behavior, not merely that an error occurred", "passed": true, "evidence": "e.g. connectivity loss: user told it did not complete, range preserved, 'no partial or corrupt CSV presented as complete'; blocked download: explicit manual download link offered."},
+    {"text": "Genuine product decisions are tagged @assumption and consolidated into a Flagged Assumptions section", "passed": true, "evidence": "7 scenarios tagged @assumption with '# Assumption:' comments; Section 8 consolidates 9 assumptions (A1–A9) as a table with what to confirm."},
+    {"text": "The .md spec includes the narrative sections Problem & Intent, Actors, Glossary, Preconditions, and Scope", "passed": true, "evidence": "Sections 1–5 are Problem & Intent, Actors, Glossary, Preconditions & Assumptions, Scope."},
+    {"text": "Deviation scenarios cover an empty date range, an invalid range (end before start), a large export, and connectivity loss mid-flow", "passed": true, "evidence": "7.9 empty date range, 7.1 end-before-start, 7.10 oversized range as background job, 7.4 connectivity loss during generation — all present."}
+  ],
+  "summary": {"passed": 9, "failed": 0, "total": 9, "pass_rate": 1.0}
+}

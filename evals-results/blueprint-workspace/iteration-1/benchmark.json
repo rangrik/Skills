@@ -1,0 +1,460 @@
+{
+  "metadata": {
+    "skill_name": "blueprint",
+    "skill_path": "/sessions/jolly-affectionate-mayer/mnt/Skills/blueprint",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-05-23T05:53:19Z",
+    "evals_run": [
+      1,
+      2,
+      3
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 9,
+        "failed": 0,
+        "total": 9,
+        "time_seconds": 114.5,
+        "tokens": 47992,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Produces both deliverables \u2014 a markdown behavior spec (.md) and a Cucumber .feature file",
+          "passed": true,
+          "evidence": "Output dir contains password-reset-behavior-spec.md and password-reset.feature."
+        },
+        {
+          "text": "The .feature file is well-formed Gherkin (Feature declaration, Scenario blocks, Given/When/Then steps)",
+          "passed": true,
+          "evidence": "password-reset.feature opens with 'Feature:' + 'Background:' and contains 43 well-formed Scenario/Scenario Outline blocks with Given/When/Then/And steps and an Examples table."
+        },
+        {
+          "text": "Happy-path scenarios are tagged @happy-path and match the forgot-password flow described in the prompt",
+          "passed": true,
+          "evidence": "3 @happy-path scenarios: request reset link, choose new password from valid link, complete reset and land on dashboard \u2014 matches the prompt's flow."
+        },
+        {
+          "text": "The spec includes a coverage checklist enumerating all 14 deviation taxonomy categories",
+          "passed": true,
+          "evidence": "Section 9 Coverage Checklist has all 14 numbered category rows, each marked Yes with a scenario count."
+        },
+        {
+          "text": "Deviation scenarios span at least 8 distinct deviation categories",
+          "passed": true,
+          "evidence": "All 14 distinct category tags present (@invalid-input, @duplicate-retry, @rate-limit, @connectivity, @abandon-resume, @out-of-order, @auth-permission, @concurrency, @state-conflict, @boundary, @environment, @external-failure, @time-expiry, @adversarial)."
+        },
+        {
+          "text": "Deviation scenario Then-steps specify concrete graceful product behavior, not merely that an error occurred",
+          "passed": true,
+          "evidence": "e.g. malformed-email scenario keeps the typed value 'in the field for correction'; email-provider-down scenario queues the email 'for automatic retry' and shows the standard confirmation \u2014 resolutions, not just error reports."
+        },
+        {
+          "text": "Genuine product decisions are tagged @assumption and consolidated into a Flagged Assumptions section",
+          "passed": true,
+          "evidence": "10 scenarios tagged @assumption with '# Assumption:' comments; Section 8 consolidates them as a table A1\u2013A12 with the open decision and what to confirm."
+        },
+        {
+          "text": "The .md spec includes the narrative sections Problem & Intent, Actors, Glossary, Preconditions, and Scope",
+          "passed": true,
+          "evidence": "Sections 1\u20135 are exactly Problem & Intent, Actors, Glossary, Preconditions & Assumptions, Scope."
+        },
+        {
+          "text": "Deviation scenarios cover an expired/reused reset link, an unregistered email, rate-limited reset requests, and a weak or mismatched new password",
+          "passed": true,
+          "evidence": "7.13 expired link, 7.2 reload-after-completed reuse, 7.9 unregistered email, 7.3 per-address rate limit, 7.1 weak-password Scenario Outline + mismatched confirmation \u2014 all present."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 10,
+        "failed": 0,
+        "total": 10,
+        "time_seconds": 119.5,
+        "tokens": 51048,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Produces both deliverables \u2014 a markdown behavior spec (.md) and a Cucumber .feature file",
+          "passed": true,
+          "evidence": "Output dir contains teammate-invite-behavior-spec.md and teammate-invite.feature."
+        },
+        {
+          "text": "The .feature file is well-formed Gherkin (Feature declaration, Scenario blocks, Given/When/Then steps)",
+          "passed": true,
+          "evidence": "teammate-invite.feature has a 'Feature:' + 'Background:' header and 48 well-formed Scenario/Scenario Outline blocks; scenarios are identical to the .md."
+        },
+        {
+          "text": "Happy-path scenarios are tagged @happy-path and match the invite flow described in the prompt",
+          "passed": true,
+          "evidence": "4 @happy-path scenarios: single-address send, multi-address send, new-user accept, existing-user accept \u2014 matches the prompt."
+        },
+        {
+          "text": "The spec includes a coverage checklist enumerating all 14 deviation taxonomy categories",
+          "passed": true,
+          "evidence": "Section 9 Coverage Checklist has all 14 numbered category rows, each marked Yes with scenario counts."
+        },
+        {
+          "text": "Deviation scenarios span at least 8 distinct deviation categories",
+          "passed": true,
+          "evidence": "All 14 distinct category tags present across 44 deviation scenarios."
+        },
+        {
+          "text": "Deviation scenario Then-steps specify concrete graceful product behavior, not merely that an error occurred",
+          "passed": true,
+          "evidence": "e.g. mixed valid/invalid addresses: invalid one flagged inline, valid ones still sendable together, 'no partial send'; email-provider-down: invitations recorded, emails queued for retry."
+        },
+        {
+          "text": "Genuine product decisions are tagged @assumption and consolidated into a Flagged Assumptions section",
+          "passed": true,
+          "evidence": "Many scenarios tagged @assumption with '# Assumption:' comments; Section 8 consolidates 16 assumptions (A1\u2013A16) as a table with what to confirm."
+        },
+        {
+          "text": "The .md spec includes the narrative sections Problem & Intent, Actors, Glossary, Preconditions, and Scope",
+          "passed": true,
+          "evidence": "Sections 1\u20135 are Problem & Intent, Actors, Glossary, Preconditions & Assumptions, Scope."
+        },
+        {
+          "text": "The happy-path scenarios include both the new-user (account creation) and existing-user (sign-in) acceptance sub-paths",
+          "passed": true,
+          "evidence": "Two distinct @happy-path scenarios: 'A new user accepts an invitation and joins by creating an account' and 'An existing user accepts an invitation and joins by signing in'."
+        },
+        {
+          "text": "Deviation scenarios cover inviting an existing member, a seat or rate limit, an expired invitation, and a malformed email address",
+          "passed": true,
+          "evidence": "7.9 inviting an existing member, 7.3 seat-quota + hourly rate limit, 7.13 expired accept link, 7.1 malformed-address Scenario Outline \u2014 all present."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 9,
+        "failed": 0,
+        "total": 9,
+        "time_seconds": 76.6,
+        "tokens": 43583,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Produces both deliverables \u2014 a markdown behavior spec (.md) and a Cucumber .feature file",
+          "passed": true,
+          "evidence": "Output dir contains transaction-csv-export-behavior-spec.md and transaction-csv-export.feature."
+        },
+        {
+          "text": "The .feature file is well-formed Gherkin (Feature declaration, Scenario blocks, Given/When/Then steps)",
+          "passed": true,
+          "evidence": "transaction-csv-export.feature has a 'Feature:' + 'Background:' header and 29 well-formed Scenario blocks; scenarios identical to the .md."
+        },
+        {
+          "text": "Happy-path scenarios are tagged @happy-path and match the CSV export flow described in the prompt",
+          "passed": true,
+          "evidence": "2 @happy-path scenarios: synchronous date-range export with download, and a large export run as a background job \u2014 matches and sensibly extends the prompt's flow."
+        },
+        {
+          "text": "The spec includes a coverage checklist enumerating all 14 deviation taxonomy categories",
+          "passed": true,
+          "evidence": "Section 9 Coverage Checklist has all 14 numbered category rows, each marked Yes with scenario counts."
+        },
+        {
+          "text": "Deviation scenarios span at least 8 distinct deviation categories",
+          "passed": true,
+          "evidence": "All 14 distinct category tags present across 27 deviation scenarios."
+        },
+        {
+          "text": "Deviation scenario Then-steps specify concrete graceful product behavior, not merely that an error occurred",
+          "passed": true,
+          "evidence": "e.g. connectivity loss: user told it did not complete, range preserved, 'no partial or corrupt CSV presented as complete'; blocked download: explicit manual download link offered."
+        },
+        {
+          "text": "Genuine product decisions are tagged @assumption and consolidated into a Flagged Assumptions section",
+          "passed": true,
+          "evidence": "7 scenarios tagged @assumption with '# Assumption:' comments; Section 8 consolidates 9 assumptions (A1\u2013A9) as a table with what to confirm."
+        },
+        {
+          "text": "The .md spec includes the narrative sections Problem & Intent, Actors, Glossary, Preconditions, and Scope",
+          "passed": true,
+          "evidence": "Sections 1\u20135 are Problem & Intent, Actors, Glossary, Preconditions & Assumptions, Scope."
+        },
+        {
+          "text": "Deviation scenarios cover an empty date range, an invalid range (end before start), a large export, and connectivity loss mid-flow",
+          "passed": true,
+          "evidence": "7.9 empty date range, 7.1 end-before-start, 7.10 oversized range as background job, 7.4 connectivity loss during generation \u2014 all present."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.222,
+        "passed": 2,
+        "failed": 7,
+        "total": 9,
+        "time_seconds": 65.0,
+        "tokens": 19896,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Produces both deliverables \u2014 a markdown behavior spec (.md) and a Cucumber .feature file",
+          "passed": false,
+          "evidence": "Output dir contains only forgot-password-behavior-spec.md; no .feature file was produced."
+        },
+        {
+          "text": "The .feature file is well-formed Gherkin (Feature declaration, Scenario blocks, Given/When/Then steps)",
+          "passed": false,
+          "evidence": "No .feature file exists. Gherkin appears only inside a code block in Section 10 of the .md."
+        },
+        {
+          "text": "Happy-path scenarios are tagged @happy-path and match the forgot-password flow described in the prompt",
+          "passed": false,
+          "evidence": "0 @happy-path tags anywhere. The happy path is a numbered prose list (Section 5); the Section 10 Gherkin scenarios are untagged."
+        },
+        {
+          "text": "The spec includes a coverage checklist enumerating all 14 deviation taxonomy categories",
+          "passed": false,
+          "evidence": "No 14-category taxonomy checklist. Section 9 is an ad hoc 17-row edge-case table chosen by free association."
+        },
+        {
+          "text": "Deviation scenarios span at least 8 distinct deviation categories",
+          "passed": true,
+          "evidence": "The 17-row edge-case table touches ~10 categories (invalid input, state conflict, concurrency, time/expiry, duplicate/retry, adversarial, auth/permission, external failure, connectivity, out-of-order)."
+        },
+        {
+          "text": "Deviation scenario Then-steps specify concrete graceful product behavior, not merely that an error occurred",
+          "passed": true,
+          "evidence": "The edge-case table's 'Expected behavior' column gives concrete graceful resolutions (e.g. expired link shows an error state with a 'Request a new link' action)."
+        },
+        {
+          "text": "Genuine product decisions are tagged @assumption and consolidated into a Flagged Assumptions section",
+          "passed": false,
+          "evidence": "0 @assumption tags. Section 11 'Open Questions' lists 8 decisions in prose but they are not tagged on scenarios or tied back to them."
+        },
+        {
+          "text": "The .md spec includes the narrative sections Problem & Intent, Actors, Glossary, Preconditions, and Scope",
+          "passed": false,
+          "evidence": "Has Summary, Goals/Non-Goals, Glossary \u2014 but no explicit Actors section and no explicit Preconditions section."
+        },
+        {
+          "text": "Deviation scenarios cover an expired/reused reset link, an unregistered email, rate-limited reset requests, and a weak or mismatched new password",
+          "passed": false,
+          "evidence": "Expired link, reused link, unregistered email and weak/mismatched password are covered, but rate-limited reset requests are described only in prose (Section 8), not enumerated as a deviation scenario."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.7,
+        "passed": 7,
+        "failed": 3,
+        "total": 10,
+        "time_seconds": 60.3,
+        "tokens": 23220,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Produces both deliverables \u2014 a markdown behavior spec (.md) and a Cucumber .feature file",
+          "passed": true,
+          "evidence": "Output dir contains behavior-spec-teammate-invitations.md plus send-invitations.feature, accept-invitation.feature, manage-pending-invitations.feature. (The prompt explicitly asked for both doc and .feature files.)"
+        },
+        {
+          "text": "The .feature file is well-formed Gherkin (Feature declaration, Scenario blocks, Given/When/Then steps)",
+          "passed": true,
+          "evidence": "Three standard .feature files with 32 Scenario blocks total covering sending, accepting, and managing invitations."
+        },
+        {
+          "text": "Happy-path scenarios are tagged @happy-path and match the invite flow described in the prompt",
+          "passed": false,
+          "evidence": "0 @happy-path tags. The happy path is a numbered prose narrative (Section 6); .feature scenarios are untagged, so happy paths cannot be distinguished from deviations."
+        },
+        {
+          "text": "The spec includes a coverage checklist enumerating all 14 deviation taxonomy categories",
+          "passed": false,
+          "evidence": "No 14-category taxonomy checklist. Section 8 is an ad hoc 13-row 'Error & Edge Cases' table."
+        },
+        {
+          "text": "Deviation scenarios span at least 8 distinct deviation categories",
+          "passed": true,
+          "evidence": "Edge cases + behavior rules touch ~8 categories (invalid input, state conflict, duplicate/retry, out-of-order, adversarial token, time/expiry, rate/seat limit, external failure)."
+        },
+        {
+          "text": "Deviation scenario Then-steps specify concrete graceful product behavior, not merely that an error occurred",
+          "passed": true,
+          "evidence": "Section 8 edge-case table and Section 7 behavior rules give concrete graceful resolutions (e.g. malformed email flagged inline, valid addresses still send)."
+        },
+        {
+          "text": "Genuine product decisions are tagged @assumption and consolidated into a Flagged Assumptions section",
+          "passed": false,
+          "evidence": "0 @assumption tags. Section 5 lists some assumptions in prose but they are not tagged on scenarios, not consolidated as a review table, and not tied to the decisions they affect."
+        },
+        {
+          "text": "The .md spec includes the narrative sections Problem & Intent, Actors, Glossary, Preconditions, and Scope",
+          "passed": true,
+          "evidence": "Has Overview, Scope, Roles & Actors, Key Concepts & Definitions (glossary), and Preconditions & Assumptions \u2014 all five narrative sections present."
+        },
+        {
+          "text": "The happy-path scenarios include both the new-user (account creation) and existing-user (sign-in) acceptance sub-paths",
+          "passed": true,
+          "evidence": "accept-invitation.feature covers new user (account creation) and existing user (logged out and logged in); both sub-paths present."
+        },
+        {
+          "text": "Deviation scenarios cover inviting an existing member, a seat or rate limit, an expired invitation, and a malformed email address",
+          "passed": true,
+          "evidence": "Edge-case table and feature files cover already-a-member, seat-limit gate, expired invitation, and malformed email."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.444,
+        "passed": 4,
+        "failed": 5,
+        "total": 9,
+        "time_seconds": 41.4,
+        "tokens": 19506,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Produces both deliverables \u2014 a markdown behavior spec (.md) and a Cucumber .feature file",
+          "passed": false,
+          "evidence": "Output dir contains only transaction-csv-export-spec.md; no .feature file was produced."
+        },
+        {
+          "text": "The .feature file is well-formed Gherkin (Feature declaration, Scenario blocks, Given/When/Then steps)",
+          "passed": false,
+          "evidence": "No .feature file exists. Gherkin appears inside plain ``` code blocks in the .md, and most blocks have no 'Feature:' wrapper."
+        },
+        {
+          "text": "Happy-path scenarios are tagged @happy-path and match the CSV export flow described in the prompt",
+          "passed": false,
+          "evidence": "0 @happy-path tags. The happy-path scenario in Section 5.1 is untagged and not distinguishable from the deviation scenarios."
+        },
+        {
+          "text": "The spec includes a coverage checklist enumerating all 14 deviation taxonomy categories",
+          "passed": false,
+          "evidence": "No 14-category taxonomy checklist. Section 13 is an ad hoc acceptance checklist."
+        },
+        {
+          "text": "Deviation scenarios span at least 8 distinct deviation categories",
+          "passed": true,
+          "evidence": "Scenarios touch ~8 categories (invalid input, state conflict, boundary, duplicate/retry, external failure, auth/permission, environment, connectivity)."
+        },
+        {
+          "text": "Deviation scenario Then-steps specify concrete graceful product behavior, not merely that an error occurred",
+          "passed": true,
+          "evidence": "Scenarios resolve gracefully (e.g. generation failure: no partial file, error message inviting retry, button restored)."
+        },
+        {
+          "text": "Genuine product decisions are tagged @assumption and consolidated into a Flagged Assumptions section",
+          "passed": false,
+          "evidence": "0 @assumption tags. Section 12 'Open questions' and inline 'Decision point' callouts raise decisions in prose but are untagged and not consolidated as a per-scenario review table."
+        },
+        {
+          "text": "The .md spec includes the narrative sections Problem & Intent, Actors, Glossary, Preconditions, and Scope",
+          "passed": false,
+          "evidence": "Has Summary, Goals/Non-goals, Actors and preconditions \u2014 but no Glossary section."
+        },
+        {
+          "text": "Deviation scenarios cover an empty date range, an invalid range (end before start), a large export, and connectivity loss mid-flow",
+          "passed": true,
+          "evidence": "5.2 empty range, 6.1 start-after-end, 8.2 large export, 9.1 generation/network failure \u2014 all present."
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 103.5333,
+        "stddev": 23.4585,
+        "min": 76.6,
+        "max": 119.5
+      },
+      "tokens": {
+        "mean": 47541.0,
+        "stddev": 3752.8798,
+        "min": 43583,
+        "max": 51048
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.4553,
+        "stddev": 0.2392,
+        "min": 0.222,
+        "max": 0.7
+      },
+      "time_seconds": {
+        "mean": 55.5667,
+        "stddev": 12.4917,
+        "min": 41.4,
+        "max": 65.0
+      },
+      "tokens": {
+        "mean": 20874.0,
+        "stddev": 2041.0321,
+        "min": 19506,
+        "max": 23220
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.54",
+      "time_seconds": "+48.0",
+      "tokens": "+26667"
+    }
+  },
+  "notes": [
+    "With-skill scored a perfect 100% (±0%) across all 3 evals; the baseline averaged 46% with high variance (±24%), ranging from 22% (forgot-password) to 70% (teammate-invite).",
+    "The baseline's variance is explained by prompt wording: eval-2 explicitly asked for 'both the doc and the .feature files', so the baseline produced them and scored 70%; evals 1 and 3 did not say '.feature' explicitly and the baseline produced no .feature file at all. The skill's value is largest exactly when the user does not spell out the format.",
+    "Two assertions fail in 100% of baseline runs and pass in 100% of with-skill runs: the 14-category coverage checklist, and @assumption tagging consolidated into a Flagged Assumptions section. These are the skill's most discriminating contributions — they are the explicit forcing function against the deviation blind spot.",
+    "The skill costs ~48s and ~27k extra tokens per run (roughly 2x time, 2.3x tokens). That budget buys the systematic taxonomy traversal: with-skill runs produced 29-48 deviation scenarios vs. the baseline's 10-16, and a provable 14/14 category coverage.",
+    "Non-discriminating assertion: 'deviation scenarios span at least 8 categories' passes in both configurations — a capable model finds a reasonable spread of edge cases unaided. The skill's real edge is exhaustiveness and auditable structure, not merely finding some edge cases. Consider tightening this threshold (e.g. to 12+ categories) in a future iteration so it discriminates.",
+    "No errors in any run. Caveat: the happy-path interview phase was not exercised because the test prompts supplied the happy path inline. Interview quality (relentlessness, alternative-path probing, the playback forcing function) still needs human review or an interactive test."
+  ]
+}

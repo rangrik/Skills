@@ -1,0 +1,40 @@
+{
+  "expectations": [
+    {
+      "text": "Flags that the SEO agent calling the new agent directly violates hub-and-spoke orchestration (Principle 38)",
+      "passed": true,
+      "evidence": "'Problem 1' quotes Principle 38 and Principle 4; states the SEO agent calling SitemapAgent makes a spoke coordinate another spoke."
+    },
+    {
+      "text": "Recommends coordination flow through the orchestrator rather than direct agent-to-agent calls (Principle 4)",
+      "passed": true,
+      "evidence": "Line 17: the determination flows back to the orchestrator, which decides to dispatch; recommended shape step 4 forbids spoke-to-spoke calls."
+    },
+    {
+      "text": "Flags that deterministic sitemap-building should not live in an agent reasoning loop and belongs in a service or tool (Principles 2 and 6)",
+      "passed": true,
+      "evidence": "'Problem 2': deterministic crawl + XML belongs in a service (thick core, P2) with a thin tool (P6/P7); 'the reasoning loop is the part to drop.'"
+    },
+    {
+      "text": "Raises skill-first extension \u2014 a skill, tool, or service should be considered before a new agent (Principle 41)",
+      "passed": true,
+      "evidence": "Problem 2 quotes Principle 41 verbatim and applies the lowest-power-layer ladder; recommended shape step 5 adds a skill only if real instructional nuance exists."
+    },
+    {
+      "text": "Concludes that the proposed shape is off and gives a concrete recommended alternative shape",
+      "passed": true,
+      "evidence": "Concludes the shape cuts against how the Kite agentic system is built and provides a numbered 'Recommended shape'."
+    },
+    {
+      "text": "Grounds the critique in the appsmith-v2 principles catalogue and cites specific principle numbers",
+      "passed": true,
+      "evidence": "Cites P38, P4, P41, P6, P2, P9, P39, P34, P37 and quotes the catalogue."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  }
+}

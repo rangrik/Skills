@@ -1,0 +1,57 @@
+{
+  "skill_name": "blueprint",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We're adding a 'forgot password' flow to our web app. Right now if someone forgets their password they have to email support, which is a pain for everyone. The flow I'm picturing: on the login page there's a 'Forgot password?' link, the user clicks it, types in their email, and we send them a reset link. They click the link, land on a page where they pick a new password, confirm it, and then they're logged in and back on their dashboard. Can you turn this into a proper behavior spec? I want something I can hand to my eng and QA team.",
+      "expected_output": "A single markdown behavior spec (.md), with the Gherkin scenarios embedded in sections 6 and 7. The happy path matches the described forgot-password flow. Deviations are autonomously enumerated and cover things like an unregistered email, an expired or reused reset link, rate-limited reset requests, a weak/mismatched new password, abandoning mid-flow, and connectivity loss. Each deviation scenario specifies graceful product behavior in its Then steps. Genuine product decisions are tagged @assumption. The spec includes a coverage checklist over all 14 taxonomy categories.",
+      "files": [],
+      "expectations": [
+        "Produces a single deliverable — a markdown behavior spec (.md) with the Gherkin scenarios embedded — and no separate .feature file",
+        "The Gherkin scenarios embedded in the .md spec are well-formed (Feature declaration, Scenario blocks, Given/When/Then steps)",
+        "Happy-path scenarios are tagged @happy-path and match the forgot-password flow described in the prompt",
+        "The spec includes a coverage checklist enumerating all 14 deviation taxonomy categories",
+        "Deviation scenarios span at least 8 distinct deviation categories",
+        "Deviation scenario Then-steps specify concrete graceful product behavior, not merely that an error occurred",
+        "Genuine product decisions are tagged @assumption and consolidated into a Flagged Assumptions section",
+        "The .md spec includes the narrative sections Problem & Intent, Actors, Glossary, Preconditions, and Scope",
+        "Deviation scenarios cover an expired/reused reset link, an unregistered email, rate-limited reset requests, and a weak or mismatched new password"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Working on a feature for our SaaS product — workspace admins should be able to invite teammates by email. Happy path as I see it: the admin goes to the Members settings page, clicks an 'Invite' button, types in one or more email addresses, and hits Send. Each person gets an invitation email. They click 'Accept' in the email, and if they don't have an account yet they create one, otherwise they just log in, and either way they end up inside the workspace as a member. I need a behavior spec for this that my eng and QA team can use.",
+      "expected_output": "A single markdown behavior spec (.md), with the Gherkin scenarios embedded in sections 6 and 7. The happy path captures both normal sub-paths (invitee is a brand-new user vs. an existing user). Deviations are autonomously enumerated: inviting someone already a member, a malformed email address, exceeding a seat limit or invite rate limit, an expired invitation link, a reused or already-accepted invite, the admin's permission being revoked mid-flow, etc. Then steps specify graceful behavior. Product decisions are tagged @assumption. A 14-row coverage checklist is included.",
+      "files": [],
+      "expectations": [
+        "Produces a single deliverable — a markdown behavior spec (.md) with the Gherkin scenarios embedded — and no separate .feature file",
+        "The Gherkin scenarios embedded in the .md spec are well-formed (Feature declaration, Scenario blocks, Given/When/Then steps)",
+        "Happy-path scenarios are tagged @happy-path and match the invite flow described in the prompt",
+        "The spec includes a coverage checklist enumerating all 14 deviation taxonomy categories",
+        "Deviation scenarios span at least 8 distinct deviation categories",
+        "Deviation scenario Then-steps specify concrete graceful product behavior, not merely that an error occurred",
+        "Genuine product decisions are tagged @assumption and consolidated into a Flagged Assumptions section",
+        "The .md spec includes the narrative sections Problem & Intent, Actors, Glossary, Preconditions, and Scope",
+        "The happy-path scenarios include both the new-user (account creation) and existing-user (sign-in) acceptance sub-paths",
+        "Deviation scenarios cover inviting an existing member, a seat or rate limit, an expired invitation, and a malformed email address"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I want to spec out a data export feature. Our users have a Transactions page that shows their transaction history, and they keep asking to get it out as a spreadsheet. The main flow: the user is on the Transactions page, they pick a date range with a date picker, click an 'Export to CSV' button, and the CSV file downloads to their computer with all the transactions in that range. Turn this into a behavior specification please.",
+      "expected_output": "A single markdown behavior spec (.md), with the Gherkin scenarios embedded in sections 6 and 7. The happy path matches the date-range CSV export flow. Deviations are autonomously enumerated: an empty date range (zero transactions), an invalid range (end before start), a very large export, connectivity loss mid-download, a double-click on Export, rate limiting, session expiry, etc. Then steps specify graceful product behavior. Product decisions are tagged @assumption. A 14-row coverage checklist is included.",
+      "files": [],
+      "expectations": [
+        "Produces a single deliverable — a markdown behavior spec (.md) with the Gherkin scenarios embedded — and no separate .feature file",
+        "The Gherkin scenarios embedded in the .md spec are well-formed (Feature declaration, Scenario blocks, Given/When/Then steps)",
+        "Happy-path scenarios are tagged @happy-path and match the CSV export flow described in the prompt",
+        "The spec includes a coverage checklist enumerating all 14 deviation taxonomy categories",
+        "Deviation scenarios span at least 8 distinct deviation categories",
+        "Deviation scenario Then-steps specify concrete graceful product behavior, not merely that an error occurred",
+        "Genuine product decisions are tagged @assumption and consolidated into a Flagged Assumptions section",
+        "The .md spec includes the narrative sections Problem & Intent, Actors, Glossary, Preconditions, and Scope",
+        "Deviation scenarios cover an empty date range, an invalid range (end before start), a large export, and connectivity loss mid-flow"
+      ]
+    }
+  ]
+}

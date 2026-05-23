@@ -1,0 +1,13 @@
+{
+  "eval_id": 3,
+  "eval_name": "eval-3-sitemap-agent-shape",
+  "prompt": "Quick gut-check on something I'm building in appsmith-v2. The orchestrator needs to be able to produce an XML sitemap for a deployed app. My plan: add a new specialized SitemapAgent, and have the existing SEO agent call SitemapAgent directly whenever it decides a sitemap is needed. The sitemap-building itself \u2014 crawling the app's routes, formatting the XML \u2014 I'd put inside the new agent's reasoning loop. Does this shape make sense, or am I doing something off?",
+  "assertions": [
+    "Flags that the SEO agent calling the new agent directly violates hub-and-spoke orchestration (Principle 38)",
+    "Recommends coordination flow through the orchestrator rather than direct agent-to-agent calls (Principle 4)",
+    "Flags that deterministic sitemap-building should not live in an agent reasoning loop and belongs in a service or tool (Principles 2 and 6)",
+    "Raises skill-first extension \u2014 a skill, tool, or service should be considered before a new agent (Principle 41)",
+    "Concludes that the proposed shape is off and gives a concrete recommended alternative shape",
+    "Grounds the critique in the appsmith-v2 principles catalogue and cites specific principle numbers"
+  ]
+}

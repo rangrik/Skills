@@ -1,0 +1,14 @@
+{
+  "expectations": [
+    {"text": "Produces both deliverables — a markdown behavior spec (.md) and a Cucumber .feature file", "passed": true, "evidence": "Output dir contains password-reset-behavior-spec.md and password-reset.feature."},
+    {"text": "The .feature file is well-formed Gherkin (Feature declaration, Scenario blocks, Given/When/Then steps)", "passed": true, "evidence": "password-reset.feature opens with 'Feature:' + 'Background:' and contains 43 well-formed Scenario/Scenario Outline blocks with Given/When/Then/And steps and an Examples table."},
+    {"text": "Happy-path scenarios are tagged @happy-path and match the forgot-password flow described in the prompt", "passed": true, "evidence": "3 @happy-path scenarios: request reset link, choose new password from valid link, complete reset and land on dashboard — matches the prompt's flow."},
+    {"text": "The spec includes a coverage checklist enumerating all 14 deviation taxonomy categories", "passed": true, "evidence": "Section 9 Coverage Checklist has all 14 numbered category rows, each marked Yes with a scenario count."},
+    {"text": "Deviation scenarios span at least 8 distinct deviation categories", "passed": true, "evidence": "All 14 distinct category tags present (@invalid-input, @duplicate-retry, @rate-limit, @connectivity, @abandon-resume, @out-of-order, @auth-permission, @concurrency, @state-conflict, @boundary, @environment, @external-failure, @time-expiry, @adversarial)."},
+    {"text": "Deviation scenario Then-steps specify concrete graceful product behavior, not merely that an error occurred", "passed": true, "evidence": "e.g. malformed-email scenario keeps the typed value 'in the field for correction'; email-provider-down scenario queues the email 'for automatic retry' and shows the standard confirmation — resolutions, not just error reports."},
+    {"text": "Genuine product decisions are tagged @assumption and consolidated into a Flagged Assumptions section", "passed": true, "evidence": "10 scenarios tagged @assumption with '# Assumption:' comments; Section 8 consolidates them as a table A1–A12 with the open decision and what to confirm."},
+    {"text": "The .md spec includes the narrative sections Problem & Intent, Actors, Glossary, Preconditions, and Scope", "passed": true, "evidence": "Sections 1–5 are exactly Problem & Intent, Actors, Glossary, Preconditions & Assumptions, Scope."},
+    {"text": "Deviation scenarios cover an expired/reused reset link, an unregistered email, rate-limited reset requests, and a weak or mismatched new password", "passed": true, "evidence": "7.13 expired link, 7.2 reload-after-completed reuse, 7.9 unregistered email, 7.3 per-address rate limit, 7.1 weak-password Scenario Outline + mismatched confirmation — all present."}
+  ],
+  "summary": {"passed": 9, "failed": 0, "total": 9, "pass_rate": 1.0}
+}

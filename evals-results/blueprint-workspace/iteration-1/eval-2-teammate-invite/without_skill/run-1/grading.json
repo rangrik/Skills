@@ -1,0 +1,15 @@
+{
+  "expectations": [
+    {"text": "Produces both deliverables — a markdown behavior spec (.md) and a Cucumber .feature file", "passed": true, "evidence": "Output dir contains behavior-spec-teammate-invitations.md plus send-invitations.feature, accept-invitation.feature, manage-pending-invitations.feature. (The prompt explicitly asked for both doc and .feature files.)"},
+    {"text": "The .feature file is well-formed Gherkin (Feature declaration, Scenario blocks, Given/When/Then steps)", "passed": true, "evidence": "Three standard .feature files with 32 Scenario blocks total covering sending, accepting, and managing invitations."},
+    {"text": "Happy-path scenarios are tagged @happy-path and match the invite flow described in the prompt", "passed": false, "evidence": "0 @happy-path tags. The happy path is a numbered prose narrative (Section 6); .feature scenarios are untagged, so happy paths cannot be distinguished from deviations."},
+    {"text": "The spec includes a coverage checklist enumerating all 14 deviation taxonomy categories", "passed": false, "evidence": "No 14-category taxonomy checklist. Section 8 is an ad hoc 13-row 'Error & Edge Cases' table."},
+    {"text": "Deviation scenarios span at least 8 distinct deviation categories", "passed": true, "evidence": "Edge cases + behavior rules touch ~8 categories (invalid input, state conflict, duplicate/retry, out-of-order, adversarial token, time/expiry, rate/seat limit, external failure)."},
+    {"text": "Deviation scenario Then-steps specify concrete graceful product behavior, not merely that an error occurred", "passed": true, "evidence": "Section 8 edge-case table and Section 7 behavior rules give concrete graceful resolutions (e.g. malformed email flagged inline, valid addresses still send)."},
+    {"text": "Genuine product decisions are tagged @assumption and consolidated into a Flagged Assumptions section", "passed": false, "evidence": "0 @assumption tags. Section 5 lists some assumptions in prose but they are not tagged on scenarios, not consolidated as a review table, and not tied to the decisions they affect."},
+    {"text": "The .md spec includes the narrative sections Problem & Intent, Actors, Glossary, Preconditions, and Scope", "passed": true, "evidence": "Has Overview, Scope, Roles & Actors, Key Concepts & Definitions (glossary), and Preconditions & Assumptions — all five narrative sections present."},
+    {"text": "The happy-path scenarios include both the new-user (account creation) and existing-user (sign-in) acceptance sub-paths", "passed": true, "evidence": "accept-invitation.feature covers new user (account creation) and existing user (logged out and logged in); both sub-paths present."},
+    {"text": "Deviation scenarios cover inviting an existing member, a seat or rate limit, an expired invitation, and a malformed email address", "passed": true, "evidence": "Edge-case table and feature files cover already-a-member, seat-limit gate, expired invitation, and malformed email."}
+  ],
+  "summary": {"passed": 7, "failed": 3, "total": 10, "pass_rate": 0.7}
+}

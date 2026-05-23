@@ -1,0 +1,16 @@
+{
+  "eval_id": 3,
+  "eval_name": "csv-export-spec",
+  "prompt": "I want to spec out a data export feature. Our users have a Transactions page that shows their transaction history, and they keep asking to get it out as a spreadsheet. The main flow: the user is on the Transactions page, they pick a date range with a date picker, click an 'Export to CSV' button, and the CSV file downloads to their computer with all the transactions in that range. Turn this into a behavior specification please.",
+  "assertions": [
+    "Produces both deliverables — a markdown behavior spec (.md) and a Cucumber .feature file",
+    "The .feature file is well-formed Gherkin (Feature declaration, Scenario blocks, Given/When/Then steps)",
+    "Happy-path scenarios are tagged @happy-path and match the CSV export flow described in the prompt",
+    "The spec includes a coverage checklist enumerating all 14 deviation taxonomy categories",
+    "Deviation scenarios span at least 8 distinct deviation categories",
+    "Deviation scenario Then-steps specify concrete graceful product behavior, not merely that an error occurred",
+    "Genuine product decisions are tagged @assumption and consolidated into a Flagged Assumptions section",
+    "The .md spec includes the narrative sections Problem & Intent, Actors, Glossary, Preconditions, and Scope",
+    "Deviation scenarios cover an empty date range, an invalid range (end before start), a large export, and connectivity loss mid-flow"
+  ]
+}

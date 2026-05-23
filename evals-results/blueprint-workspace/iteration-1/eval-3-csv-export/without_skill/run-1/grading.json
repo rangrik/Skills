@@ -1,0 +1,14 @@
+{
+  "expectations": [
+    {"text": "Produces both deliverables — a markdown behavior spec (.md) and a Cucumber .feature file", "passed": false, "evidence": "Output dir contains only transaction-csv-export-spec.md; no .feature file was produced."},
+    {"text": "The .feature file is well-formed Gherkin (Feature declaration, Scenario blocks, Given/When/Then steps)", "passed": false, "evidence": "No .feature file exists. Gherkin appears inside plain ``` code blocks in the .md, and most blocks have no 'Feature:' wrapper."},
+    {"text": "Happy-path scenarios are tagged @happy-path and match the CSV export flow described in the prompt", "passed": false, "evidence": "0 @happy-path tags. The happy-path scenario in Section 5.1 is untagged and not distinguishable from the deviation scenarios."},
+    {"text": "The spec includes a coverage checklist enumerating all 14 deviation taxonomy categories", "passed": false, "evidence": "No 14-category taxonomy checklist. Section 13 is an ad hoc acceptance checklist."},
+    {"text": "Deviation scenarios span at least 8 distinct deviation categories", "passed": true, "evidence": "Scenarios touch ~8 categories (invalid input, state conflict, boundary, duplicate/retry, external failure, auth/permission, environment, connectivity)."},
+    {"text": "Deviation scenario Then-steps specify concrete graceful product behavior, not merely that an error occurred", "passed": true, "evidence": "Scenarios resolve gracefully (e.g. generation failure: no partial file, error message inviting retry, button restored)."},
+    {"text": "Genuine product decisions are tagged @assumption and consolidated into a Flagged Assumptions section", "passed": false, "evidence": "0 @assumption tags. Section 12 'Open questions' and inline 'Decision point' callouts raise decisions in prose but are untagged and not consolidated as a per-scenario review table."},
+    {"text": "The .md spec includes the narrative sections Problem & Intent, Actors, Glossary, Preconditions, and Scope", "passed": false, "evidence": "Has Summary, Goals/Non-goals, Actors and preconditions — but no Glossary section."},
+    {"text": "Deviation scenarios cover an empty date range, an invalid range (end before start), a large export, and connectivity loss mid-flow", "passed": true, "evidence": "5.2 empty range, 6.1 start-after-end, 8.2 large export, 9.1 generation/network failure — all present."}
+  ],
+  "summary": {"passed": 4, "failed": 5, "total": 9, "pass_rate": 0.444}
+}

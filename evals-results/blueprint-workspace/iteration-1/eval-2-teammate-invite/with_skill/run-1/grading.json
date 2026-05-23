@@ -1,0 +1,15 @@
+{
+  "expectations": [
+    {"text": "Produces both deliverables — a markdown behavior spec (.md) and a Cucumber .feature file", "passed": true, "evidence": "Output dir contains teammate-invite-behavior-spec.md and teammate-invite.feature."},
+    {"text": "The .feature file is well-formed Gherkin (Feature declaration, Scenario blocks, Given/When/Then steps)", "passed": true, "evidence": "teammate-invite.feature has a 'Feature:' + 'Background:' header and 48 well-formed Scenario/Scenario Outline blocks; scenarios are identical to the .md."},
+    {"text": "Happy-path scenarios are tagged @happy-path and match the invite flow described in the prompt", "passed": true, "evidence": "4 @happy-path scenarios: single-address send, multi-address send, new-user accept, existing-user accept — matches the prompt."},
+    {"text": "The spec includes a coverage checklist enumerating all 14 deviation taxonomy categories", "passed": true, "evidence": "Section 9 Coverage Checklist has all 14 numbered category rows, each marked Yes with scenario counts."},
+    {"text": "Deviation scenarios span at least 8 distinct deviation categories", "passed": true, "evidence": "All 14 distinct category tags present across 44 deviation scenarios."},
+    {"text": "Deviation scenario Then-steps specify concrete graceful product behavior, not merely that an error occurred", "passed": true, "evidence": "e.g. mixed valid/invalid addresses: invalid one flagged inline, valid ones still sendable together, 'no partial send'; email-provider-down: invitations recorded, emails queued for retry."},
+    {"text": "Genuine product decisions are tagged @assumption and consolidated into a Flagged Assumptions section", "passed": true, "evidence": "Many scenarios tagged @assumption with '# Assumption:' comments; Section 8 consolidates 16 assumptions (A1–A16) as a table with what to confirm."},
+    {"text": "The .md spec includes the narrative sections Problem & Intent, Actors, Glossary, Preconditions, and Scope", "passed": true, "evidence": "Sections 1–5 are Problem & Intent, Actors, Glossary, Preconditions & Assumptions, Scope."},
+    {"text": "The happy-path scenarios include both the new-user (account creation) and existing-user (sign-in) acceptance sub-paths", "passed": true, "evidence": "Two distinct @happy-path scenarios: 'A new user accepts an invitation and joins by creating an account' and 'An existing user accepts an invitation and joins by signing in'."},
+    {"text": "Deviation scenarios cover inviting an existing member, a seat or rate limit, an expired invitation, and a malformed email address", "passed": true, "evidence": "7.9 inviting an existing member, 7.3 seat-quota + hourly rate limit, 7.13 expired accept link, 7.1 malformed-address Scenario Outline — all present."}
+  ],
+  "summary": {"passed": 10, "failed": 0, "total": 10, "pass_rate": 1.0}
+}

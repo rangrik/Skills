@@ -1,0 +1,17 @@
+{
+  "eval_id": 2,
+  "eval_name": "teammate-invite-spec",
+  "prompt": "Working on a feature for our SaaS product — workspace admins should be able to invite teammates by email. Happy path as I see it: the admin goes to the Members settings page, clicks an 'Invite' button, types in one or more email addresses, and hits Send. Each person gets an invitation email. They click 'Accept' in the email, and if they don't have an account yet they create one, otherwise they just log in, and either way they end up inside the workspace as a member. I need a behavior spec for this — both the doc and the .feature files so QA can use them.",
+  "assertions": [
+    "Produces both deliverables — a markdown behavior spec (.md) and a Cucumber .feature file",
+    "The .feature file is well-formed Gherkin (Feature declaration, Scenario blocks, Given/When/Then steps)",
+    "Happy-path scenarios are tagged @happy-path and match the invite flow described in the prompt",
+    "The spec includes a coverage checklist enumerating all 14 deviation taxonomy categories",
+    "Deviation scenarios span at least 8 distinct deviation categories",
+    "Deviation scenario Then-steps specify concrete graceful product behavior, not merely that an error occurred",
+    "Genuine product decisions are tagged @assumption and consolidated into a Flagged Assumptions section",
+    "The .md spec includes the narrative sections Problem & Intent, Actors, Glossary, Preconditions, and Scope",
+    "The happy-path scenarios include both the new-user (account creation) and existing-user (sign-in) acceptance sub-paths",
+    "Deviation scenarios cover inviting an existing member, a seat or rate limit, an expired invitation, and a malformed email address"
+  ]
+}

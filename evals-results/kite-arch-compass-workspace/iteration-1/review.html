@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "kite-arch-compass", "runs": [{"id": "eval-1-domain-finalization-with_skill-run-1", "prompt": "(No prompt found)", "eval_id": null, "outputs": [{"name": "guidance-answer.md", "type": "text", "content": "# Custom-domain finalization \u2014 does `finalize_domain()` fit how we build things?\n\nShort answer: the *goal* is right, but the *shape* \u2014 one function that runs the DNS check, makes the GSC call, waits for the result, and flips the row to active all in one pass \u2014 does not fit how appsmith-v2 builds this kind of flow. It collapses a multi-step external workflow into a single blocking call, and that conflicts with two principles this part of the codebase is explicitly built around. The good news: the repo already has the pattern you need, and domain/GSC flows are even cited as the canonical example of it.\n\nI checked this against the Kite Architecture Compass. The work spans three components: **Backend Services**, **Deployment & Domains**, and **Celery & Background Workers**.\n\n## Why the single-function plan doesn't fit\n\n### Principle 16 \u2014 Model long or external flows as resumable state machines\n\nThis is the decisive one. The principle states: multi-step work that crosses process boundaries or external services is *not* a single blocking call \u2014 it is an explicit sequence of states that commits each transition and can resume from where it stopped. And it names your exact flow as the example: *\"Domain purchase (`pending \u2192 purchased \u2192 setup \u2192 active`), Search Console verification, and generation jobs all work this way. A crash mid-flow leaves a recoverable state, not a corrupt one.\"*\n\nYour `finalize_domain()` holds DNS-check + GSC-call + wait + activation in one in-memory pass. If the process dies, gets redeployed, or the request times out anywhere in the middle, there is no committed intermediate state to resume from \u2014 the domain is left in an undefined limbo, and re-running the function starts over from scratch instead of picking up where it stopped. The repo's standard is that each transition is a committed state in the domain row, so a crash leaves a recoverable state, not a corrupt one.\n\nThe Component Map confirms this is non-negotiable for this area: both **Backend Services** and **Deployment & Domains** list Principle 16, with Deployment & Domains noting specifically \"Domain purchase and GSC verification commit each transition and can resume.\"\n\n### Principle 19 \u2014 Do slow and fallible work asynchronously, with backpressure\n\n\"Wait for it to come back\" inside a service function means the request path blocks on an external provider. P19 says the request path stays fast; long-running or failure-prone work is pushed onto queues and workers \u2014 the user-facing request never blocks on work that can be deferred. GSC verification is both slow and fallible (it is exactly the kind of \"external service\" P19 and P16 are about). It belongs on Celery, with the route returning immediately and the client polling for status \u2014 which is also how the rest of Deployment & Domains already works (P19 there: \"deploys run `--prod --no-wait`; side effects are tracked background tasks; clients poll for status\").\n\n### Principle 21 \u2014 Bound every retry; define terminal states\n\nGSC verification doesn't always succeed, and \"wait for the result\" implies polling. The catalogue calls this out by name: *\"Search Console stepped backoff into `retry_exhausted`\"* and *\"GSC stepped backoff into a terminal state.\"* Your plan has no terminal state for the case where GSC never verifies \u2014 it would either hang or fail in an undefined direction. The standard is a finite, backed-off retry that ends in an explicit terminal state (e.g. `retry_exhausted`), which is itself a defined outcome, not an error.\n\n## Supporting principles to build to\n\n- **P15 \u2014 Idempotency by design.** Whichever step kicks this off (DNS-propagation completion) and the GSC step itself can be redelivered or retried. Each must be safe to run twice: don't re-issue a GSC verification if one is already in flight or done, and make the activation transition a no-op if the row is already active. Celery & Background Workers lists P15 for exactly this reason.\n- **P17 \u2014 Explicit transaction boundaries.** Each state transition is its own committed unit. The domain database module should `flush()` and leave the `commit()` to the caller (the service or task that owns the step). Don't bundle all transitions into one transaction \u2014 that defeats the resumability you're building.\n- **P2 / P6 \u2014 Thin edges, single responsibility.** Keep the service functions scoped to one transition each. The Celery task is a thin wrapper that calls the service; the route just kicks off the flow and returns. No business logic in the route or the task body.\n- **P20 \u2014 Choose fail-open vs fail-closed deliberately.** Decide explicitly what happens if GSC is unreachable. Flipping a domain to `active` is a correctness-sensitive change, so it should *not* fail open into \"active anyway\" \u2014 it should stay in its current state and retry. Make that decision explicit (a comment or the PR description), per the deviation/decision discipline.\n\n## What to do instead\n\nReplace the one blocking `finalize_domain(domain_id)` with a small resumable state machine over the domain row. Concretely:\n\n1. **Define the states explicitly.** Extend the existing domain status progression with the steps this flow needs \u2014 e.g. `dns_verified \u2192 gsc_pending \u2192 gsc_verified \u2192 active`, plus a terminal `retry_exhausted` (reuse the existing domain status column / enum rather than inventing a parallel one \u2014 P5, single source of truth). Mirror the existing `pending \u2192 purchased \u2192 setup \u2192 active` style already in the repo.\n\n2. **One service function per transition, each committing its own step.** Instead of one function that does everything:\n   - a function that runs the DNS check and, on success, transitions the row to `dns_verified` (or kicks off the GSC step);\n   - a function that issues the GSC verification call and transitions to `gsc_pending`;\n   - a function that checks the GSC result and transitions to `gsc_verified`, or applies stepped backoff;\n   - a function that performs the final activation, idempotently, transitioning to `active`.\n   Each commits its transition before the next begins, so a crash leaves a recoverable state.\n\n3. **Run the slow/fallible parts on Celery, not in the request path.** The DNS-propagation completion enqueues a task; the GSC verification poll runs as a Celery task with bounded, backed-off retries (`max_retries` / `retry_backoff`) terminating in `retry_exhausted`. The route that triggers this returns immediately; the client polls for status (consistent with how deploys already work here).\n\n4. **Make every step idempotent.** Guard the GSC issue step against double-issuing; make the activation step a no-op when already `active`; use `acks_late`-safe task design so redelivery is harmless.\n\n5. **Keep transaction ownership explicit.** Domain DB module functions `flush()`; the service/task that owns the step `commit()`s. Don't wrap the whole flow in one transaction.\n\nThis isn't more code for its own sake \u2014 it's the difference between a flow that survives a deploy or a GSC hiccup and one that strands customer domains in a broken state. And because GSC verification is already a named example of P16 and P21 in the contract, building it as a state machine keeps it consistent with the domain-purchase flow sitting right next to it.\n\n## If you genuinely need to deviate\n\nIf there's a real constraint that makes the single-function approach necessary (I don't see one here \u2014 GSC is inherently async), the repo's rule is that the deviation must be explicit and justified: name the principle you're departing from (P16), state why, and record it where the next reader will see it \u2014 a comment, the PR description, or a decision record (P37). An undocumented deviation from P16 on a customer-facing domain flow would be flagged in review as a blocking issue, since it sits in the State & Correctness theme.\n\n## One thing to confirm\n\nI'm working from the architecture contract, not the live `domain` service code. Before you build, check the existing domain-purchase implementation (`pending \u2192 purchased \u2192 setup \u2192 active`) and any existing GSC verification code \u2014 they are the golden-path reference for the state-machine shape and the stepped-backoff terminal state. Match their conventions for status columns, task naming, and where commits happen rather than introducing a new pattern alongside them (P5, P8).\n"}], "grading": {"expectations": [{"text": "Identifies the work as belonging to the Deployment & Domains area of the platform", "passed": true, "evidence": "Line 5: names the work as spanning Backend Services, Deployment & Domains, and Celery & Background Workers."}, {"text": "Recommends modeling the flow as a resumable state machine that commits each transition (Principle 16), not one blocking function", "passed": true, "evidence": "Dedicated 'Principle 16' section (lines 9-15) and line 34: 'Replace the one blocking finalize_domain ... with a small resumable state machine.'"}, {"text": "Recommends the domain move through explicit persisted intermediate states that can resume after a crash", "passed": true, "evidence": "Step 1 (line 36): define explicit states dns_verified -> gsc_pending -> gsc_verified -> active, each transition committed so a crash leaves recoverable state."}, {"text": "Recommends running the slow external GSC verification work asynchronously off the request path (Principle 19)", "passed": true, "evidence": "'Principle 19' section (lines 17-19) and step 3 (line 45): GSC poll runs as a Celery task; route returns immediately; client polls."}, {"text": "Recommends bounding the verification retries with backoff and an explicit terminal state (Principle 21)", "passed": true, "evidence": "'Principle 21' section (lines 21-23): finite, backed-off retry terminating in retry_exhausted."}, {"text": "Explicitly advises against the user's proposed single blocking finalize_domain function as written", "passed": true, "evidence": "Line 3 and line 34 explicitly say the single-function plan does not fit and should be replaced."}, {"text": "Grounds the advice in the appsmith-v2 principles catalogue and cites specific principle numbers", "passed": true, "evidence": "Cites P16, P19, P21, P15, P17, P2, P6, P20, P5, P8, P37 and quotes the contract throughout."}], "summary": {"passed": 7, "failed": 0, "total": 7, "pass_rate": 1.0}}}, {"id": "eval-1-domain-finalization-without_skill-run-1", "prompt": "(No prompt found)", "eval_id": null, "outputs": [{"name": "guidance-answer.md", "type": "text", "content": "# Finalizing custom domains: review of your `finalize_domain` plan\n\nShort answer: the *goal* is right, but a single `finalize_domain(domain_id)` that runs the DNS check, calls Google Search Console (GSC), **waits** for the result, and then flips the row to active is the part I'd push back on. The \"wait for it to come back\" step is the problem. Below is why, and what I'd build instead.\n\n## The core issue: you're describing a long-running, multi-party workflow as one synchronous function\n\nYour function spans three things with very different timing and failure characteristics:\n\n1. **DNS propagation check** \u2014 fast-ish, but eventually-consistent and can be flaky.\n2. **GSC verification call** \u2014 an outbound call to a third party. Initiating verification is quick, but Google does its own asynchronous check on its side. It is *not* instant and it is *not* guaranteed.\n3. **Flip domain to active** \u2014 a local DB write.\n\nThe phrase \"wait for the result\" means one of two implementations, and both are problematic:\n\n- **Block the request thread** until GSC confirms. This ties up a worker for seconds-to-minutes, breaks if the caller is an HTTP request (timeouts, retries firing mid-flight), and gives the user no feedback while it hangs.\n- **Sleep/poll in a loop** inside the function. Same thread-occupancy problem, plus you've now built an ad-hoc scheduler inside a service method.\n\nNeither fits how a well-structured service codebase typically handles \"do work, wait on an external system, then continue.\" That pattern wants to be **asynchronous and broken into stages**.\n\n## How this kind of thing is usually built in a repo like this\n\nI don't have your actual source, so treat this as the conventional shape \u2014 but in a platform codebase (Rails/Django/Node service, etc.) with custom-domain support, you almost certainly already have:\n\n- A **background job / worker** system (Sidekiq, Celery, BullMQ, a queue, cron, etc.).\n- A **domain state machine** \u2014 domains move through statuses like `pending` -> `dns_pending` -> `dns_verified` -> `gsc_pending` -> `active` (and failure states).\n- Existing **callers** of whatever does the DNS check today.\n\nSo before writing anything, do this reconnaissance:\n\n1. Find the domain model/entity and list its current status values and transitions. Is there an explicit state machine (e.g. `aasm`, `state_machine`, a status enum + guarded transitions)? Mirror it.\n2. Find how DNS propagation is checked today and how it's triggered. There's probably already a job that polls DNS \u2014 `finalize_domain` should likely *hook into the existing flow*, not re-run the DNS check from scratch.\n3. Find how other third-party verification or webhook-style flows are modeled. GSC verification almost certainly has a precedent (provisioning, certificate issuance, OAuth callbacks). Copy that pattern.\n4. Check whether GSC notifies you back (callback/webhook) or whether you must poll. This single fact decides the design.\n\n## Recommended design: stages, not one function\n\nModel finalization as **distinct steps driven by background jobs and the domain's status column**, each step idempotent and re-runnable.\n\n### Step 1 \u2014 DNS confirmed -> request GSC verification\nWhen DNS propagation is confirmed (likely already detected by an existing job):\n- Transition the domain to a `gsc_pending` (or similar) status.\n- Enqueue a job that makes the GSC verification *request*. This step only *kicks off* verification; it does not wait for the answer.\n- Persist any token/handle Google returns so later steps can correlate.\n\n### Step 2 \u2014 Get the GSC result\nTwo cases:\n\n- **If GSC can call you back** (webhook/callback): handle it in a controller/endpoint, look up the domain by the stored token, and transition it. Preferred \u2014 no polling.\n- **If you must poll**: enqueue a *re-checking* job that asks GSC for the current verification status. If still pending, it re-enqueues itself with a delay and a bounded retry/attempt count (exponential backoff). This is the only correct way to \"wait\" \u2014 let the queue hold the wait, not a thread.\n\n### Step 3 \u2014 Flip to active\nOnly when GSC reports success:\n- Transition the domain to `active` through the state machine's guarded transition (so invalid transitions are rejected).\n- Do any activation side effects (cache invalidation, routing/cert config, notifying the user).\n\nA thin service function is still fine \u2014 e.g. `DomainFinalization.activate(domain)` \u2014 but it should be the *last* step, called once verification has already succeeded, not the thing that orchestrates the wait.\n\n## Things to get right regardless of structure\n\n- **Idempotency.** Jobs get retried. Running step 2 twice, or step 3 on an already-active domain, must be safe. Guard every transition on current status.\n- **Bounded retries + a terminal failure state.** GSC verification *will* sometimes never succeed (user removed the DNS record, wrong property, etc.). Define `gsc_failed` / `dns_failed` states with a max attempt count, and surface the reason to the user instead of polling forever.\n- **Don't re-run the DNS check inside finalization.** If an existing job already established DNS is propagated, trust that status and move on. Re-checking invites a race where DNS passed a moment ago but blips now.\n- **Persist status transitions, not just the final value.** A `status` column plus timestamps (`dns_verified_at`, `gsc_verified_at`, `activated_at`) makes the flow debuggable and lets you build a status UI.\n- **Use the state machine's guarded transitions** rather than `domain.update(status: \"active\")`. This prevents skipping steps and gives you a single place for transition callbacks.\n- **Wrap external calls** (DNS resolver, GSC API) with timeouts and explicit error handling. Treat transient errors (retry) differently from permanent errors (move to failed state).\n- **Concurrency.** Make sure two jobs can't finalize the same domain simultaneously \u2014 lock the row or rely on guarded status transitions as the serialization point.\n- **Observability.** Log/emit metrics at each transition. \"Stuck in `gsc_pending`\" is a question you'll want to answer quickly.\n\n## What I'd actually do next\n\n1. Read the domain model and confirm the existing status values and transition mechanism.\n2. Find the existing DNS-propagation job and the existing third-party-verification pattern; match them.\n3. Determine whether GSC pushes a callback or requires polling.\n4. Implement it as: a job to *request* GSC verification, a callback handler **or** a self-re-enqueuing poll job to *collect* the result, and a small `activate` step guarded by the state machine.\n5. Add the `gsc_failed`/`dns_failed` terminal states and bounded retries.\n6. Cover with tests: DNS-passed-but-GSC-fails, GSC-times-out, retried-job-runs-twice, and finalize-called-on-already-active.\n\n## Bottom line\n\nKeep the *intent* of `finalize_domain` \u2014 there's value in one named entry point \u2014 but don't let it be a synchronous function that blocks on Google. Split it into queue-driven stages tracked by the domain's status, make every stage idempotent, add explicit failure states, and let the job system own the \"waiting\" instead of a thread. Reuse the existing DNS-check and verification patterns in the repo rather than inventing a parallel one. Confirm the actual model, jobs, and GSC callback-vs-poll behavior before writing code \u2014 those details will shape the final structure.\n"}], "grading": {"expectations": [{"text": "Identifies the work as belonging to the Deployment & Domains area of the platform", "passed": false, "evidence": "Discusses custom-domain finalization but never locates it in the platform's component structure; gives generic 'Rails/Django/Node service' advice."}, {"text": "Recommends modeling the flow as a resumable state machine that commits each transition (Principle 16), not one blocking function", "passed": true, "evidence": "Lines 36-37: 'Model finalization as distinct steps driven by background jobs and the domain's status column'; recommends guarded state transitions."}, {"text": "Recommends the domain move through explicit persisted intermediate states that can resume after a crash", "passed": true, "evidence": "Recommends statuses pending -> dns_pending -> dns_verified -> gsc_pending -> active and 'Persist status transitions, not just the final value' (line 63)."}, {"text": "Recommends running the slow external GSC verification work asynchronously off the request path (Principle 19)", "passed": true, "evidence": "Lines 48-49: 'let the queue hold the wait, not a thread'; enqueue jobs rather than block."}, {"text": "Recommends bounding the verification retries with backoff and an explicit terminal state (Principle 21)", "passed": true, "evidence": "Line 61: 'Bounded retries + a terminal failure state' with a max attempt count."}, {"text": "Explicitly advises against the user's proposed single blocking finalize_domain function as written", "passed": true, "evidence": "Line 3 'the part I'd push back on'; line 80 'don't let it be a synchronous function that blocks on Google.'"}, {"text": "Grounds the advice in the appsmith-v2 principles catalogue and cites specific principle numbers", "passed": false, "evidence": "No principle numbers; explicitly generic \u2014 'I don't have your actual source', 'Rails/Django/Node service, etc.'"}], "summary": {"passed": 5, "failed": 2, "total": 7, "pass_rate": 0.7143}}}, {"id": "eval-2-export-endpoint-review-with_skill-run-1", "prompt": "(No prompt found)", "eval_id": null, "outputs": [{"name": "conformance-report.md", "type": "text", "content": "# Conformance Report \u2014 `backend/app/routes/export_routes.py` (new export endpoint)\n\nReviewed against the Kite Architecture Compass (43 engineering principles + component map). This is a conformance review (Mode B) of a PR before merge.\n\nComponent(s) reviewed:\n- **1. Backend HTTP Routes** \u2014 the file itself.\n- **2. Backend Services** \u2014 the handler does substantive business logic that belongs in a service.\n- **3. Database Modules & Models** \u2014 the handler queries and commits the ORM directly.\n- **12. Celery & Background Workers** \u2014 file generation is long/fallible work done synchronously on the request path.\n\n**Verdict: Non-conformant.** Do not approve as-is. The endpoint works, but it breaks layering, skips request/response typing, does slow work on the request path, swallows errors, and depends on auto-discovery conventions it does not follow. Several issues are blocking. Concrete remediations below.\n\n---\n\n## Deviations\n\n### 1. [P1] Separation of concerns through strict layering \u2014 Backend HTTP Routes / Database Modules\n- **Observed:** The route imports `get_session`, the `Export` model, and `select` directly, runs `select(...)` queries, calls `db.add()`, and calls `await db.commit()` inside the handler. It reaches straight past the service layer into `database/` and `models/`.\n- **Standard:** Routes are the top layer \u2014 they accept a request and delegate downward to a service; they never reach past services into persistence. DB access lives in `*_db.py` modules, called only by services (Component 1; Component 3, [P1]).\n- **Severity:** Blocking \u2014 this is the central layering rule for the backend, and every other structural problem below follows from it.\n- **Remediation:** Create `app/services/export_service.py` to own the flow, and an `app/database/export_db.py` for the queries/writes. The route should do only: parse + validate input, resolve the authenticated user, make one service call, shape the response.\n\n### 2. [P2] Thin edges, thick core \u2014 Backend HTTP Routes\n- **Observed:** The handler contains the format-validation rule, the daily-quota computation (fetch-all + filter-by-date + compare against an env quota), record creation, file generation, and status transitions \u2014 all inline.\n- **Standard:** HTTP routes parse and delegate; substantive business logic lives in services, not in the edge. Quota enforcement, record lifecycle, and file generation are business logic ([P2], Component 1 + 2).\n- **Severity:** Blocking \u2014 it is the same defect as #1 seen from the logic side; the handler is a thick edge.\n- **Remediation:** Move format validation, quota enforcement, and the export lifecycle into `export_service.py`. The handler keeps only request parsing, auth, the single service call, and response shaping.\n\n### 3. [P7] Explicit, typed contracts \u2014 Backend HTTP Routes\n- **Observed:** Inputs `user_id` and `export_format` are bare function arguments (so they bind as query parameters). The success and both error responses are returned as ad-hoc untyped `dict`s.\n- **Standard:** Request, response, and event bodies are declared as Pydantic schemas; strict inputs use `extra=\"forbid\"`. The boundary is a typed artefact ([P7], Component 1).\n- **Severity:** Should-fix.\n- **Remediation:** Add a `CreateExportRequest` Pydantic model (`extra=\"forbid\"`) for the body and a `CreateExportResponse` model for the result, and declare them on the route. Make `export_format` an `Enum` so the allowed-values check is a type constraint, not a hand-rolled `if`.\n\n### 4. [P28] Trust boundaries \u2014 `user_id` supplied by the caller \u2014 Backend HTTP Routes / Auth\n- **Observed:** `user_id` is accepted as a request parameter. Any signed-in caller can pass any other user's ID and export \u2014 or count the quota of \u2014 their data.\n- **Standard:** Platform identifiers reach handlers/tools through request-scoped auth context, never as caller-supplied arguments; public and internal routes carry the correct auth dependency ([P28], Components 1 + 16). Although the PR says \"lets a signed-in user request an export of their data,\" nothing here ties the export to the *authenticated* identity.\n- **Severity:** Blocking \u2014 this is a Theme V (Security) violation and an authorization bypass / IDOR.\n- **Remediation:** Remove the `user_id` parameter. Resolve the user from the session/auth dependency (the standard auth dependency used elsewhere in `routes/`) and pass that identity into the service. Never trust a client-supplied user ID.\n\n### 5. [P8] Shared vocabulary \u2014 `APIRouter` structure \u2014 Backend HTTP Routes\n- **Observed:** `router = APIRouter()` \u2014 no `prefix`, no `tags`. The route path is the literal `\"/exports\"`.\n- **Standard:** Route files use a single `APIRouter(prefix=..., tags=[...])` with consistent structure ([P8], Component 1).\n- **Severity:** Minor.\n- **Remediation:** `router = APIRouter(prefix=\"/exports\", tags=[\"exports\"])` and register the handler on `\"\"` / `\"/\"`.\n\n### 6. [P12] Convention over configuration \u2014 auto-discovery \u2014 Backend HTTP Routes\n- **Observed:** Cannot confirm from the file alone, but the filename `export_routes.py` and a module-level `router` match the `routes/*_routes.py` auto-discovery convention. The PR adds no manual registration line, which is correct *if* the discovery mechanism picks up this exact shape.\n- **Standard:** Routers are auto-discovered from `routes/*_routes.py`; no manual registration ([P12], Component 1).\n- **Severity:** Minor \u2014 verify, not necessarily fix.\n- **Remediation:** Confirm the discovery loader picks this file up (correct directory, exported symbol name matches what the loader scans for). If it does, no change. If not, conform the file to the loader's expectations rather than adding a manual `include_router` call.\n\n### 7. [P19] Do slow and fallible work asynchronously, with backpressure \u2014 Celery & Background Workers\n- **Observed:** `write_export_file(...)` runs synchronously inside the request handler (\"generate the file right here so we can return a download URL in the response\"). File generation is unbounded, fallible work (large datasets, I/O, upload), and it blocks the HTTP request for its full duration.\n- **Standard:** Long-running or failure-prone work is pushed onto a queue/worker; the request path stays fast. Exports are the canonical example of deferrable work ([P19], Component 12; the Compass even uses \"email a user when their export is ready\" as its worked example).\n- **Severity:** Should-fix (high priority \u2014 it caps throughput and will time out on large exports).\n- **Remediation:** The endpoint should create the `Export` row with `status=\"pending\"`, enqueue a Celery task to generate the file, and return `202` with the export `id` and `status: \"pending\"`. The client polls (or is notified) for completion. The route should not block on `write_export_file`.\n\n### 8. [P15] / [P21] / [P25] Idempotency, bounded retry, cooperative cancellation \u2014 Celery & Background Workers\n- **Observed:** Because generation is inline, there is no idempotency key, no bounded-retry/terminal-state handling, and no cancellation behaviour. A retried request creates a *second* export row and regenerates the file; a failure mid-`write_export_file` leaves a row stuck at `status=\"pending\"` forever with no terminal state.\n- **Standard:** Background work must be idempotent (idempotency keys, `acks_late`), bounded in retries (`max_retries`, `retry_backoff`) ending in an explicit terminal state, and cooperatively cancellable ([P15], [P21], [P25], Component 12).\n- **Severity:** Should-fix \u2014 becomes required once the work moves to a worker (#7); flagged together because the fix is the same change.\n- **Remediation:** In the Celery task: design an idempotency key (e.g. user + day + format, or reuse a still-valid `pending`/`done` export \u2014 see #11), set `max_retries` with `retry_backoff` and `autoretry_for`, and define a terminal `status` (e.g. `\"failed\"`) so a crashed generation does not strand the row at `\"pending\"`.\n\n### 9. [P20] Choose fail-open vs fail-closed deliberately \u2014 error handling \u2014 Backend HTTP Routes / Services\n- **Observed:** Failures are returned as `{\"error\": \"...\"}` dicts with an implicit HTTP `200`. The quota-exceeded and unsupported-format cases \u2014 and any unexpected exception \u2014 are not surfaced as real error statuses. `write_export_file` is not wrapped; if it throws, the row is left at `status=\"pending\"` and the client gets a `500` with no record cleanup.\n- **Standard:** Each failure path makes a deliberate fail-open/fail-closed choice and surfaces it correctly. The unacceptable state is failing in an undecided direction ([P20], Component 2). Errors at the HTTP edge are expressed through proper status codes (e.g. `HTTPException`).\n- **Severity:** Should-fix (the silent `200`-with-`error`-body is a correctness and contract problem for every client).\n- **Remediation:** Raise `HTTPException` with correct codes \u2014 `422`/`400` for unsupported format (or let Pydantic/Enum reject it), `429` for quota exceeded. Wrap generation so a failure transitions the row to a terminal `\"failed\"` state rather than leaving it `\"pending\"`.\n\n### 10. [P9] YAGNI / config handling \u2014 `os.environ` read in the handler \u2014 Backend HTTP Routes / Services\n- **Observed:** `int(os.environ[\"MAX_EXPORTS_PER_DAY\"])` is read directly in the request path. A missing or non-integer env var raises `KeyError`/`ValueError` as an unhandled `500` on every request.\n- **Standard:** Configuration is wired once through shared settings/dependency aliases (`SettingsDep` and similar), not read ad hoc at call sites ([P9] and the convention-over-configuration practice, Component 2/4).\n- **Severity:** Minor.\n- **Remediation:** Read `MAX_EXPORTS_PER_DAY` from the central settings object, with validation/typing at load time, and have the service consume it from there.\n\n### 11. [P5] Single source of truth / [P15] Idempotency \u2014 quota logic and the export query\n- **Observed:** Two concerns here. (a) The quota is computed by loading **every** `Export` row for the user and filtering in Python by `created_at.date()` \u2014 this re-derives \"today's exports\" in the caller and does not scale. (b) Line 40 re-runs `select(Export).where(Export.user_id == user_id)` and passes *Export records* into `write_export_file` as `rows` \u2014 the data being exported appears to be the user's list of exports, which is almost certainly not the intended payload and looks like a copy-paste bug.\n- **Standard:** Each fact has one authoritative home; canonical selection is centralised, not re-derived in callers ([P5]). Repeated identical queries and Python-side filtering belong in a single `*_db.py` query ([P1], [P5], Component 3).\n- **Severity:** (a) should-fix; (b) blocking if it is indeed exporting the wrong data \u2014 confirm with the author what `write_export_file` is meant to receive.\n- **Remediation:** Put a single `count_exports_today(db, user_id)` (a `SELECT COUNT(*)` with a date filter) in `export_db.py`. Fix line 40 to fetch the *actual* data the user is exporting, not the `Export` table. Consider \"create-or-return-existing\" semantics so a repeated request within the quota window does not silently create duplicate rows ([P15]).\n\n### 12. [P17] Explicit transaction boundaries \u2014 Database Modules\n- **Observed:** The handler calls `await db.commit()` twice and obtains the session via a bare `get_session()` rather than the request-scoped session dependency. There is no rollback path if generation fails between the two commits.\n- **Standard:** DB modules `flush()` and leave `commit()` to the caller; the request-scoped session commits at dependency teardown; transaction ownership is explicit and sessions are cancellation-safe ([P17], Component 3).\n- **Severity:** Should-fix.\n- **Remediation:** Use the standard `AsyncSessionDep` request-scoped session. Let `export_db.py` functions `flush()`; let the service/route own the commit boundary (committed once at teardown). Do not hand-roll `get_session()` in the handler.\n\n---\n\n## Conformant\n\n- The file uses `async def` for the handler \u2014 consistent with the async backend.\n- The filename `export_routes.py` follows the `*_routes.py` naming convention ([P8] naming \u2014 though the `APIRouter` construction itself does not, see #5).\n- No manual router registration line was added, which is correct *if* auto-discovery picks the file up (see #6).\n- A `status` field exists on the `Export` model, giving the lifecycle a place to live \u2014 the right shape for the resumable-state remediation in #8, once a terminal `\"failed\"` state is added.\n\n## Not applicable\n\n- **[P16] Resumable state machine** (Component 2/15) \u2014 N/A: a single-step generate-and-store export does not need a multi-state machine; the `pending \u2192 done` (`+ failed`) status field from #8 is sufficient. Flagged only so it is not silently skipped.\n- **[P11] Adapter isolation** \u2014 N/A from this file: no third-party provider is called directly here. If `write_export_file` uploads to an external store (S3 etc.), that belongs behind an adapter, but it is not visible in this file.\n- **[P18] Migrations / backward compatibility** \u2014 N/A to this file: no migration is included in the diff. Note for the reviewer: the `Export` model with `status` / `download_url` / `created_at` columns presumably needs a migration \u2014 confirm one ships in the same PR.\n- **[P23] Scale on observed pressure** \u2014 N/A: autoscaling signals are not in scope for a single endpoint.\n\n---\n\n## Summary for the PR author\n\nThe endpoint is functionally close but should not merge in its current form. Three blocking items:\n\n1. **Authorization bypass ([P28]):** drop the `user_id` parameter; derive the user from the auth session. (Security \u2014 fix first.)\n2. **Layering ([P1]/[P2]):** route must delegate to an `export_service.py` + `export_db.py`; no ORM access or business logic in the handler.\n3. **Confirm the export payload ([P5]):** line 40 currently exports the `Export` table itself \u2014 verify what `write_export_file` should actually receive.\n\nThen the should-fix items: move file generation to a Celery task and return `202` ([P19], with [P15]/[P21]/[P25] following), add typed Pydantic request/response schemas ([P7]), use proper HTTP error statuses instead of `200`-with-`error`-body ([P20]), use the request-scoped session and explicit commit ownership ([P17]). Minor: `APIRouter(prefix/tags)` ([P8]) and central settings for the quota ([P9]).\n"}], "grading": {"expectations": [{"text": "Produces a structured conformance review report with a clear overall verdict", "passed": true, "evidence": "Titled 'Conformance Report' with 'Verdict: Non-conformant'; follows the SKILL.md template (Deviations / Conformant / Not applicable / Summary)."}, {"text": "Identifies the relevant component(s): Backend HTTP Routes and the service/database layer", "passed": true, "evidence": "Lists 'Component(s) reviewed': Backend HTTP Routes, Backend Services, Database Modules & Models, Celery & Background Workers."}, {"text": "Flags that business logic lives in the route handler, violating the thin-edges standard (Principle 2)", "passed": true, "evidence": "Deviation 2 [P2] Thin edges, thick core: format validation, quota computation, record creation, and generation are all inline in the handler."}, {"text": "Flags that the route reaches directly into the database and models instead of delegating to a service (Principle 1)", "passed": true, "evidence": "Deviation 1 [P1]: the route imports get_session and the Export model, runs select() queries, and reaches past the service layer into database/ and models/."}, {"text": "Flags the missing typed Pydantic request and response schemas (Principle 7)", "passed": true, "evidence": "Deviation 3 [P7]: bare str args bind as query params and responses are untyped dicts; recommends Pydantic request/response models."}, {"text": "Flags that the slow export generation runs inline in the request path instead of on a queue (Principle 19)", "passed": true, "evidence": "Deviation 7 [P19]: write_export_file runs synchronously in the handler; recommends enqueueing a Celery task and returning 202."}, {"text": "Flags that creating an export is not idempotent, so a retried POST creates duplicate records (Principle 15)", "passed": true, "evidence": "Deviation 8 [P15] and 11: no idempotency key; a retried request creates a second export row; recommends create-or-return-existing semantics."}, {"text": "Gives a concrete, specific remediation for each flagged deviation and assigns a severity to it", "passed": true, "evidence": "Every deviation entry has an explicit Severity (blocking/should-fix/minor) and a concrete Remediation."}, {"text": "Cites the appsmith-v2 principle numbers behind each finding rather than only generic commentary", "passed": true, "evidence": "Every finding is tagged with its principle number ([P1], [P2], [P7], [P19], [P15], plus P28, P20, P9, P5, P17, P8, P12)."}], "summary": {"passed": 9, "failed": 0, "total": 9, "pass_rate": 1.0}}}, {"id": "eval-2-export-endpoint-review-without_skill-run-1", "prompt": "(No prompt found)", "eval_id": null, "outputs": [{"name": "conformance-report.md", "type": "text", "content": "# PR Review: `backend/app/routes/export_routes.py`\n\nThanks for sending this over. The endpoint works for the happy path, but there are several issues I'd want addressed before this merges. I've grouped them by severity.\n\n---\n\n## Blocking issues\n\n### 1. Authentication / authorization is missing \u2014 `user_id` is caller-controlled\n\nThe PR description says this should let \"a signed-in user request an export of **their** data,\" but the endpoint takes `user_id` as a plain request parameter:\n\n```python\nasync def create_export(user_id: str, export_format: str):\n```\n\nThis means **any caller can export any user's data** by passing a different `user_id`. This is an IDOR (Insecure Direct Object Reference) vulnerability.\n\nThe `user_id` should come from the authenticated session/token, not from the request body or query string. Most FastAPI codebases do this with a dependency, e.g.:\n\n```python\nasync def create_export(\n    export_format: str,\n    current_user: User = Depends(get_current_user),\n):\n    user_id = current_user.id\n```\n\nWhatever auth dependency the rest of the repo uses (`get_current_user`, `require_auth`, etc.) should be applied here. Please confirm this endpoint is reachable only by authenticated users and that it only ever operates on the caller's own data.\n\n### 2. Database session is not managed correctly\n\n```python\ndb = get_session()\n```\n\nThe session is grabbed directly inside the function, never closed, and there's no rollback on failure. If `get_session()` is the raw session factory, this leaks a connection on every request and won't roll back a half-finished transaction when an exception is thrown between the two `commit()` calls.\n\nIn a FastAPI app the session should almost always be injected as a dependency so its lifecycle (open \u2192 use \u2192 commit/rollback \u2192 close) is handled for you:\n\n```python\nasync def create_export(\n    export_format: str,\n    current_user: User = Depends(get_current_user),\n    db: AsyncSession = Depends(get_session),\n):\n```\n\nCheck how other route files in `backend/app/routes/` obtain their session and match that pattern exactly. Mixing a manual `get_session()` here with a dependency-injected session elsewhere is the kind of inconsistency that causes subtle connection-pool bugs.\n\n### 3. The export is generated synchronously inside the request\n\n```python\n# generate the file right here so we can return a download URL in the response\nrows = await db.execute(select(Export).where(Export.user_id == user_id))\nurl = write_export_file(export.id, rows.scalars().all())\n```\n\nTwo problems:\n\n- **`write_export_file` is a blocking call inside an async handler.** Unless it's actually async, calling it directly will block the event loop and stall every other request on that worker. If it must run inline, it should be wrapped (`await run_in_threadpool(...)` / `asyncio.to_thread(...)`). But really \u2014\n- **File generation doesn't belong in the request path.** Exports can be large and slow. The record is even created with `status=\"pending\"`, which strongly implies the intended design is async processing (a background task / job queue) that flips the status to `done` later. The code then immediately overrides it to `done` in the same request, defeating the point of the status field. I'd expect this to enqueue a job and return `202 Accepted` with `status=\"pending\"`, and a separate `GET /exports/{id}` endpoint for the client to poll. Please align this with however the repo handles other long-running work (Celery, RQ, FastAPI `BackgroundTasks`, etc.).\n\n### 4. Wrong query when fetching rows to export\n\n```python\nrows = await db.execute(select(Export).where(Export.user_id == user_id))\nurl = write_export_file(export.id, rows.scalars().all())\n```\n\nThis selects from the **`Export`** table \u2014 i.e. it's exporting the list of export records, not the user's actual data. This looks like a copy/paste of the quota query above. It should select whatever domain data the export is supposed to contain. As written, the feature doesn't do what it claims.\n\n---\n\n## Should fix before merge\n\n### 5. Error handling doesn't use HTTP status codes\n\n```python\nif export_format not in (\"csv\", \"xlsx\", \"json\"):\n    return {\"error\": \"unsupported format\"}\n...\nif len(todays) >= quota:\n    return {\"error\": \"daily quota exceeded\"}\n```\n\nBoth of these return **HTTP 200** with an error body. Clients (and any monitoring/alerting) can't distinguish success from failure. These should raise proper errors:\n\n```python\nraise HTTPException(status_code=400, detail=\"unsupported format\")\nraise HTTPException(status_code=429, detail=\"daily quota exceeded\")\n```\n\n(Quota exceeded is specifically a `429 Too Many Requests`.) If the repo has a shared error/response convention \u2014 a custom exception class, an error envelope, an exception handler \u2014 use that instead so this endpoint is consistent with the others.\n\n### 6. Quota enforcement has a race condition and is inefficient\n\n```python\nresult = await db.execute(select(Export).where(Export.user_id == user_id))\ntodays = [e for e in result.scalars().all() if e.created_at.date() == _today()]\n```\n\n- **Race condition:** two concurrent requests both read a count below quota, both proceed, and the user exceeds the limit. If the quota matters, enforce it with a DB-level constraint or a `SELECT ... FOR UPDATE` / atomic insert-with-count.\n- **Inefficiency:** it loads *every* export row the user has ever created into memory just to filter today's in Python. Push the date filter into the query and use `count()`:\n\n  ```python\n  from sqlalchemy import func\n  today_count = await db.scalar(\n      select(func.count()).select_from(Export)\n      .where(Export.user_id == user_id, Export.created_at >= start_of_today)\n  )\n  ```\n\n### 7. `_today()` is undefined in this file\n\nLine 29 calls `_today()`, but it's never imported or defined here. Either this is a missing import (where does it live?) or the file won't run. Please make sure it's imported, and prefer comparing against a timezone-aware day boundary rather than a naive `.date()` so the quota window is correct across timezones.\n\n### 8. `os.environ[\"MAX_EXPORTS_PER_DAY\"]` will crash on a missing/invalid value\n\n```python\nquota = int(os.environ[\"MAX_EXPORTS_PER_DAY\"])\n```\n\n- A missing env var raises `KeyError`; a non-numeric value raises `ValueError` \u2014 both unhandled, both surface as a 500.\n- Reading config from `os.environ` directly inside a route handler is usually inconsistent with how the rest of the repo manages configuration. Most projects centralize this in a settings module (`app.config` / a Pydantic `Settings` object) with a typed default. Read the quota from there instead.\n\n---\n\n## Minor / consistency\n\n- **No response model.** Other endpoints in this repo likely declare a Pydantic `response_model` and request schema. This one uses bare `dict`s and loose `str` parameters. Add request/response models for validation, OpenAPI docs, and consistency. `export_format` in particular is a great candidate for an `Enum`.\n- **No router prefix/tags.** `APIRouter()` is created with no `prefix` or `tags`. Check how sibling routers are constructed \u2014 they probably set `APIRouter(prefix=\"/...\", tags=[...])` so the OpenAPI docs stay organized.\n- **No explicit status code on the route.** Once this becomes async, decorate with `status_code=status.HTTP_202_ACCEPTED` (or `201` if it stays synchronous and creates a resource).\n- **No logging.** A create + file-generation endpoint should log key events (export requested, completed, failed) consistent with the repo's logging setup.\n- **No tests included.** A new endpoint should ship with tests \u2014 at minimum: happy path, unsupported format, quota exceeded, and the auth check (a user cannot export another user's data).\n- **Two `commit()` calls** with non-atomic work in between. If `write_export_file` fails, you're left with a stranded `status=\"pending\"` row and no cleanup/rollback path.\n\n---\n\n## Summary\n\nThe core idea is fine, but I can't approve it as-is. The **blocking** items are: the missing auth (anyone can export anyone's data), the unmanaged DB session, the synchronous/blocking file generation that contradicts the `pending` status design, and the query that exports the wrong table. The error-handling and quota items should also be fixed for this to be consistent with how endpoints are built elsewhere in the repo.\n\nOne overarching note: several of my suggestions (session handling, config access, error envelope, router prefix, response models) depend on the **existing conventions in `backend/app/routes/`**. Please diff this file against a couple of established route modules and make it match \u2014 consistency with the existing codebase matters as much as any individual fix here.\n"}], "grading": {"expectations": [{"text": "Produces a structured conformance review report with a clear overall verdict", "passed": true, "evidence": "Structured review grouped into Blocking / Should fix / Minor with a Summary stating 'I can't approve it as-is.'"}, {"text": "Identifies the relevant component(s): Backend HTTP Routes and the service/database layer", "passed": false, "evidence": "Reviews the file directly; does not identify named platform components or a service/database layer."}, {"text": "Flags that business logic lives in the route handler, violating the thin-edges standard (Principle 2)", "passed": false, "evidence": "Flags the synchronous generation and quota inefficiency but does not frame business-logic-in-the-route as a thin-edges violation or recommend extracting a service."}, {"text": "Flags that the route reaches directly into the database and models instead of delegating to a service (Principle 1)", "passed": false, "evidence": "Flags the DB session handling but accepts the route running raw select() queries; does not flag the missing service/db layer or the layering violation."}, {"text": "Flags the missing typed Pydantic request and response schemas (Principle 7)", "passed": true, "evidence": "Minor section: 'No response model ... Add request/response models for validation'; suggests an Enum for export_format."}, {"text": "Flags that the slow export generation runs inline in the request path instead of on a queue (Principle 19)", "passed": true, "evidence": "Blocking issue 3: 'The export is generated synchronously inside the request'; recommends enqueueing a job and returning 202."}, {"text": "Flags that creating an export is not idempotent, so a retried POST creates duplicate records (Principle 15)", "passed": false, "evidence": "Flags a quota race condition and stranded pending rows, but does not flag the create itself as non-idempotent or that a retry creates a duplicate."}, {"text": "Gives a concrete, specific remediation for each flagged deviation and assigns a severity to it", "passed": true, "evidence": "Each issue has a concrete fix with code and is grouped under an explicit severity heading."}, {"text": "Cites the appsmith-v2 principle numbers behind each finding rather than only generic commentary", "passed": false, "evidence": "No principle numbers; advice is generic ('Most FastAPI codebases...', 'Check how other route files...')."}], "summary": {"passed": 4, "failed": 5, "total": 9, "pass_rate": 0.4444}}}, {"id": "eval-3-sitemap-agent-shape-with_skill-run-1", "prompt": "(No prompt found)", "eval_id": null, "outputs": [{"name": "guidance-answer.md", "type": "text", "content": "# Gut-check: SitemapAgent shape\n\nShort version: the *capability* is fine to want, but the *shape* you've drawn has two things that cut against how the Kite agentic system is built. Both are fixable, and the fix actually makes the feature smaller.\n\nI checked this against the Kite Architecture Compass \u2014 specifically the **Specialised Agents**, **Skills**, and **Tools** components, and the agentic-system principles behind them.\n\n## Problem 1 \u2014 SEO agent calling SitemapAgent directly breaks hub-and-spoke\n\nThis is the bigger one, and it's blocking-tier.\n\n> **Principle 38 \u2014 Hub-and-spoke orchestration through a single mediator.** \"One orchestrator agent owns the user conversation and is the only component that decides what happens next; specialised agents, routines, and services own implementation detail and never coordinate each other directly.\"\n\n> **Principle 4 \u2014 Loose coupling.** For Specialised Agents specifically: \"They communicate via tool results and persisted state, not direct calls. The orchestrator and its specialist agents never call each other directly.\"\n\nYour plan has the SEO agent *deciding a sitemap is needed* and then *invoking SitemapAgent itself*. That makes the SEO agent a mini-orchestrator \u2014 a spoke coordinating another spoke. In this codebase the spokes are deliberately kept independent and replaceable precisely because they don't know about each other. The moment SEO holds a reference to SitemapAgent, you've created a coupling that the architecture spends real effort avoiding.\n\nThe correct shape: the SEO agent does not call anything. If, in the course of its work, it determines a sitemap is needed, that determination flows *back to the orchestrator* (via its tool result / persisted state), and the **orchestrator** decides to dispatch the sitemap work next. All coordination flows through the one hub. This keeps SEO and the sitemap capability independently testable and independently replaceable.\n\n## Problem 2 \u2014 A whole new agent is probably the wrong layer for this\n\nBefore adding an agent at all, the catalogue says to start lower:\n\n> **Principle 41 \u2014 Skill-first extension.** \"New capability is added at the lowest-power layer that can carry it. Prefer extending or adding a skill (instructions and routing) before writing new code; move deterministic logic into services and tools; reserve agent/loop code for genuinely iterative work. The question for any new capability is 'can a skill do this?' before 'what code do I write?'.\"\n\nNow look at what sitemap generation actually is. You described it as: crawl the app's known routes, format them into XML. That is **deterministic work** \u2014 there is a finite, knowable set of routes for a deployed app, and XML sitemap formatting is a fixed, spec-defined transformation. There is no genuine reasoning loop here; there's no iterative \"try, observe, adjust\" cycle that needs an LLM in the loop.\n\n> **Principle 6 \u2014 Single responsibility** and the Tools entry: tools \"validate input, delegate to one primary callee, translate the result,\" with \"deterministic business logic in services, not in prompts or tools.\"\n\nSo the natural decomposition is:\n\n- **A service** (Backend Services, Principle 2 \u2014 thick core) that owns the actual logic: enumerate the deployed app's routes and render the XML sitemap. This is plain deterministic code. It's unit-testable without an LLM.\n- **A tool** that is a thin adapter over that service \u2014 validates input, calls the one service, returns the `ToolResult` / `ToolError` envelope (Principle 7).\n- Optionally **a skill** if there's instruction/routing nuance about *when* a sitemap should be produced \u2014 but only if that judgment genuinely needs to live in an instruction bundle.\n\nPutting the crawling and XML formatting \"inside the new agent's reasoning loop\" is the part to drop. A reasoning loop wrapped around deterministic work just makes the work slower, costlier (every loop step is context + tokens \u2014 Principle 39, context economy), and non-deterministic where it should be exact. An XML sitemap that's *almost* right because the model formatted it freehand is a defect; a service that emits it is correct every time.\n\nA SitemapAgent would only be justified if producing the sitemap were genuinely open-ended and iterative \u2014 e.g. it had to discover routes by exploring an app it has no manifest for, reacting to what it finds. From your description that's not the case. If it later turns out to be, that's the moment to introduce the agent \u2014 not now (Principle 9, YAGNI \u2014 earn every abstraction).\n\n## Recommended shape\n\n1. **Sitemap-generation service** \u2014 deterministic route enumeration + XML rendering. Lives in `backend/app/services/`. The thick core.\n2. **A thin tool** over that service, returning the standard `ToolResult` envelope.\n3. **The orchestrator** decides when to invoke that tool \u2014 it is the only thing that decides \"what happens next.\"\n4. **The SEO agent** never calls the sitemap path. If SEO concludes a sitemap is warranted, that conclusion goes back to the orchestrator in its result, and the orchestrator dispatches the tool. No spoke-to-spoke call.\n5. Add a **skill** only if there's real instructional nuance about *when/how* to produce a sitemap that's worth disclosing on demand.\n\nThis is strictly less code than your plan (no new agent, no new reasoning loop), it's deterministically testable, and it keeps SEO and the sitemap capability decoupled.\n\n## If you still want an agent\n\nIf there's context I'm missing and the sitemap work really is iterative enough to need an agent, that's allowed \u2014 but it's a **deviation**, and the deviation rule applies: don't slip it in. Name what makes the work genuinely non-deterministic, write down why a service+tool can't carry it, and record that rationale in the PR description or a decision record (Principle 37). And even then, the hub-and-spoke point in Problem 1 still stands without exception \u2014 the orchestrator dispatches it, not the SEO agent.\n\n## One caveat on coverage\n\nThe compass tells me clearly *where* this capability should live (service/tool, orchestrator-dispatched) and *what it must not do* (spoke-to-spoke calls). It does not contain a sitemap-specific or route-crawling-specific standard \u2014 there isn't an existing pattern in the catalogue for \"how Kite enumerates a deployed app's routes.\" So treat the route-enumeration mechanics as a normal design decision within the service layer; the architecture just requires that it be a service, deterministic, and tested (Principle 34).\n"}], "grading": {"expectations": [{"text": "Flags that the SEO agent calling the new agent directly violates hub-and-spoke orchestration (Principle 38)", "passed": true, "evidence": "'Problem 1' quotes Principle 38 and Principle 4; states the SEO agent calling SitemapAgent makes a spoke coordinate another spoke."}, {"text": "Recommends coordination flow through the orchestrator rather than direct agent-to-agent calls (Principle 4)", "passed": true, "evidence": "Line 17: the determination flows back to the orchestrator, which decides to dispatch; recommended shape step 4 forbids spoke-to-spoke calls."}, {"text": "Flags that deterministic sitemap-building should not live in an agent reasoning loop and belongs in a service or tool (Principles 2 and 6)", "passed": true, "evidence": "'Problem 2': deterministic crawl + XML belongs in a service (thick core, P2) with a thin tool (P6/P7); 'the reasoning loop is the part to drop.'"}, {"text": "Raises skill-first extension \u2014 a skill, tool, or service should be considered before a new agent (Principle 41)", "passed": true, "evidence": "Problem 2 quotes Principle 41 verbatim and applies the lowest-power-layer ladder; recommended shape step 5 adds a skill only if real instructional nuance exists."}, {"text": "Concludes that the proposed shape is off and gives a concrete recommended alternative shape", "passed": true, "evidence": "Concludes the shape cuts against how the Kite agentic system is built and provides a numbered 'Recommended shape'."}, {"text": "Grounds the critique in the appsmith-v2 principles catalogue and cites specific principle numbers", "passed": true, "evidence": "Cites P38, P4, P41, P6, P2, P9, P39, P34, P37 and quotes the catalogue."}], "summary": {"passed": 6, "failed": 0, "total": 6, "pass_rate": 1.0}}}, {"id": "eval-3-sitemap-agent-shape-without_skill-run-1", "prompt": "(No prompt found)", "eval_id": null, "outputs": [{"name": "guidance-answer.md", "type": "text", "content": "# Gut-check: SitemapAgent shape\n\nShort version: the *idea* of a dedicated sitemap capability is reasonable, but two parts of the proposed shape are likely to bite you. One is an architectural smell (agent-to-agent direct calls), the other is a workload mismatch (putting crawling + XML formatting inside a reasoning loop). Let me walk through both and suggest an alternative.\n\n## 1. SEO agent calling SitemapAgent directly \u2014 avoid this\n\nHaving one specialized agent reach in and invoke another specialized agent creates a tight, hidden coupling that tends to get expensive fast:\n\n- **Hidden control flow.** The orchestrator no longer has a complete picture of what work is happening. If the SEO agent silently spawns SitemapAgent, then debugging, tracing, cost accounting, and timeout/retry policy all get murky \u2014 you have a sub-call that doesn't show up where the rest of orchestration lives.\n- **A coupling graph that doesn't scale.** Today it's SEO \u2192 Sitemap. Tomorrow something else wants sitemaps too (a deploy hook, a \"publish\" flow, a content agent). If each caller wires a direct dependency, you get an N\u00d7N mesh of agents knowing about each other. The orchestrator exists precisely to be the hub so agents don't need to.\n- **Reuse gets blocked.** A sitemap is a generally useful artifact. If it's only reachable *through* the SEO agent's reasoning, every other consumer has to route through SEO-specific logic (and pay for SEO's reasoning tokens) to get it.\n- **Error handling leaks.** When SitemapAgent fails, the SEO agent now owns that failure mid-reasoning. Recovery, partial results, and retries become the SEO agent's problem instead of the orchestrator's, which is the wrong place for it.\n\n**Better:** keep agent invocation decisions with the orchestrator. The SEO agent shouldn't *call* SitemapAgent \u2014 it should *signal a need* (\"a sitemap should be generated/refreshed for this app\") and let the orchestrator decide whether to dispatch the sitemap work. That keeps the dependency graph a star, not a mesh, and keeps all dispatch/trace/cost in one place.\n\n## 2. Crawling + XML formatting inside a reasoning loop \u2014 also avoid this\n\nThis is the bigger concern. Generating a sitemap is, at its core, **deterministic mechanical work**:\n\n- Enumerate the app's routes/pages (you almost certainly already have this \u2014 appsmith-style platforms keep an explicit page/route registry in app metadata; you should read that, not \"crawl\").\n- Apply filters (exclude auth-gated, draft, or non-indexable pages).\n- Emit well-formed XML conforming to the `sitemaps.org` schema (`<urlset>`, `<url>`, `<loc>`, optional `<lastmod>`, `<changefreq>`, `<priority>`).\n\nNone of that benefits from LLM reasoning, and putting it in a reasoning loop actively hurts you:\n\n- **Correctness.** An LLM emitting raw XML can produce subtly malformed output \u2014 unescaped `&`, wrong namespace, dropped entries, hallucinated URLs. XML generation should go through a serializer/template that is correct by construction.\n- **Cost and latency.** You'd pay tokens to \"reason\" about a loop-and-format task. For a large app this is slow and expensive for zero added intelligence.\n- **Non-determinism.** The same app could yield different sitemaps run-to-run. Sitemaps should be reproducible.\n- **Scale.** Hundreds of routes won't fit comfortably or reliably in a model context.\n\n**Better:** the sitemap *generation* should be a plain deterministic function/tool \u2014 given the app's route registry and base URL, return validated XML. No model in the hot path.\n\n## So do you even need a \"SitemapAgent\"?\n\nProbably not as a full reasoning agent. Ask what actual *judgment* is required:\n\n- If the answer is \"almost none \u2014 just enumerate routes and format XML,\" then this should be a **tool** (e.g. `generate_sitemap(appId)`), not an agent. The orchestrator (or whatever flow) calls the tool directly.\n- An agent is only warranted if there's genuine reasoning: deciding *which* pages are SEO-worthy, inferring `priority`/`changefreq` from page semantics, handling localized/alternate URLs, reconciling against an existing sitemap. Even then, the agent should *decide* and then *call the deterministic tool* to actually produce the XML \u2014 the agent orchestrates, the tool emits.\n\nA useful litmus test: **agents reason; tools do.** Crawling and XML serialization are \"do.\" If a step has a single correct output for a given input, it belongs in a tool.\n\n## Recommended shape\n\n```\nOrchestrator\n  \u251c\u2500\u2500 SEO agent        \u2192 reasons about SEO needs; emits a request:\n  \u2502                      \"generate/refresh sitemap for app X\"\n  \u2502                      (does NOT call another agent)\n  \u2502\n  \u251c\u2500\u2500 [optional] SitemapAgent  \u2192 only if real judgment is needed\n  \u2502                              (page selection, priority inference);\n  \u2502                              it reasons, then calls the tool below\n  \u2502\n  \u2514\u2500\u2500 generate_sitemap(appId)  \u2192 deterministic tool\n                                 reads app route registry,\n                                 filters non-indexable pages,\n                                 emits schema-valid XML\n```\n\nDecision flow:\n1. SEO agent concludes a sitemap is needed \u2192 returns that as a result/intent to the orchestrator.\n2. Orchestrator dispatches sitemap work. If selection logic is trivial, it calls `generate_sitemap` directly and skips the agent entirely.\n3. The deterministic tool builds and validates the XML.\n\n## Concrete suggestions\n\n- **Don't crawl \u2014 read metadata.** A deployed app on this kind of platform exposes its pages/routes in app config. Pull from that source of truth; HTTP-crawling your own app is slower, flakier, and can miss or duplicate routes.\n- **Validate output.** Run generated XML against the sitemap XSD (or at minimum a well-formedness + namespace check) before publishing.\n- **Handle the >50,000-URL / 50MB limit.** Large apps need a sitemap *index* pointing to multiple sitemap files. Bake that into the tool.\n- **Make `lastmod` meaningful.** Derive it from real page/app modification timestamps in metadata, not \"now\" \u2014 wrong `lastmod` is worse than none.\n- **Decide who triggers refresh.** A sitemap is usually best regenerated on deploy/publish, not on every SEO-agent run. Consider a deploy hook calling the tool, with the SEO agent only requesting an ad-hoc refresh.\n\n## Bottom line\n\n- The need is real; the *packaging* is off.\n- **Don't** have the SEO agent call another agent directly \u2014 have it return an intent and let the orchestrator dispatch. Keep the agent graph a star.\n- **Don't** put crawling/XML formatting in a reasoning loop \u2014 make it a deterministic tool that reads the route registry and emits schema-valid XML.\n- A standalone `SitemapAgent` is only justified if there's genuine page-selection judgment; otherwise ship `generate_sitemap` as a tool and you're done.\n"}], "grading": {"expectations": [{"text": "Flags that the SEO agent calling the new agent directly violates hub-and-spoke orchestration (Principle 38)", "passed": true, "evidence": "Section 1 'SEO agent calling SitemapAgent directly \u2014 avoid this' explains hidden control flow and an NxN coupling mesh vs a star."}, {"text": "Recommends coordination flow through the orchestrator rather than direct agent-to-agent calls (Principle 4)", "passed": true, "evidence": "Line 14: the SEO agent should 'signal a need' and 'let the orchestrator decide whether to dispatch the sitemap work.'"}, {"text": "Flags that deterministic sitemap-building should not live in an agent reasoning loop and belongs in a service or tool (Principles 2 and 6)", "passed": true, "evidence": "Section 2: crawling + XML formatting is 'deterministic mechanical work'; recommends a deterministic tool with 'no model in the hot path.'"}, {"text": "Raises skill-first extension \u2014 a skill, tool, or service should be considered before a new agent (Principle 41)", "passed": false, "evidence": "Weighs tool vs agent but never raises a skill as the lowest-power option or the 'can a skill do this?' framing; no skill-first concept."}, {"text": "Concludes that the proposed shape is off and gives a concrete recommended alternative shape", "passed": true, "evidence": "Provides a 'Recommended shape' diagram and a 'Bottom line' concluding the packaging is off."}, {"text": "Grounds the critique in the appsmith-v2 principles catalogue and cites specific principle numbers", "passed": false, "evidence": "No principle numbers; generic reasoning ('agents reason; tools do')."}], "summary": {"passed": 4, "failed": 2, "total": 6, "pass_rate": 0.6667}}}], "previous_feedback": {}, "previous_outputs": {}, "benchmark": {"metadata": {"skill_name": "kite-arch-compass", "skill_path": "<path/to/skill>", "executor_model": "<model-name>", "analyzer_model": "<model-name>", "timestamp": "2026-05-23T09:00:43Z", "evals_run": [1, 2, 3], "runs_per_configuration": 3}, "runs": [{"eval_id": 1, "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 7, "failed": 0, "total": 7, "time_seconds": 34.4, "tokens": 32963, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Identifies the work as belonging to the Deployment & Domains area of the platform", "passed": true, "evidence": "Line 5: names the work as spanning Backend Services, Deployment & Domains, and Celery & Background Workers."}, {"text": "Recommends modeling the flow as a resumable state machine that commits each transition (Principle 16), not one blocking function", "passed": true, "evidence": "Dedicated 'Principle 16' section (lines 9-15) and line 34: 'Replace the one blocking finalize_domain ... with a small resumable state machine.'"}, {"text": "Recommends the domain move through explicit persisted intermediate states that can resume after a crash", "passed": true, "evidence": "Step 1 (line 36): define explicit states dns_verified -> gsc_pending -> gsc_verified -> active, each transition committed so a crash leaves recoverable state."}, {"text": "Recommends running the slow external GSC verification work asynchronously off the request path (Principle 19)", "passed": true, "evidence": "'Principle 19' section (lines 17-19) and step 3 (line 45): GSC poll runs as a Celery task; route returns immediately; client polls."}, {"text": "Recommends bounding the verification retries with backoff and an explicit terminal state (Principle 21)", "passed": true, "evidence": "'Principle 21' section (lines 21-23): finite, backed-off retry terminating in retry_exhausted."}, {"text": "Explicitly advises against the user's proposed single blocking finalize_domain function as written", "passed": true, "evidence": "Line 3 and line 34 explicitly say the single-function plan does not fit and should be replaced."}, {"text": "Grounds the advice in the appsmith-v2 principles catalogue and cites specific principle numbers", "passed": true, "evidence": "Cites P16, P19, P21, P15, P17, P2, P6, P20, P5, P8, P37 and quotes the contract throughout."}], "notes": []}, {"eval_id": 2, "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 9, "failed": 0, "total": 9, "time_seconds": 47.4, "tokens": 43083, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Produces a structured conformance review report with a clear overall verdict", "passed": true, "evidence": "Titled 'Conformance Report' with 'Verdict: Non-conformant'; follows the SKILL.md template (Deviations / Conformant / Not applicable / Summary)."}, {"text": "Identifies the relevant component(s): Backend HTTP Routes and the service/database layer", "passed": true, "evidence": "Lists 'Component(s) reviewed': Backend HTTP Routes, Backend Services, Database Modules & Models, Celery & Background Workers."}, {"text": "Flags that business logic lives in the route handler, violating the thin-edges standard (Principle 2)", "passed": true, "evidence": "Deviation 2 [P2] Thin edges, thick core: format validation, quota computation, record creation, and generation are all inline in the handler."}, {"text": "Flags that the route reaches directly into the database and models instead of delegating to a service (Principle 1)", "passed": true, "evidence": "Deviation 1 [P1]: the route imports get_session and the Export model, runs select() queries, and reaches past the service layer into database/ and models/."}, {"text": "Flags the missing typed Pydantic request and response schemas (Principle 7)", "passed": true, "evidence": "Deviation 3 [P7]: bare str args bind as query params and responses are untyped dicts; recommends Pydantic request/response models."}, {"text": "Flags that the slow export generation runs inline in the request path instead of on a queue (Principle 19)", "passed": true, "evidence": "Deviation 7 [P19]: write_export_file runs synchronously in the handler; recommends enqueueing a Celery task and returning 202."}, {"text": "Flags that creating an export is not idempotent, so a retried POST creates duplicate records (Principle 15)", "passed": true, "evidence": "Deviation 8 [P15] and 11: no idempotency key; a retried request creates a second export row; recommends create-or-return-existing semantics."}, {"text": "Gives a concrete, specific remediation for each flagged deviation and assigns a severity to it", "passed": true, "evidence": "Every deviation entry has an explicit Severity (blocking/should-fix/minor) and a concrete Remediation."}, {"text": "Cites the appsmith-v2 principle numbers behind each finding rather than only generic commentary", "passed": true, "evidence": "Every finding is tagged with its principle number ([P1], [P2], [P7], [P19], [P15], plus P28, P20, P9, P5, P17, P8, P12)."}], "notes": []}, {"eval_id": 3, "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 6, "failed": 0, "total": 6, "time_seconds": 27.4, "tokens": 32435, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Flags that the SEO agent calling the new agent directly violates hub-and-spoke orchestration (Principle 38)", "passed": true, "evidence": "'Problem 1' quotes Principle 38 and Principle 4; states the SEO agent calling SitemapAgent makes a spoke coordinate another spoke."}, {"text": "Recommends coordination flow through the orchestrator rather than direct agent-to-agent calls (Principle 4)", "passed": true, "evidence": "Line 17: the determination flows back to the orchestrator, which decides to dispatch; recommended shape step 4 forbids spoke-to-spoke calls."}, {"text": "Flags that deterministic sitemap-building should not live in an agent reasoning loop and belongs in a service or tool (Principles 2 and 6)", "passed": true, "evidence": "'Problem 2': deterministic crawl + XML belongs in a service (thick core, P2) with a thin tool (P6/P7); 'the reasoning loop is the part to drop.'"}, {"text": "Raises skill-first extension \u2014 a skill, tool, or service should be considered before a new agent (Principle 41)", "passed": true, "evidence": "Problem 2 quotes Principle 41 verbatim and applies the lowest-power-layer ladder; recommended shape step 5 adds a skill only if real instructional nuance exists."}, {"text": "Concludes that the proposed shape is off and gives a concrete recommended alternative shape", "passed": true, "evidence": "Concludes the shape cuts against how the Kite agentic system is built and provides a numbered 'Recommended shape'."}, {"text": "Grounds the critique in the appsmith-v2 principles catalogue and cites specific principle numbers", "passed": true, "evidence": "Cites P38, P4, P41, P6, P2, P9, P39, P34, P37 and quotes the catalogue."}], "notes": []}, {"eval_id": 1, "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.7143, "passed": 5, "failed": 2, "total": 7, "time_seconds": 27.1, "tokens": 14989, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Identifies the work as belonging to the Deployment & Domains area of the platform", "passed": false, "evidence": "Discusses custom-domain finalization but never locates it in the platform's component structure; gives generic 'Rails/Django/Node service' advice."}, {"text": "Recommends modeling the flow as a resumable state machine that commits each transition (Principle 16), not one blocking function", "passed": true, "evidence": "Lines 36-37: 'Model finalization as distinct steps driven by background jobs and the domain's status column'; recommends guarded state transitions."}, {"text": "Recommends the domain move through explicit persisted intermediate states that can resume after a crash", "passed": true, "evidence": "Recommends statuses pending -> dns_pending -> dns_verified -> gsc_pending -> active and 'Persist status transitions, not just the final value' (line 63)."}, {"text": "Recommends running the slow external GSC verification work asynchronously off the request path (Principle 19)", "passed": true, "evidence": "Lines 48-49: 'let the queue hold the wait, not a thread'; enqueue jobs rather than block."}, {"text": "Recommends bounding the verification retries with backoff and an explicit terminal state (Principle 21)", "passed": true, "evidence": "Line 61: 'Bounded retries + a terminal failure state' with a max attempt count."}, {"text": "Explicitly advises against the user's proposed single blocking finalize_domain function as written", "passed": true, "evidence": "Line 3 'the part I'd push back on'; line 80 'don't let it be a synchronous function that blocks on Google.'"}, {"text": "Grounds the advice in the appsmith-v2 principles catalogue and cites specific principle numbers", "passed": false, "evidence": "No principle numbers; explicitly generic \u2014 'I don't have your actual source', 'Rails/Django/Node service, etc.'"}], "notes": []}, {"eval_id": 2, "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.4444, "passed": 4, "failed": 5, "total": 9, "time_seconds": 26.7, "tokens": 16125, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Produces a structured conformance review report with a clear overall verdict", "passed": true, "evidence": "Structured review grouped into Blocking / Should fix / Minor with a Summary stating 'I can't approve it as-is.'"}, {"text": "Identifies the relevant component(s): Backend HTTP Routes and the service/database layer", "passed": false, "evidence": "Reviews the file directly; does not identify named platform components or a service/database layer."}, {"text": "Flags that business logic lives in the route handler, violating the thin-edges standard (Principle 2)", "passed": false, "evidence": "Flags the synchronous generation and quota inefficiency but does not frame business-logic-in-the-route as a thin-edges violation or recommend extracting a service."}, {"text": "Flags that the route reaches directly into the database and models instead of delegating to a service (Principle 1)", "passed": false, "evidence": "Flags the DB session handling but accepts the route running raw select() queries; does not flag the missing service/db layer or the layering violation."}, {"text": "Flags the missing typed Pydantic request and response schemas (Principle 7)", "passed": true, "evidence": "Minor section: 'No response model ... Add request/response models for validation'; suggests an Enum for export_format."}, {"text": "Flags that the slow export generation runs inline in the request path instead of on a queue (Principle 19)", "passed": true, "evidence": "Blocking issue 3: 'The export is generated synchronously inside the request'; recommends enqueueing a job and returning 202."}, {"text": "Flags that creating an export is not idempotent, so a retried POST creates duplicate records (Principle 15)", "passed": false, "evidence": "Flags a quota race condition and stranded pending rows, but does not flag the create itself as non-idempotent or that a retry creates a duplicate."}, {"text": "Gives a concrete, specific remediation for each flagged deviation and assigns a severity to it", "passed": true, "evidence": "Each issue has a concrete fix with code and is grouped under an explicit severity heading."}, {"text": "Cites the appsmith-v2 principle numbers behind each finding rather than only generic commentary", "passed": false, "evidence": "No principle numbers; advice is generic ('Most FastAPI codebases...', 'Check how other route files...')."}], "notes": []}, {"eval_id": 3, "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.6667, "passed": 4, "failed": 2, "total": 6, "time_seconds": 23.7, "tokens": 15010, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Flags that the SEO agent calling the new agent directly violates hub-and-spoke orchestration (Principle 38)", "passed": true, "evidence": "Section 1 'SEO agent calling SitemapAgent directly \u2014 avoid this' explains hidden control flow and an NxN coupling mesh vs a star."}, {"text": "Recommends coordination flow through the orchestrator rather than direct agent-to-agent calls (Principle 4)", "passed": true, "evidence": "Line 14: the SEO agent should 'signal a need' and 'let the orchestrator decide whether to dispatch the sitemap work.'"}, {"text": "Flags that deterministic sitemap-building should not live in an agent reasoning loop and belongs in a service or tool (Principles 2 and 6)", "passed": true, "evidence": "Section 2: crawling + XML formatting is 'deterministic mechanical work'; recommends a deterministic tool with 'no model in the hot path.'"}, {"text": "Raises skill-first extension \u2014 a skill, tool, or service should be considered before a new agent (Principle 41)", "passed": false, "evidence": "Weighs tool vs agent but never raises a skill as the lowest-power option or the 'can a skill do this?' framing; no skill-first concept."}, {"text": "Concludes that the proposed shape is off and gives a concrete recommended alternative shape", "passed": true, "evidence": "Provides a 'Recommended shape' diagram and a 'Bottom line' concluding the packaging is off."}, {"text": "Grounds the critique in the appsmith-v2 principles catalogue and cites specific principle numbers", "passed": false, "evidence": "No principle numbers; generic reasoning ('agents reason; tools do')."}], "notes": []}], "run_summary": {"with_skill": {"pass_rate": {"mean": 1.0, "stddev": 0.0, "min": 1.0, "max": 1.0}, "time_seconds": {"mean": 36.4, "stddev": 10.1489, "min": 27.4, "max": 47.4}, "tokens": {"mean": 36160.3333, "stddev": 6001.015, "min": 32435, "max": 43083}}, "without_skill": {"pass_rate": {"mean": 0.6085, "stddev": 0.1441, "min": 0.4444, "max": 0.7143}, "time_seconds": {"mean": 25.8333, "stddev": 1.8583, "min": 23.7, "max": 27.1}, "tokens": {"mean": 15374.6667, "stddev": 649.8926, "min": 14989, "max": 16125}}, "delta": {"pass_rate": "+0.39", "time_seconds": "+10.6", "tokens": "+20786"}}, "notes": []}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>

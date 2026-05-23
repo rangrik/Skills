@@ -1,0 +1,16 @@
+{
+  "eval_id": 1,
+  "eval_name": "forgot-password-spec",
+  "prompt": "We're adding a 'forgot password' flow to our web app. Right now if someone forgets their password they have to email support, which is a pain for everyone. The flow I'm picturing: on the login page there's a 'Forgot password?' link, the user clicks it, types in their email, and we send them a reset link. They click the link, land on a page where they pick a new password, confirm it, and then they're logged in and back on their dashboard. Can you turn this into a proper behavior spec? I want something I can hand to my eng and QA team.",
+  "assertions": [
+    "Produces both deliverables — a markdown behavior spec (.md) and a Cucumber .feature file",
+    "The .feature file is well-formed Gherkin (Feature declaration, Scenario blocks, Given/When/Then steps)",
+    "Happy-path scenarios are tagged @happy-path and match the forgot-password flow described in the prompt",
+    "The spec includes a coverage checklist enumerating all 14 deviation taxonomy categories",
+    "Deviation scenarios span at least 8 distinct deviation categories",
+    "Deviation scenario Then-steps specify concrete graceful product behavior, not merely that an error occurred",
+    "Genuine product decisions are tagged @assumption and consolidated into a Flagged Assumptions section",
+    "The .md spec includes the narrative sections Problem & Intent, Actors, Glossary, Preconditions, and Scope",
+    "Deviation scenarios cover an expired/reused reset link, an unregistered email, rate-limited reset requests, and a weak or mismatched new password"
+  ]
+}

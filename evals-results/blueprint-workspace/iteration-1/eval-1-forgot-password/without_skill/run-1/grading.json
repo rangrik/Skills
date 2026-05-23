@@ -1,0 +1,14 @@
+{
+  "expectations": [
+    {"text": "Produces both deliverables — a markdown behavior spec (.md) and a Cucumber .feature file", "passed": false, "evidence": "Output dir contains only forgot-password-behavior-spec.md; no .feature file was produced."},
+    {"text": "The .feature file is well-formed Gherkin (Feature declaration, Scenario blocks, Given/When/Then steps)", "passed": false, "evidence": "No .feature file exists. Gherkin appears only inside a code block in Section 10 of the .md."},
+    {"text": "Happy-path scenarios are tagged @happy-path and match the forgot-password flow described in the prompt", "passed": false, "evidence": "0 @happy-path tags anywhere. The happy path is a numbered prose list (Section 5); the Section 10 Gherkin scenarios are untagged."},
+    {"text": "The spec includes a coverage checklist enumerating all 14 deviation taxonomy categories", "passed": false, "evidence": "No 14-category taxonomy checklist. Section 9 is an ad hoc 17-row edge-case table chosen by free association."},
+    {"text": "Deviation scenarios span at least 8 distinct deviation categories", "passed": true, "evidence": "The 17-row edge-case table touches ~10 categories (invalid input, state conflict, concurrency, time/expiry, duplicate/retry, adversarial, auth/permission, external failure, connectivity, out-of-order)."},
+    {"text": "Deviation scenario Then-steps specify concrete graceful product behavior, not merely that an error occurred", "passed": true, "evidence": "The edge-case table's 'Expected behavior' column gives concrete graceful resolutions (e.g. expired link shows an error state with a 'Request a new link' action)."},
+    {"text": "Genuine product decisions are tagged @assumption and consolidated into a Flagged Assumptions section", "passed": false, "evidence": "0 @assumption tags. Section 11 'Open Questions' lists 8 decisions in prose but they are not tagged on scenarios or tied back to them."},
+    {"text": "The .md spec includes the narrative sections Problem & Intent, Actors, Glossary, Preconditions, and Scope", "passed": false, "evidence": "Has Summary, Goals/Non-Goals, Glossary — but no explicit Actors section and no explicit Preconditions section."},
+    {"text": "Deviation scenarios cover an expired/reused reset link, an unregistered email, rate-limited reset requests, and a weak or mismatched new password", "passed": false, "evidence": "Expired link, reused link, unregistered email and weak/mismatched password are covered, but rate-limited reset requests are described only in prose (Section 8), not enumerated as a deviation scenario."}
+  ],
+  "summary": {"passed": 2, "failed": 7, "total": 9, "pass_rate": 0.222}
+}
