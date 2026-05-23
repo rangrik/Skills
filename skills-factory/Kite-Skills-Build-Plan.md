@@ -166,9 +166,21 @@ HARD CONSTRAINTS:
 
 **1. kite-planner** — Skill 1, lines 114–239.
 
-- STEP 3: Create `references/plan-file.md` with the shared plan-file schema from
-  Section 0 (the Template fenced block, lines 50–97, **plus** the "Ownership and
-  status flow" subsection, lines 99–108). Copy faithfully.
+- STEP 3: Create `references/plan-file.md` — the canonical plan-file definition,
+  assembled from `Kite-Skill-Prompts.md` Section 0 as exactly three parts, in
+  this order, copied verbatim:
+  1. **State-machine framing** — the paragraph at lines 44–46 ("The plan file is
+     a single Markdown document. It doubles as the pipeline's **state
+     machine**…").
+  2. **Template** — the `### Template` heading and its fenced block, lines 48–97.
+  3. **Ownership and status flow** — the `### Ownership and status flow` heading
+     and its bullets, lines 99–108.
+  Prepend a single `# Plan file` H1 so the file stands on its own; add nothing
+  else. **Do NOT include** Section 0's heading or its opening paragraph (lines
+  35–43, "This is **not a skill**… single canonical definition.") — that is
+  build-time scaffolding guidance for whoever installs the skills, not part of
+  the schema the skill reads at runtime. The four skills that bundle this file
+  each get a byte-for-byte identical copy.
 - STEP 4 evals: given a blueprint + system-design doc fixture, produces a plan
   file that (a) extracts every scenario incl. corner cases as Gherkin, (b)
   orders scenarios for reuse with stated reasoning, (c) writes code-blind
@@ -253,6 +265,11 @@ as authored-but-unrun and record the limitation.
   untouched.
 - **Verbatim check:** diff each new `SKILL.md` body against its source fenced
   block in `Kite-Skill-Prompts.md` — must match exactly (frontmatter included).
+- **plan-file.md check:** confirm each `references/plan-file.md` contains exactly
+  the three parts — state-machine framing, the `### Template` block, and
+  `### Ownership and status flow` — preceded only by the `# Plan file` H1, and
+  contains **none** of Section 0's "This is **not a skill**…" scaffolding
+  paragraph; confirm the four copies are byte-for-byte identical.
 - **Frontmatter/validity:** every `SKILL.md` `name:` matches its directory; YAML
   parses (run `skill-creator`'s `quick_validate.py` if available).
 - **Triggering:** the skills appear in the available-skills list on the next

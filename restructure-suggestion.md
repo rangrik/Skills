@@ -1,136 +1,214 @@
 # Repository Restructure Suggestion
 
+_Last reviewed: 2026-05-23_
+
 ## Goal
 
-Restructure this repo around a self-learning skill-improvement loop where **everything is committed**: skill source, eval definitions, eval fixtures, generated run outputs, grading artifacts, review reports, and daily summaries.
+Maintain this repository as a long-lived home for agent skills and the learning
+history around those skills.
 
-The repo should become both:
+The repo should serve two jobs at the same time:
 
-1. the source of truth for the skills, and
-2. the historical learning journal showing how those skills improved over time.
+1. **Source of truth for executable skills** — public skills, private skills,
+   draft skills, and reference/vendor skill material are easy to distinguish.
+2. **Historical learning journal** — eval definitions, fixtures, run outputs,
+   grading artifacts, review reports, and summaries are preserved so skill
+   quality can be compared over time.
 
-Because of that goal, the structure should not treat generated eval outputs as disposable. They should be organized clearly and committed intentionally.
+Because of that second goal, generated eval outputs should not be treated as
+throwaway build artifacts. They should be tracked intentionally and organized so
+future maintainers can tell what was run, why, and what changed afterward.
+
+## Current State Snapshot
+
+The repo has already moved beyond the previous version of this document. Current
+state:
+
+| Path | Current role | Long-term note |
+| --- | --- | --- |
+| `blueprint/` | Public root skill. README advertises `npx skills add rangrik/Skills/blueprint`. | Keep at root unless the public publishing/install path changes. |
+| `system-design/` | Public root skill with references and eval definitions. | Keep at root. Fix eval fixture paths; current `files` point at workspace-style inputs. |
+| `private-skills/kite-arch-compass/` | Private/internal Kite architecture skill with evals and references. | Keep separate from public root skills. |
+| `wip/backend-standards/` | Draft/WIP backend standards skill. | Do not sync or publish by default. Promote to `private-skills/` only when ready. |
+| `by-anthropic/skill-creator/` | Tracked reference/vendor copy of Anthropic's skill creator. | Treat as reference material, not a repo-published skill. Current sync script ignores `by-anthropic`. |
+| `by-openai/skill-creator/` | Tracked reference/vendor copy of OpenAI's skill creator. | Treat as reference material, not a repo-published skill. Current sync script ignores `by-openai`. |
+| `evals-results/` | Tracked historical eval outputs for `blueprint`, `system-design`, and `kite-arch-compass`. | Preserve. New runs should move toward a normalized `eval-runs/` shape. |
+| `guides/` | Durable guide material. | Target: `docs/guides/`. |
+| `research/` | Durable research notes. | Target: `docs/research/`. |
+| `skills-factory/` | Active skill-factory planning workspace: generation/build plans, prompt drafts, lifecycle diagram, raw notes, and a comparison/gap analysis for future Kite pipeline skills. | Target: `docs/factory/`; decide where `raw` and the untracked comparison doc belong. |
+| `sync-skills.sh` | Links repo skills into local agent skill stores. | Move to `scripts/`, keep root wrapper if desired. Default should become public-only. |
+| `uninstall-skills.sh` | Removes installed repo skills from local agent skill stores. | Move to `scripts/`, keep root wrapper if desired. Keep discovery rules in sync with `sync-skills.sh`. |
+| `.gitignore` | Currently only ignores `.DS_Store`. | Good direction: keep minimal local-junk ignores only; do not ignore eval artifacts. |
+| `archive/` | Empty placeholder. | Remove if unused, or add `archive/README.md` explaining what belongs there. |
 
 ## Core Principles
 
-### 1. Commit everything
+### 1. Classify every top-level area by purpose
 
-Do not hide learning-loop artifacts in `.gitignore`. If a run produces inputs, outputs, reports, grading, feedback, or summaries, those files should be committed so the system can compare progress over time.
+Every directory should clearly be one of these categories:
 
-Recommended policy:
+- **Public skill** — installable/publishable skill source.
+- **Private skill** — executable locally/internal to a project, not public by default.
+- **WIP skill** — draft skill that should not be synced or published by default.
+- **Vendor/reference material** — copied examples or external skill creators used for study.
+- **Reusable eval material** — stable eval definitions and fixtures.
+- **Historical run output** — generated but intentionally committed run artifacts.
+- **Durable docs** — research, guides, and design notes.
+- **Automation** — scripts that maintain, sync, test, or report on the repo.
 
-- Keep `.gitignore` empty, or remove it.
-- Do not ignore `*-workspace/`, eval reports, feedback JSON, run outputs, timing files, or generated HTML.
-- Prefer moving generated outputs into a clear committed location instead of ignoring them.
+This is more important than whether a file was human-written or generated.
 
-### 2. Separate by purpose, not by whether Git tracks it
+### 2. Preserve public skill paths for now
 
-Everything is tracked, but directories should still clearly communicate intent:
-
-- `evals/` = reusable eval definitions
-- `fixtures/` = reusable eval inputs
-- `runs/` = historical execution artifacts
-- `reports/` = human-readable summaries and trend analysis
-- `docs/` = durable research, guides, and design notes
-- skill directories = executable/publishable skill source
-
-### 3. Preserve public skill paths for now
-
-The current README advertises install paths like:
+The README currently advertises root-level install paths such as:
 
 ```sh
 npx skills add rangrik/Skills/blueprint
 npx skills add rangrik/Skills
 ```
 
-Because of that, the least disruptive structure keeps public skills at the repo root for now:
+Keep public skills at the repo root until the publishing story is deliberately
+changed:
 
 ```text
 blueprint/
 system-design/
 ```
 
-A future cleanup could move skills under `skills/public/`, but that should only happen if the publishing/install workflow is updated at the same time.
+If the repo-wide install command would expose nested/vendor/private skills, stop
+advertising it or add a publishing guard before relying on it long term.
 
-### 4. Keep private/internal skills explicit
+### 3. Keep private, WIP, and vendor material visibly separate
 
-Private or local-only skills should stay separate from public skills:
+The repo now has three kinds of non-public skill-shaped content:
 
 ```text
-private-skills/
+private-skills/kite-arch-compass/
+wip/backend-standards/
+by-anthropic/skill-creator/
+by-openai/skill-creator/
 ```
 
-The sync script should ideally make private skill linking opt-in, so local/internal guidance is not accidentally treated as public publishing material.
+Do not let these collapse into one bucket. They have different maintenance
+rules:
 
-### 5. Make daily learning runs reproducible
+- `private-skills/` can be executable locally, but should be opt-in for sync.
+- `wip/` is draft material and should never sync by default.
+- `by-anthropic/` and `by-openai/` are vendor/reference material and should never
+  sync or publish as this repo's skills.
 
-Each learning-loop run should capture enough context to reproduce and understand it later:
+### 4. Track learning artifacts intentionally
 
-- what skill version ran
-- what commit it started from
-- what model/provider ran it
-- what eval definitions and fixtures were used
-- what outputs were produced
-- how grading/review judged those outputs
-- what improvement was made afterward
-- whether the next run improved or regressed
+The current repo already tracks eval outputs under `evals-results/`. Keep that
+policy. A run's outputs, grading, timing, benchmark files, review HTML, feedback,
+and summaries are part of the learning record.
 
-## Proposed Structure
+Recommended ignore policy:
 
-Recommended path-preserving target layout:
+- Keep `.gitignore` minimal.
+- Ignore local machine junk such as `.DS_Store`.
+- Do **not** ignore `evals-results/`, future `eval-runs/`, reports, grading JSON,
+  timing files, generated markdown, or review HTML.
+- Prefer moving generated outputs into a clear committed location instead of
+  hiding them.
+
+### 5. Separate reusable eval inputs from historical run outputs
+
+A stable eval definition should not depend on a generated workspace path.
+
+Reusable material belongs near the skill:
+
+```text
+system-design/evals/evals.json
+system-design/evals/fixtures/*.md
+private-skills/kite-arch-compass/evals/evals.json
+private-skills/kite-arch-compass/evals/fixtures/*
+```
+
+Run-specific copies and generated outputs belong in run history:
+
+```text
+evals-results/        # current legacy history
+eval-runs/            # recommended normalized history for new runs
+```
+
+### 6. Avoid silent duplicate sources of truth
+
+Some reference material exists both globally and inside a skill, for example the
+Kite engineering principles guide under `guides/` and the copied runtime version
+under `private-skills/kite-arch-compass/references/`.
+
+Pick one canonical source for each duplicated reference:
+
+- If the skill needs the file at runtime, make the skill-local copy canonical and
+  link to it from docs; or
+- if the docs copy is canonical, add a sync/check script that copies it into the
+  skill before publishing or local sync.
+
+Do not allow two independent copies to drift silently.
+
+## Recommended Target Layout
+
+Path-preserving target layout for the next phase:
 
 ```text
 README.md
 PUBLICATION.md
 restructure-suggestion.md
+.gitignore
 
 blueprint/
   SKILL.md
   references/
   evals/
     evals.json
-    fixtures/
+    fixtures/                 # optional; blueprint currently uses inline prompts
 
 system-design/
   SKILL.md
   references/
   evals/
     evals.json
-    fixtures/
+    fixtures/                 # stable blueprint/input fixtures
 
 private-skills/
-  backend-standards/
-    SKILL.md
-    references/
-    evals/
-      fixtures/
   kite-arch-compass/
     SKILL.md
     references/
     evals/
       evals.json
       fixtures/
+  kite-planner/               # planned, if generated from skills-factory
+  kite-research/              # planned, if generated from skills-factory
+  kite-implementation/        # planned, if generated from skills-factory
+  kite-scenario-check/        # planned, if generated from skills-factory
+  kite-feature-review/        # planned, if generated from skills-factory
+
+wip/
+  backend-standards/
+    SKILL.md
+    patterns.md
+    evals/                    # add before promotion, if useful
+
+vendor/                       # target name; current paths are by-anthropic/by-openai
+  anthropic/skill-creator/
+  openai/skill-creator/
 
 docs/
   guides/
   research/
   factory/
 
+evals-results/                # current tracked legacy history; keep until deliberately migrated
+
 eval-runs/
   2026-05-23/
     loop-001/
       manifest.json
+      summary.md
       blueprint/
-        inputs/
-        outputs/
-        grading/
-        reports/
       system-design/
-        inputs/
-        outputs/
-        grading/
-        reports/
-      daily-summary.md
+      kite-arch-compass/
 
 reports/
   daily/
@@ -138,53 +216,136 @@ reports/
 
 scripts/
   sync-skills.sh
+  uninstall-skills.sh
   run-learning-loop.sh
+  validate-repo.sh
+
+archive/                      # remove if unused; otherwise document policy
 ```
+
+Do not move public root skills (`blueprint/`, `system-design/`) until the README,
+publishing workflow, and any skills.sh expectations are updated together.
 
 ## Migration Recommendations
 
-### Phase 1 — Make tracking policy explicit
+### Phase 1 — Document boundaries before moving files
 
-- Empty or remove `.gitignore`.
-- Add a README section explaining that generated learning-loop artifacts are intentionally committed.
-- Add `PUBLICATION.md` describing what is public, private, experimental, and generated-but-committed.
+Add `PUBLICATION.md` with a simple classification table:
 
-### Phase 2 — Stabilize eval inputs
+- Public skills: `blueprint/`, `system-design/`.
+- Private skills: `private-skills/kite-arch-compass/`.
+- WIP skills: `wip/backend-standards/`.
+- Vendor/reference copies: `by-anthropic/skill-creator/`,
+  `by-openai/skill-creator/`.
+- Generated-but-committed history: `evals-results/`.
+- Durable docs: `guides/`, `research/`, `skills-factory/`.
 
-Move reusable eval fixtures into each skill's `evals/fixtures/` directory.
+Update `README.md` so it does not imply every `SKILL.md`-shaped thing in the repo
+is public. At minimum, list both public skills and point private/WIP/vendor
+readers to `PUBLICATION.md`.
 
-For example, `system-design/evals/evals.json` should reference:
+### Phase 2 — Harden skill discovery and local sync
 
-```text
-system-design/evals/fixtures/github-contributions-blueprint.md
-system-design/evals/fixtures/saved-views-blueprint.md
-system-design/evals/fixtures/weekly-digest-blueprint.md
-system-design/evals/fixtures/announcement-banner-blueprint.md
-system-design/evals/fixtures/collab-cursors-blueprint.md
+Current `sync-skills.sh` links root skills and private skills by default, while
+ignoring `by-anthropic` and `by-openai`. For long-term safety, change the default
+behavior:
+
+```sh
+./scripts/sync-skills.sh                  # public root skills only
+./scripts/sync-skills.sh --include-private # also link private-skills/*
+./scripts/sync-skills.sh --include-wip     # optional; explicit only
 ```
 
-instead of referencing files inside a generated workspace.
+Recommended script improvements:
 
-### Phase 3 — Consolidate generated artifacts
+- Move `sync-skills.sh` and `uninstall-skills.sh` under `scripts/`.
+- Keep tiny root wrappers if convenience matters.
+- Share one discovery function between sync and uninstall so they cannot drift.
+- Refuse to link duplicate skill names unless the user explicitly chooses one.
+  This matters because both vendor copies are named `skill-creator`.
+- Never link or uninstall from vendor/reference directories.
+- Add `scripts/validate-repo.sh` to check classification rules, duplicate skill
+  names, eval fixture paths, and accidental generated-artifact ignores.
 
-Move historical/generated run outputs into `eval-runs/` using a date and loop ID:
+### Phase 3 — Stabilize eval fixtures
+
+Keep `evals-results/` as historical run output, but stop using it as a source of
+reusable eval input.
+
+Immediate fixture work:
+
+- Copy stable system-design blueprint inputs from current historical outputs into
+  `system-design/evals/fixtures/`:
+  - `github-contributions-blueprint.md`
+  - `saved-views-blueprint.md`
+  - `weekly-digest-blueprint.md`
+  - `announcement-banner-blueprint.md`
+  - `collab-cursors-blueprint.md`
+- Update `system-design/evals/evals.json` so `files` points at those fixtures,
+  not workspace-style paths.
+- Rename `private-skills/kite-arch-compass/evals/files/` to
+  `private-skills/kite-arch-compass/evals/fixtures/` for consistency, then update
+  paths in its eval definitions if needed.
+- Keep `blueprint/evals/evals.json` as-is unless prompts grow large enough to
+  deserve fixture files.
+
+### Phase 4 — Normalize future eval run history
+
+Current history lives in:
 
 ```text
-eval-runs/YYYY-MM-DD/loop-001/<skill-name>/...
+evals-results/blueprint-workspace/
+evals-results/system-design-workspace/
+evals-results/kite-arch-compass-workspace/
 ```
 
-This replaces the current split between directories like:
+That history is useful and should stay committed. Do not delete it just because
+it is generated.
+
+For new runs, prefer a normalized date/loop structure:
 
 ```text
-evals-results/
-system-design-workspace/
+eval-runs/YYYY-MM-DD/loop-NNN/
+  manifest.json
+  summary.md
+  <skill-name>/
+    benchmark.json
+    benchmark.md
+    review.html
+    feedback.json              # if produced
+    <eval-case>/
+      eval_metadata.json
+      inputs/
+      with_skill/
+        run-1/
+          outputs/
+          grading.json
+          timing.json
+      without_skill/
+        run-1/
+          outputs/
+          grading.json
+          timing.json
+      recheck/                 # optional ad-hoc follow-up runs
+      verify/                  # optional verification runs
 ```
 
-Those can be preserved as legacy folders temporarily, but the target should be one committed run-history tree.
+Preserve the current with-skill/without-skill comparison shape because it makes
+skill impact easy to inspect later.
 
-### Phase 4 — Move durable non-skill docs under `docs/`
+Migration options:
 
-Suggested moves:
+1. **Low risk:** keep `evals-results/` as legacy history and write only new runs
+   to `eval-runs/`.
+2. **Cleaner but noisier:** migrate old history into `eval-runs/` with a manifest
+   explaining the original paths.
+
+Recommendation: choose option 1 first. It avoids churn while establishing the
+future convention.
+
+### Phase 5 — Consolidate durable docs
+
+Move durable non-skill docs under `docs/`:
 
 ```text
 guides/         -> docs/guides/
@@ -192,31 +353,119 @@ research/       -> docs/research/
 skills-factory/ -> docs/factory/
 ```
 
-This keeps root-level space focused on installable skills, scripts, reports, and run history.
+Specific decisions to make during this move:
 
-### Phase 5 — Move scripts under `scripts/`
+- Convert or rename `skills-factory/raw` so its purpose is obvious, for example
+  `docs/factory/raw-implementation-skill-notes.md`.
+- Decide whether `skills-factory/Kite-Skills-Plans-Comparison.md` should be
+  committed and moved to `docs/factory/`.
+- Keep the Kite pipeline skill-generation plans together: prompts, build plan,
+  generation plan, lifecycle diagram, and comparison/gap analysis should live in
+  one `docs/factory/kite-pipeline-skills/` cluster if they remain active.
+- Resolve canonical ownership for `engineering-principles-contract.md` so the
+  docs copy and the `kite-arch-compass` runtime copy cannot drift.
 
-Suggested move:
+### Phase 6 — Clean up vendor/reference copies
+
+The current vendor/reference directories are:
 
 ```text
-sync-skills.sh -> scripts/sync-skills.sh
+by-anthropic/skill-creator/
+by-openai/skill-creator/
 ```
 
-If root-level convenience matters, keep a tiny root wrapper that calls the script in `scripts/`.
+They are useful for study, but risky as executable skills because both contain a
+`SKILL.md` and both use the skill name `skill-creator`.
 
-### Phase 6 — Improve private-skill sync behavior
+Recommended target:
 
-Update the sync flow so private skills are linked only when explicitly requested:
-
-```sh
-./scripts/sync-skills.sh --include-private
+```text
+vendor/anthropic/skill-creator/
+vendor/openai/skill-creator/
 ```
 
-This reduces the chance of internal skills leaking into public workflows by accident.
+Then make the policy explicit:
+
+- Vendor directories are tracked reference material.
+- Vendor directories are never linked by local sync.
+- Vendor directories are never treated as public skills from this repo.
+- If copied vendor code is modified, note whether it is still a faithful copy or
+  a local adaptation.
+
+If the external skills publishing tool recursively discovers nested `SKILL.md`
+files, either add a supported publication ignore mechanism or stop advertising
+repo-wide install until the behavior is safe.
+
+### Phase 7 — Treat planned Kite pipeline skills as private until proven otherwise
+
+The factory docs currently plan five additional Kite pipeline skills:
+
+```text
+kite-planner
+kite-research
+kite-implementation
+kite-scenario-check
+kite-feature-review
+```
+
+If those plans are executed, create them under `private-skills/` first, alongside
+`kite-arch-compass`, not at the repo root. They are project-specific workflow
+skills, not public skills by default.
+
+Long-term rules for these planned skills:
+
+- Each generated skill should have `SKILL.md`, `references/`, and `evals/` if it
+  is intended to be maintained.
+- Shared runtime references such as `references/plan-file.md` should either be
+  byte-for-byte identical across the skills or generated from one canonical
+  source.
+- Evals should use `evals/fixtures/` for stable inputs and write historical
+  outputs to `eval-runs/`, not back into the factory docs.
+- `PUBLICATION.md` and sync discovery must be updated before these skills are
+  linked locally.
+- Once the skills are generated and validated, mark the corresponding factory
+  docs as completed, superseded, or still active so future agents do not rerun an
+  obsolete plan.
+
+### Phase 8 — Decide the fate of `wip/backend-standards`
+
+Current state: `wip/backend-standards/` is a draft skill with `SKILL.md` and
+`patterns.md`.
+
+Keep it under `wip/` until one of these decisions is made:
+
+- **Promote to private:** move to `private-skills/backend-standards/`, add evals,
+  and allow opt-in local sync.
+- **Promote to public:** move to root `backend-standards/`, update README and
+  publication docs, and add public-facing evals/references.
+- **Archive:** move to `archive/backend-standards/` with a note explaining why it
+  is no longer active.
+
+Do not let WIP skills be synced by default. Draft trigger descriptions can fire
+in surprising contexts and pollute day-to-day agent behavior.
+
+### Phase 9 — Add reports as curated summaries
+
+Raw run artifacts answer "what happened?" Reports answer "what did we learn?"
+Add:
+
+```text
+reports/daily/
+reports/trends/
+```
+
+A daily report should link to the relevant `eval-runs/` or `evals-results/`
+artifacts and summarize:
+
+- baseline behavior,
+- skill changes made,
+- post-change behavior,
+- regressions,
+- open follow-ups.
 
 ## Daily Commit Pattern
 
-A self-learning loop should create a readable commit sequence. A good daily pattern is:
+A useful learning-loop history has a readable commit rhythm:
 
 ```text
 eval: record 2026-05-23 baseline results
@@ -225,27 +474,16 @@ eval: record 2026-05-23 post-change results
 report: summarize 2026-05-23 learning loop
 ```
 
-This gives the repo a useful historical rhythm:
+This sequence keeps causality clear:
 
-1. show the previous behavior,
+1. show previous behavior,
 2. make the skill improvement,
-3. show the measured effect,
+3. show measured effect,
 4. summarize what was learned.
 
-## Run Artifact Shape
+## Run Manifest Shape
 
-Each run should include:
-
-```text
-manifest.json
-inputs/
-outputs/
-grading/
-reports/
-notes.md
-```
-
-Recommended `manifest.json` fields:
+Every normalized run should include a `manifest.json` like:
 
 ```json
 {
@@ -256,209 +494,202 @@ Recommended `manifest.json` fields:
   "skills_tested": ["blueprint", "system-design"],
   "model": "<model-name>",
   "eval_command": "<command-used>",
+  "runner": "<script-or-tool>",
+  "artifacts_root": "eval-runs/2026-05-23/loop-001",
   "summary": "<one-sentence-summary>"
 }
 ```
 
-## Canonical Reference Policy
+For migrated legacy runs, add:
 
-Some reference material may exist both globally and inside a skill's `references/` directory. For runtime reliability, the skill-local copy should be treated as the executable copy: if a skill needs a reference to function, that reference should live inside that skill.
+```json
+{
+  "migrated_from": "evals-results/system-design-workspace/iteration-2",
+  "migration_note": "Original tracked eval output preserved under normalized run history."
+}
+```
 
-If a global copy is also useful for browsing or authoring, either:
+## Agent Placement Guide
 
-- make the skill-local copy canonical and link to it from `docs/`, or
-- make the `docs/` copy canonical and add a script/check that syncs it into the skill before publishing.
+Use this section when deciding where to put new files.
 
-Avoid silent duplication where two copies can drift without detection.
+### Root files
 
-## Top-Level and Second-Level Directory Context for Agents
+#### `README.md`
 
-This section is intended for future agents reading the repo. Use it to decide where to put new files or what to update.
+Human-facing overview and public install instructions. Update when public skills,
+install commands, or the high-level repo purpose changes.
 
-### `README.md`
+#### `PUBLICATION.md` _(proposed)_
 
-Root overview for humans and agents. Update this when the public purpose of the repo, install instructions, or high-level repository layout changes.
+Classification policy for public, private, WIP, vendor/reference, generated, and
+durable-doc content. Update whenever a skill changes classification.
 
-### `PUBLICATION.md`
+#### `restructure-suggestion.md`
 
-Proposed policy document for what is public, private, experimental, generated, or safe to publish. Update this when adding a new skill, changing publishing paths, or changing private/public boundaries.
+This document. Update when the structure decision changes or the current-state
+snapshot becomes stale.
 
-### `restructure-suggestion.md`
+#### `.gitignore`
 
-This document. It records the proposed target structure and migration plan. Update it if the structure decision changes before migration is complete.
+Minimal local-junk ignore list. Do not add generated eval/run/report paths unless
+the repo's learning-history policy changes.
 
-### `blueprint/`
+### Public skills
 
-Public skill directory for the `blueprint` skill. Keep this at the repo root unless the public publishing path is intentionally changed.
+#### `blueprint/`
 
-#### `blueprint/SKILL.md`
+Public behavior-blueprint skill. Keep at root while `rangrik/Skills/blueprint`
+is an advertised install path.
 
-The executable prompt/instructions for the `blueprint` skill. Update this when changing how the behavior-blueprint skill works.
+- `blueprint/SKILL.md` — executable skill prompt/instructions.
+- `blueprint/references/` — runtime references required by the skill.
+- `blueprint/evals/evals.json` — reusable eval definitions.
+- `blueprint/evals/fixtures/` — optional stable fixture files if future evals need
+  larger inputs.
 
-#### `blueprint/references/`
+#### `system-design/`
 
-Runtime references used by the `blueprint` skill. Put supporting templates, taxonomies, style guides, and other skill-required documents here.
+Public system-design skill. Keep at root while repo root contains public skills.
 
-#### `blueprint/evals/`
+- `system-design/SKILL.md` — executable skill prompt/instructions.
+- `system-design/references/` — runtime design taxonomies, principles, and
+  templates.
+- `system-design/evals/evals.json` — reusable eval definitions.
+- `system-design/evals/fixtures/` — stable blueprint/input fixtures. This should
+  replace references to generated workspace paths.
 
-Reusable eval definitions and inputs for the `blueprint` skill. Put eval cases in `evals.json` and reusable input files under `fixtures/`.
-
-#### `blueprint/evals/fixtures/`
-
-Tracked input fixtures used by blueprint evals. Put stable prompts, source docs, sample PRDs, or other reusable eval inputs here.
-
-### `system-design/`
-
-Public skill directory for the `system-design` skill. Keep this at the repo root unless the public publishing path is intentionally changed.
-
-#### `system-design/SKILL.md`
-
-The executable prompt/instructions for the `system-design` skill. Update this when changing the system-design workflow.
-
-#### `system-design/references/`
-
-Runtime references used by the `system-design` skill, such as decision taxonomies, design principles, and design-document templates.
-
-#### `system-design/evals/`
-
-Reusable eval definitions and inputs for the `system-design` skill. Eval definitions should not depend on generated workspace paths.
-
-#### `system-design/evals/fixtures/`
-
-Tracked blueprint/input fixtures used by system-design evals. Move any reusable files currently living in workspaces into this directory.
-
-### `private-skills/`
-
-Container for local/internal skills that are not intended to be public skills.sh publishing targets by default. Put private or repo-specific skills here.
-
-#### `private-skills/backend-standards/`
-
-Private skill for backend coding standards. Update this when backend conventions change or when new backend standards are documented.
-
-#### `private-skills/backend-standards/SKILL.md`
-
-Executable instructions for the backend standards skill.
-
-#### `private-skills/backend-standards/references/`
-
-Supporting backend-standard references, examples, and pattern documents.
-
-#### `private-skills/backend-standards/evals/`
-
-Optional eval definitions and fixtures for the backend standards skill.
+### Private skills
 
 #### `private-skills/kite-arch-compass/`
 
-Private/reference skill for Kite/appsmith-v2 architecture principles and conformance checks.
+Private Kite/appsmith-v2 architecture compass skill.
 
-#### `private-skills/kite-arch-compass/SKILL.md`
+- `SKILL.md` — executable guidance and conformance-review workflow.
+- `references/` — runtime engineering principles and conformance checklists.
+- `evals/evals.json` — reusable eval definitions.
+- `evals/fixtures/` — target home for files currently under `evals/files/`.
 
-Executable instructions for architecture guidance and conformance review.
+#### Planned Kite pipeline private skills
 
-#### `private-skills/kite-arch-compass/references/`
+If generated from the factory docs, place `kite-planner`, `kite-research`,
+`kite-implementation`, `kite-scenario-check`, and `kite-feature-review` under
+`private-skills/`. Keep their shared references canonical and update
+`PUBLICATION.md` plus sync discovery before linking them into local agent stores.
 
-Runtime architecture principle catalogues and conformance checklists required by the skill.
+### WIP skills
 
-#### `private-skills/kite-arch-compass/evals/`
+#### `wip/backend-standards/`
 
-Reusable eval definitions and fixtures for the architecture compass skill.
+Draft backend standards skill. Keep here while it is experimental.
 
-### `docs/`
+- Do not sync by default.
+- Add a short status note if it remains WIP for long.
+- Promote to `private-skills/backend-standards/` or root `backend-standards/` only
+  when its audience and publication policy are clear.
 
-Durable documentation that is not itself an executable skill. Put research, guides, design notes, and factory/planning docs here.
+### Vendor/reference material
 
-#### `docs/guides/`
+#### `by-anthropic/skill-creator/` and `by-openai/skill-creator/`
 
-Curated, durable guides and reference documents. Put polished docs here, not raw run artifacts.
+Current tracked vendor/reference copies. They should not be installed or
+published as this repo's skills.
 
-#### `docs/research/`
+Target path if moved:
 
-Research notes and synthesized studies that inform future skills or standards. Put exploratory but durable research here.
+```text
+vendor/anthropic/skill-creator/
+vendor/openai/skill-creator/
+```
 
-#### `docs/factory/`
+If these stay in place, keep them in every script's ignore list and document the
+reason in `PUBLICATION.md`.
 
-Skill-factory notes, draft skill architectures, lifecycle designs, and generated skill prompt drafts. Put proposed future-skill design work here.
+### Durable docs
 
-### `eval-runs/`
+#### `guides/` -> `docs/guides/`
 
-Committed historical outputs from self-learning/eval loops. Put generated run artifacts here instead of hiding them in ignored workspaces.
+Polished durable guides and contracts.
 
-#### `eval-runs/YYYY-MM-DD/`
+#### `research/` -> `docs/research/`
 
-All learning-loop runs for a specific date.
+Research notes and synthesized studies that inform skills or architecture
+standards.
 
-#### `eval-runs/YYYY-MM-DD/loop-NNN/`
+#### `skills-factory/` -> `docs/factory/`
 
-One complete learning-loop iteration. Each loop should include a manifest, per-skill artifacts, and a summary.
+Skill-factory plans, prompt drafts, lifecycle diagrams, raw notes, and
+comparisons. The current active cluster is the Kite pipeline skill work: prompts,
+build/generation plans, lifecycle diagram, and plan comparison/gap analysis.
 
-#### `eval-runs/YYYY-MM-DD/loop-NNN/manifest.json`
+### Eval history
 
-Machine-readable record of the run: date, loop ID, commit SHA, model, commands, skills tested, and summary.
+#### `evals-results/`
 
-#### `eval-runs/YYYY-MM-DD/loop-NNN/<skill-name>/inputs/`
+Current tracked legacy run history. Preserve it unless deliberately migrated.
+Do not write new ad-hoc output shapes here once `eval-runs/` exists.
 
-Exact inputs used for that skill during this run. These are run-specific copies, even if they came from reusable fixtures.
+Current workspaces:
 
-#### `eval-runs/YYYY-MM-DD/loop-NNN/<skill-name>/outputs/`
+- `evals-results/blueprint-workspace/`
+- `evals-results/system-design-workspace/`
+- `evals-results/kite-arch-compass-workspace/`
 
-Outputs produced by the skill during the run.
+#### `eval-runs/` _(proposed)_
 
-#### `eval-runs/YYYY-MM-DD/loop-NNN/<skill-name>/grading/`
+Normalized future run history. Use date and loop IDs, include a manifest, and
+preserve per-skill benchmark/review artifacts plus per-eval run outputs.
 
-Raw grading artifacts, scorer outputs, pass/fail judgments, and machine-readable evaluation results.
+### Reports
 
-#### `eval-runs/YYYY-MM-DD/loop-NNN/<skill-name>/reports/`
+#### `reports/daily/` _(proposed)_
 
-Generated human-readable review artifacts such as markdown reports, HTML reviews, screenshots, or summaries.
+One human-readable learning-loop summary per day.
 
-### `reports/`
+#### `reports/trends/` _(proposed)_
 
-Curated summaries derived from committed run artifacts. Put human-facing daily and trend reports here.
+Longer-running trend analysis across days, skills, models, or eval suites.
 
-#### `reports/daily/`
+### Scripts
 
-One markdown summary per day. Use this for daily learning-loop summaries and human-readable progress notes.
+#### `sync-skills.sh` -> `scripts/sync-skills.sh`
 
-#### `reports/trends/`
+Links local repo skills into agent skill stores. Target default: public root
+skills only, with explicit flags for private and WIP skills.
 
-Longer-running trend analysis across days or skills. Use this to track whether a skill is improving, regressing, or changing behavior.
+#### `uninstall-skills.sh` -> `scripts/uninstall-skills.sh`
 
-### `scripts/`
+Removes installed repo skills from local agent stores. Must use the same skill
+discovery and classification rules as sync.
 
-Local automation scripts. Put sync scripts, run-loop scripts, eval runners, report generators, and maintenance checks here.
+#### `scripts/run-learning-loop.sh` _(proposed)_
 
-#### `scripts/sync-skills.sh`
+Runs evals, writes normalized artifacts under `eval-runs/`, and updates reports.
 
-Script for linking local skill directories into agent skill stores. Should ideally link private skills only when explicitly requested.
+#### `scripts/validate-repo.sh` _(proposed)_
 
-#### `scripts/run-learning-loop.sh`
+Checks repo invariants: no accidental ignored eval artifacts, no duplicate public
+skill names, no fixture paths into historical run directories, and no vendor/WIP
+skills in default sync discovery.
 
-Proposed script for running the daily self-learning loop. It should create committed artifacts under `eval-runs/` and update reports.
+### Archive
 
-### `evals-results/`
+#### `archive/`
 
-Current legacy location for generated eval results. Target state: migrate this content into `eval-runs/` using date/loop structure, then stop writing new artifacts here.
+Currently empty. Either remove it or add a README defining it as the place for
+frozen, no-longer-active material that should remain tracked for historical
+context.
 
-### `system-design-workspace/`
+## Immediate Recommended Next Steps
 
-Current legacy/generated workspace for system-design evals. Target state: move reusable fixtures into `system-design/evals/fixtures/` and generated run artifacts into `eval-runs/`.
-
-### `guides/`
-
-Current legacy location for durable guides. Target state: move this content into `docs/guides/`.
-
-### `research/`
-
-Current legacy location for research notes. Target state: move this content into `docs/research/`.
-
-### `skills-factory/`
-
-Current legacy location for skill-factory drafts and raw notes. Target state: move this content into `docs/factory/`.
-
-### `sync-skills.sh`
-
-Current root-level sync script. Target state: move to `scripts/sync-skills.sh`, optionally keeping a root wrapper for convenience.
-
-### `.gitignore`
-
-Target state: empty or removed. This repo intentionally commits learning-loop artifacts, including generated outputs, so agents should not add new ignore rules unless the project policy changes.
+1. Add `PUBLICATION.md` before moving directories.
+2. Update `README.md` to list current public skills and clarify non-public areas.
+3. Make `sync-skills.sh` public-only by default, with explicit private/WIP flags.
+4. Create `system-design/evals/fixtures/` and update stale eval file paths.
+5. Decide whether to keep `evals-results/` as frozen legacy history or migrate it
+   after `eval-runs/` exists.
+6. Move durable docs under `docs/` once publication boundaries are documented.
+7. Keep the Kite pipeline skill-factory docs together, and if the planned skills
+   are generated, put them under `private-skills/` first.
+8. Decide whether `wip/backend-standards/` should be promoted, kept WIP, or
+   archived.
