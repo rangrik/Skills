@@ -1,13 +1,9 @@
 # Blueprint Template
 
-This file defines the structure of the `<feature-name>-blueprint.md` deliverable.
-Reproduce the sections below, in this order, in the output file. Each section is
-described with guidance in _italics_ — replace the guidance with real content; never copy
-the guidance text into the deliverable.
-
-The companion `<feature-name>.feature` file contains exactly the Gherkin scenario blocks
-from sections 6 and 7 — the `Feature` block and every `Scenario` / `Scenario Outline`,
-verbatim with tags and `# Assumption:` comments — and nothing else.
+This file defines the structure of the `<feature-name>-blueprint.md` deliverable — the
+single file this skill produces. Reproduce the sections below, in this order, in the
+output file. Each section is described with guidance in _italics_ — replace the guidance
+with real content; never copy the guidance text into the deliverable.
 
 ---
 
@@ -124,14 +120,15 @@ An empty cell or a missing row means the enumeration was not finished. Use exact
 
 ---
 
-## Producing the two files
+## Producing the file
 
-- The `.md` file is the human source of truth: narrative sections 1–5 and 8–9 wrapped
-  around the Gherkin of sections 6–7.
-- The `.feature` file is for tooling: the `Feature` block and every scenario from
-  sections 6 and 7, verbatim, with tags and `# Assumption:` comments — no markdown, no
-  narrative.
-- The scenarios must be **identical** between the two files. The `.md` adds context
-  around them; it never alters them.
-- Name both files in kebab-case from the real feature name, e.g.
-  `password-reset-blueprint.md` and `password-reset.feature`.
+- The `.md` file is the single deliverable and the human source of truth: narrative
+  sections 1–5 and 8–9 wrapped around the Gherkin of sections 6–7.
+- Sections 6 and 7 carry the scenarios as Gherkin in fenced `gherkin` code blocks — the
+  `Feature` block and every `Scenario` / `Scenario Outline`, with tags and
+  `# Assumption:` comments. This is the only place the scenarios are written.
+- The skill does not emit a separate `.feature` file. Because the scenarios are kept as
+  clean, tagged Gherkin, they can be lifted into a `.feature` file later if test
+  automation is wanted — but producing that file is out of scope here.
+- Name the file in kebab-case from the real feature name, e.g.
+  `password-reset-blueprint.md`.

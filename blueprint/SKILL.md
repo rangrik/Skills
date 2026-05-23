@@ -6,8 +6,8 @@ description: >-
   autonomously enumerates every plausible deviation and edge case — invalid input,
   retries, rate limits, lost connectivity, abandoned sessions, out-of-order actions,
   expired sessions, concurrency, boundary states, external failures — and proposes
-  graceful product behavior for each, writing it up as a markdown blueprint plus
-  Cucumber .feature files. Use whenever someone has a feature idea, problem statement,
+  graceful product behavior for each, writing it up as a single markdown behavior
+  blueprint. Use whenever someone has a feature idea, problem statement,
   or PRD to pin down into concrete behavior; asks for a behavior blueprint, behavior
   spec, interaction spec, acceptance criteria, or Gherkin/Cucumber scenarios; asks
   what the edge cases are or what could go wrong with a feature; or describes a
@@ -167,23 +167,22 @@ scenario *or* with an explicit, justified "not applicable" note in the coverage
 checklist. Silent omission is the exact failure this skill is designed against — forcing
 an explicit, reasoned N/A keeps the enumeration honest.
 
-### Phase 4 — Write the outputs
+### Phase 4 — Write the output
 
 Read `references/blueprint-template.md` and (if not already) `references/gherkin-style.md`.
-Derive a short kebab-case feature name for filenames. Produce two deliverables:
+Derive a short kebab-case feature name for the filename. Produce one deliverable:
 
 1. **`<feature-name>-blueprint.md`** — the full markdown blueprint, following the
    template: problem and intent, actors, glossary, preconditions and assumptions, scope,
    happy-path scenarios, deviation scenarios grouped by category, the consolidated
    flagged-assumptions list, and the coverage checklist.
-2. **`<feature-name>.feature`** — a Cucumber file with every scenario in pure Gherkin,
-   tagged (`@happy-path`, `@deviation`, `@assumption`, plus a category tag such as
-   `@rate-limit`). One feature file suits most features; split into several only when
-   there are clearly separable sub-features.
 
-The Gherkin scenarios must be identical between the two files — the `.md` wraps them in
-narrative; the `.feature` file is just the scenarios. Save both to the folder the user is
-working in.
+The happy-path and deviation scenarios are written as Gherkin inside the blueprint
+(sections 6 and 7), in fenced `gherkin` code blocks, tagged (`@happy-path`, `@deviation`,
+`@assumption`, plus a category tag such as `@rate-limit`). The skill does not emit a
+separate `.feature` file; the Gherkin lives only in the blueprint, where it can be
+extracted into one later if test automation is wanted. Save the blueprint to the folder
+the user is working in.
 
 ### Phase 5 — Deliver and summarize
 

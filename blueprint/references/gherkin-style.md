@@ -3,7 +3,8 @@
 Gherkin is the language of the spec's scenarios. It is chosen because a `Given / When /
 Then` scenario means the same thing to engineering, design, and QA — it is structured
 enough to remove ambiguity and close enough to plain English that anyone can read it.
-This guide keeps the output consistent and machine-parseable for Cucumber tooling.
+This guide keeps the scenarios consistent and machine-parseable, so they read
+unambiguously and can be lifted into Cucumber tooling later if needed.
 
 ## Structure
 
@@ -32,7 +33,7 @@ Feature: <short feature name>
       | not-an-email | rejected inline   |
 ```
 
-- **Feature** — one per `.feature` file. The description line carries the *why*.
+- **Feature** — one `Feature` block per blueprint. The description line carries the *why*.
 - **Background** — preconditions true for *every* scenario in the file. Use it to avoid
   repeating the same `Given` everywhere; do not put actions or anything scenario-specific
   in it.
