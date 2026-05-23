@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "The document is complete to the skill's template: all 15 sections are present and filled, and the Decision Coverage Checklist accounts for every one of the 22 taxonomy dimensions (A1-A14 and B1-B8) with a status (Resolved / Assumed / N/A) and a substantive note — no row left blank or rubber-stamped.",
+      "passed": true,
+      "evidence": "Sections 1-15 are all present and substantively filled. The Decision Coverage Checklist (§15) contains all 14 A-dimensions (A1-A14) and all 8 B-dimensions (B1-B8), each with a status (Resolved or N/A) and a specific note pointing to the relevant section or decision (e.g., \"A3 Concurrency & consistency | Resolved | D1, D2, §6 — partial unique index + transactional publish; concurrent-publish 409 in §7\"). No row is blank or rubber-stamped."
+    },
+    {
+      "text": "Assumptions and Accepted Compromises are each first-class tables (not prose); every accepted compromise names the specific design principle it bends and gives a concrete revisit trigger.",
+      "passed": true,
+      "evidence": "§11 Assumptions is a table with columns #, Assumption, Why safe to assume, Needs confirmation?. §12 Accepted Compromises is a table with columns #, Compromise, What we give up, Principle bent, Why acceptable now, Revisit trigger. Each of the three compromises names a specific principle (e.g., C1: \"Principle 5 (design for failure / be explicit about freshness cost)\") and a concrete revisit trigger (e.g., C1: \"If the product requirement tightens to 'within seconds', or if a real-time channel is added for other features\")."
+    },
+    {
+      "text": "The design stores per-user dismissal server-side so it persists across a user's devices and sessions — it does NOT rely on client-only storage (localStorage or cookies), which would fail the blueprint's cross-device requirement. (Correctness trap: client-side dismissal is the easy wrong answer.)",
+      "passed": true,
+      "evidence": "D3 states: \"A `banner_dismissals` table records `(user_id, banner_id)` pairs. The read endpoint checks this table to decide whether to return `dismissed: true`.\" It explicitly rejects the alternative: \"localStorage / cookie: fails the cross-device requirement. Rejected.\" The Appendix also captures this: \"The blueprint explicitly requires dismissal to persist across devices and sessions — localStorage is per-device and cannot satisfy this.\""
+    },
+    {
+      "text": "The design is proportional to a small feature: it does not introduce infrastructure the feature does not need (no message queue, websockets, Redis, or a background job purely to expire banners — expiry is handled at query time), and any such omission is a deliberate, stated choice.",
+      "passed": true,
+      "evidence": "§1 Summary explicitly states: \"no new infrastructure, no queue, no real-time layer.\" D5 rejects WebSocket/SSE: \"requires either a new pub/sub infrastructure or extending an existing one...not warrant the complexity. Rejected.\" D8 rejects background cron: \"Eliminates a class of bugs where a background job fails to run...No cron job toggles banner state\" with date-window enforced at query time via `WHERE start_at <= NOW() AND (end_at IS NULL OR end_at > NOW())`."
+    },
+    {
+      "text": "The 'one active banner per workspace' rule is enforced structurally (e.g. a partial unique index) so that two admins publishing concurrently resolve deterministically rather than leaving two active banners.",
+      "passed": true,
+      "evidence": "D1 states: \"A `is_active` boolean column with a partial unique index (`WHERE is_active = TRUE`) on `(workspace_id, is_active)` ensures at most one active banner per workspace at any time.\" The DDL confirms: `CREATE UNIQUE INDEX uq_one_active_banner_per_workspace ON announcement_banners (workspace_id) WHERE is_active = TRUE;`. §6 Concurrency notes: \"The partial unique index prevents two concurrent publishes from leaving two active banners — the second transaction will get a unique-constraint violation.\""
+    },
+    {
+      "text": "Dismissal is keyed to the banner's identity, not its text, so that an admin editing the banner text does not resurface it for users who already dismissed it — matching the blueprint rule explicitly.",
+      "passed": true,
+      "evidence": "D4 states: \"`banner_dismissals` records the `banner_id` (the row PK), not a hash of the text. Editing a banner's text does not change its `banner_id`, so dismissal records are preserved through an edit.\" It explicitly cites the blueprint rule: \"The blueprint is explicit: 'an admin edits the active banner's text; an edit does not bring it back for users who already dismissed it.'\" The alternative (re-key on text hash) is explicitly rejected."
+    },
+    {
+      "text": "Admin-only authorization for create, edit, and remove is enforced server-side, addressing the adversarial scenario that a non-admin must not publish a banner via a crafted request.",
+      "passed": true,
+      "evidence": "D7 states: \"Write routes (POST, PATCH, DELETE) live under `/api/admin/banners` and are gated by admin-role middleware that verifies the authenticated user holds the `admin` role for the workspace. A non-admin request receives 403.\" §8 Security directly quotes the adversarial scenario and states: \"Role check is server-side from session token; not bypassable by altering the request body.\" The dismiss route also takes `user_id` from the session token, not the request body."
+    },
+    {
+      "text": "The taxonomy walk is scoped honestly to the feature's real risk: low-relevance dimensions (e.g. external services, heavy scale, caching) are marked N/A or low-risk Assumed with a genuine one-line reason — not padded with invented concerns to look thorough.",
+      "passed": true,
+      "evidence": "A7 (Cost) is marked N/A: \"No third-party services; no per-call cost. Postgres query cost is negligible at this scale.\" B5 (External services) is marked N/A: \"No external services (§5).\" A6 (Caching) is Resolved with an honest conclusion that no cache is warranted: \"adding a shared cache would require per-user cache keying or a separate 'banner changed' invalidation signal — complexity not warranted at this scale (Principle 1 — YAGNI).\" Scale concerns (§13 risk 3) are flagged only at 100k+ users with a proportionate mitigation, not inflated."
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 0,
+    "total": 8,
+    "pass_rate": 1.00
+  }
+}

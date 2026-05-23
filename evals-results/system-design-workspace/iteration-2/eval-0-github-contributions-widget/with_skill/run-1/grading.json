@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "The document is complete to the skill's template: all 15 sections are present and filled, and the Decision Coverage Checklist accounts for every one of the 22 taxonomy dimensions (A1-A14 and B1-B8) with a status (Resolved / Assumed / N/A) and a substantive note — no row left blank or rubber-stamped.",
+      "passed": true,
+      "evidence": "The document has 15 numbered sections (1 Summary through 15 Decision Coverage Checklist) plus a 16th section and Appendix A. Section 15 contains a table with all 22 dimensions: A1-A14 and B1-B8, each with a Status (Resolved, Assumed, or Resolved (N/A)) and a substantive note referencing specific sections or decisions. For example: A1 'Resolved | §6 — p50/p95 targets per action', A14 'Assumed (A6) | Frontend widget must render empty/loading/error states...', B1 'Resolved | §2 — new github_contributions Django app with service layer...'. No row is blank or rubber-stamped."
+    },
+    {
+      "text": "Assumptions and Accepted Compromises are each first-class tables (not prose); every accepted compromise names the specific design principle it bends and gives a concrete revisit trigger.",
+      "passed": true,
+      "evidence": "Section 11 (Assumptions) is a table with columns: #, Assumption, Why safe to assume, Needs confirmation? Section 12 (Accepted Compromises) is a table with columns: #, Compromise, What we give up, Principle bent, Why acceptable now, Revisit trigger. Every compromise names a principle: C1 'Measure, don't guess (Principle 8)', C2 'Simplicity first (Principle 1)', C3 'Simplicity first (Principle 1)', C4 'Simplicity first (Principle 1)', C5 'Design the seams for testing (Principle 15)'. Every row has a concrete revisit trigger, e.g., C1 'If the product decides to surface sub-hour freshness for visitors', C3 'If user research shows this is a significant friction point'."
+    },
+    {
+      "text": "The design guarantees that a visitor viewing a profile never triggers a GitHub API call — reads are always served from stored data — and this is stated as a deliberate design property, not left incidental. (Correctness trap: a naive design fetches on page view.)",
+      "passed": true,
+      "evidence": "Section 1 (Summary) states explicitly: 'The single most important architectural choice is the store-and-serve model: contribution data is fetched into Postgres by a Celery background task and read back from there; GitHub is never called in the request path.' Decision D1 states: 'Every read — profile owner and visitors alike — queries that row. GitHub is never called in the HTTP request path.' Section 8 under Abuse vectors: 'The read endpoint is a pure DB read; it cannot trigger a GitHub API call.' The Blueprint Coverage Checklist (§16) row 'Visitor cannot trigger a data fetch' lists this as 'Adversarial | D1, §8 | Read endpoint is DB-only; Refresh requires auth + ownership.'"
+    },
+    {
+      "text": "The once-per-hour owner refresh cooldown is enforced server-side in a way a scripted client cannot bypass (server-checked timestamp, lock, or equivalent), explicitly addressing the blueprint's adversarial 'scripting the request' scenario — not merely a disabled button or client-side timer.",
+      "passed": true,
+      "evidence": "Decision D4 states: 'GitHubConnection carries a last_manual_refresh_at timestamp. The POST /refresh/ endpoint checks now() - last_manual_refresh_at < 1 hour; if true it returns 429. ... No separate Redis key or token bucket.' Section 6 (Concurrency) adds: 'the cooldown check is a DB read-then-conditional-update wrapped in select_for_update() on the GitHubConnection row. Only one request proceeds; the other gets 429.' Section 8 (Adversarial scenarios) states directly: 'Scripted refresh to bypass cooldown: The POST /refresh/ cooldown check uses select_for_update() on the DB row, making it race-safe. Even with parallel requests, only one can hold the lock and set last_manual_refresh_at; subsequent requests within the hour window receive 429.'"
+    },
+    {
+      "text": "The design specifies what the owner and visitors each see for all three GitHub-failure deviation scenarios — GitHub unreachable/slow, token revoked/expired, and a rate-limit response — with a concrete mechanism for each, and never surfaces a hard error to visitors.",
+      "passed": true,
+      "evidence": "Section 7 covers all three scenarios. (1) GitHub slow/unreachable: task retries with exponential back-off, sets fetch_status='github_error', fetched_at not updated; 'Profile page continues to serve the last stored snapshot with the \"Last updated <time>\" label ... No hard error shown to visitors.' (2) Token revoked/expired: 401/403 sets is_active=false; 'Owner's widget shows \"Reconnect GitHub\" prompt; visitors see the last stored snapshot.' (3) Rate-limit: 'A 429 from GitHub inside the Celery task: do not retry ... Set fetch_status = \"rate_limited\"... owner will see \"Couldn't refresh right now, try again later\" on their next page load.' The Blueprint Coverage Checklist §16 confirms all three are handled."
+    },
+    {
+      "text": "The design explicitly names the central architectural trade-off (serving stored, possibly-stale data to avoid GitHub API load) and resolves it with principle-grounded reasoning about the freshness-vs-cost balance.",
+      "passed": true,
+      "evidence": "Decision D1 names the trade-off explicitly: 'Trade-off accepted: Data shown to visitors can be up to 24 hours stale between automatic refreshes. Acceptable per blueprint: \"Contribution data is considered fresh enough if it is less than 24 hours old.\"' D1 also grounds it in principles: 'Upholds Cost as a first-class constraint (Principle 12): API calls are bounded to one per user per 24-hour window plus one explicit refresh per hour, not one per visitor per page load.' Section 6 Caching model table has a 'Freshness vs. cost trade-off' row: 'Data may be up to 24 h stale for visitors. Blueprint explicitly accepts this. Manual refresh gives the owner an escape hatch.' Compromise C1 also names the specific trade-off with principle reference."
+    },
+    {
+      "text": "OAuth token handling is specified concretely — encrypted at rest and never returned in any API response or exposed to visitors — addressing the blueprint's scenario that a visitor must never see another member's token.",
+      "passed": true,
+      "evidence": "Decision D3: 'The GitHub OAuth access token is stored in the GitHubConnection table, encrypted at rest using Django's existing field-level encryption pattern (e.g. django-cryptography or equivalent).' The Data Model specifies the column as 'access_token_encrypted bytea NOT NULL -- field-level encrypted' with invariant: 'access_token_encrypted is never read by any code path that touches the HTTP response.' Section 8 Secret handling: 'access_token_encrypted is decrypted only inside the Celery task, in memory, for the duration of the GitHub API call. The API read endpoint (GET /api/github-contributions/{username}/) returns only contribution grid data — never the token or any GitHub account credential.' Section 8 Adversarial: 'Visitor cannot see another member's GitHub token | D3, §8 | Token never in API responses; read endpoint returns only contribution data.'"
+    },
+    {
+      "text": "GitHub API consumption is bounded: background refresh runs only for stale data and cannot fan out without limit, and per-call cost or quota is acknowledged — directly serving the user's stated priority of not hammering the API.",
+      "passed": true,
+      "evidence": "Decision D6 states the sweep queries 'ContributionSnapshot for rows where fetched_at < now() - 24 hours (and GitHubConnection.is_active = True) and enqueues one fetch_github_contributions task per user' — refresh only for stale data. Section 6 Expected load: 'At 10,000 connected users the sweep enqueues ~417 tasks/hour on average.' Section 5 External Services table lists GitHub GraphQL rate limit: '5,000 points/hour per token (GraphQL costs ~1 point per query)'. Decision D1 explicitly states: 'API calls are bounded to one per user per 24-hour window plus one explicit refresh per hour, not one per visitor per page load.' Decision Coverage Checklist A7: 'Resolved | D1, §6 — API calls bounded to 1/user/24 h + 1/user/hour manual; no runaway cost path.'"
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 0,
+    "total": 8,
+    "pass_rate": 1.00
+  }
+}

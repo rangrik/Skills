@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "The document is complete to the skill's template: all 15 sections are present and filled, and the Decision Coverage Checklist accounts for every one of the 22 taxonomy dimensions (A1-A14 and B1-B8) with a status (Resolved / Assumed / N/A) and a substantive note — no row left blank or rubber-stamped.",
+      "passed": false,
+      "evidence": "The document has 13 custom sections but is missing multiple required template sections: no Architecture Decisions section (no ADR format), no Rollout section, no Assumptions section, no Accepted Compromises section, no Open Risks section, and no Decision Coverage Checklist whatsoever. None of the 22 taxonomy dimensions (A1-A14, B1-B8) appear anywhere in the document."
+    },
+    {
+      "text": "Assumptions and Accepted Compromises are each first-class tables (not prose); every accepted compromise names the specific design principle it bends and gives a concrete revisit trigger.",
+      "passed": false,
+      "evidence": "The document has no Assumptions section and no Accepted Compromises section. Assumptions are scattered in prose (e.g., '-- Assumed existing columns' in §2.1, 'assumed existing' in §2.4). No table of compromises with bent principles or revisit triggers exists anywhere in the document."
+    },
+    {
+      "text": "The idempotency mechanism guarantees one digest per user per week even under a concurrent double-run of the job — it relies on a database-enforced dedup (e.g. a unique key on user + week), not a check-then-send that has a race window. (Correctness trap: an application-level 'already sent?' check is not concurrency-safe.)",
+      "passed": true,
+      "evidence": "Section 3.3 'Double-trigger protection' states: 'The UNIQUE (user_id, week_start) constraint on digest_sends combined with INSERT ... ON CONFLICT DO NOTHING ensures that even if the coordinator fires twice, at most one digest_sends row is created per user per week, and therefore at most one DigestBuildAndSendJob is enqueued.' The DB constraint is the primary gate; the worker's secondary status check is belt-and-suspenders. The schema in §2.2 shows 'UNIQUE (user_id, week_start)' explicitly. Section 7 idempotency table confirms 'INSERT ... ON CONFLICT DO NOTHING on digest_sends (user_id, week_start)' as the coordinator-layer mechanism."
+    },
+    {
+      "text": "The design handles the email-provider failure rule correctly: retries are time-bounded, and on continued failure the digest is dropped for the week rather than delayed — and the design explicitly ties this to the blueprint's 'a late digest is worse than a skipped one' rule.",
+      "passed": true,
+      "evidence": "Section 6.1 specifies 'sidekiq_options retry: 3' with explicit retry delays of [5*60, 15*60, 30*60] seconds (total window under 1 hour), plus a hard 4-hour deadline that drops the job even if retries remain. The text states: 'After all retries are exhausted, the Sidekiq sidekiq_retries_exhausted callback marks digest_sends.status = \"failed\". The email is dropped for the week — consistent with the blueprint rule that a late digest is worse than no digest.'"
+    },
+    {
+      "text": "Per-user-timezone send scheduling is designed concretely (how 8am-local across many timezones becomes scheduled sends), and the design handles the blueprint's 'job runs late' deviation without corrupting the seven-day content window.",
+      "passed": true,
+      "evidence": "Section 3.1 describes an hourly coordinator that 'identifies the UTC window [now-60min, now) — i.e., the set of timezone offsets whose 08:00 Monday falls within the past hour' and queries users with matching timezones. Section 4.2 shows the window computation: 'week_start_date = Date.parse(week_start_str)' (the passed Monday date), with window_end derived from that fixed date — not from job run time. This means a late-running job still uses the correct Monday window."
+    },
+    {
+      "text": "The design specifies that no email is sent when a user has no relevant activity, and correctly handles the mid-week new-user partial window — both blueprint rules.",
+      "passed": true,
+      "evidence": "Empty-digest guard: Section 4.4 states 'If all three result sets are empty → digest_sends.status = \"skipped\", job exits, no email sent.' Mid-week new-user: Section 4.2 explicitly: 'window_start = [window_end - 7.days, user.created_at].max' with the comment 'This handles the new-user edge case: if the user joined mid-week, window_start is clamped to their join date.'"
+    },
+    {
+      "text": "The unsubscribe link is designed to be unguessable and scoped to the issuing account (a signed or random token, not a sequential identifier), addressing the adversarial scenario; and digest content is scoped to only what each user is permitted to see.",
+      "passed": true,
+      "evidence": "Section 5.2 and 5.3: token is 'SecureRandom.urlsafe_base64(32)' (256-bit random, not guessable), stored as 'digest_unsubscribe_token' per user (one per account). Section 8.1: 'One token per user: cannot be used to affect another user's account.' Content scoping: Section 8.2 states 'All digest content queries join through workspace_memberships with deleted_at IS NULL and through workspaces with deleted_at IS NULL. A user will never see content from a workspace they have left or that has been deleted.' The SQL queries in §4.3 enforce this with explicit JOIN conditions."
+    },
+    {
+      "text": "The design names the central scheduling trade-off and resolves it with principle-grounded reasoning, and the digest-assembly query is bounded — the 'up to ten highlighted items, +N more' cap is reflected as a real query limit, not unbounded fetching.",
+      "passed": false,
+      "evidence": "The query bounding is correct: §4.3 shows explicit 'LIMIT 11' on each activity query (fetch 11 to detect '+N more'), and §4.1 describes capping highlighted items at 10. However, the scheduling trade-off is not resolved with principle-grounded reasoning. Section 3.1 says 'Rather than one massive job at a single UTC time, the scheduler enqueues per-user jobs at the right UTC moment' but names no design principles, lists no alternatives with principled rejection, and uses no ADR structure. The choice is described but not reasoned through with named principles, failing the 'resolves it with principle-grounded reasoning' requirement."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 3,
+    "total": 8,
+    "pass_rate": 0.63
+  }
+}

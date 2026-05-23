@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "The document is complete to the skill's template: all 15 sections are present and filled, and the Decision Coverage Checklist accounts for every one of the 22 taxonomy dimensions (A1-A14 and B1-B8) with a status (Resolved / Assumed / N/A) and a substantive note — no row left blank or rubber-stamped.",
+      "passed": true,
+      "evidence": "§15 Decision Coverage Checklist contains all 22 rows (A1-A14, B1-B8), each with a Resolved/Assumed/N/A status and a substantive note citing specific sections (e.g. A3: \"Resolved — §3 D3, §7 — unique constraint idempotency; dispatched_at guard prevents double-enqueue\"). All 15 document sections are present and filled."
+    },
+    {
+      "text": "Assumptions and Accepted Compromises are each first-class tables (not prose); every accepted compromise names the specific design principle it bends and gives a concrete revisit trigger.",
+      "passed": true,
+      "evidence": "§11 Assumptions and §12 Accepted Compromises are both full markdown tables. Every row in §12 has a 'Principle bent' column (e.g. C1: \"Design for failure — we're not retrying indefinitely\", C3: \"Prefer reversible decisions\") and a 'Revisit trigger' column (e.g. C1: \"Reconsider if user complaints about missed digests are a significant support driver\", C2: \"Re-evaluate if digest is extended to daily frequency or query volume spikes measurably\")."
+    },
+    {
+      "text": "The idempotency mechanism guarantees one digest per user per week even under a concurrent double-run of the job — it relies on a database-enforced dedup (e.g. a unique key on user + week), not a check-then-send that has a race window. (Correctness trap: an application-level 'already sent?' check is not concurrency-safe.)",
+      "passed": true,
+      "evidence": "D3 explicitly rejects the race-window pattern: \"Application-level check-then-insert (SELECT then INSERT): subject to a race condition between two concurrent jobs for the same user.\" The design uses \"INSERT INTO digest_deliveries (user_id, iso_week) VALUES (...)\"; if a unique violation occurs, the job exits. §4 shows \"UNIQUE (user_id, iso_week)\" constraint. The DB constraint is the backstop."
+    },
+    {
+      "text": "The design handles the email-provider failure rule correctly: retries are time-bounded, and on continued failure the digest is dropped for the week rather than delayed — and the design explicitly ties this to the blueprint's 'a late digest is worse than a skipped one' rule.",
+      "passed": true,
+      "evidence": "D7: \"DigestEmailJob uses Sidekiq's built-in retry with a cap of 5 attempts (exponential backoff, max ~20 minutes of retries). If all retries are exhausted, the job is moved to Sidekiq's dead queue and a structured log entry is emitted. The email is not delayed to a later day.\" Explicitly tied to blueprint: \"The blueprint is explicit: 'a digest that arrives late is worse than one skipped.' Honoring this means we must not re-enqueue failed jobs outside the Monday window.\""
+    },
+    {
+      "text": "Per-user-timezone send scheduling is designed concretely (how 8am-local across many timezones becomes scheduled sends), and the design handles the blueprint's 'job runs late' deviation without corrupting the seven-day content window.",
+      "passed": true,
+      "evidence": "§4 `digest_send_schedule` table stores `next_send_at` as UTC-converted Monday 8:00 AM per user timezone. D4 states: \"The job receives the user's scheduled_send_at timestamp from which to derive the window\" — window is computed from the schedule row, not wall-clock time. \"For a delayed job start, the window shifts slightly (the blueprint explicitly accepts this: 'content is unaffected').\" §7 failure table: \"DigestSchedulerJob starts late — Window bounds computed at job runtime — Content window is unaffected; only send time slips.\""
+    },
+    {
+      "text": "The design specifies that no email is sent when a user has no relevant activity, and correctly handles the mid-week new-user partial window — both blueprint rules.",
+      "passed": false,
+      "evidence": "No-activity rule is handled (§7: \"Activity query returns zero rows — Row count check — Job exits early; no email sent\"). The mid-week partial window is self-identified as NOT fully addressed. The P4 last-call section states: \"New-user mid-week edge case: covered by D4 (window bounded by user join date — assumption: created_at on the user or a workspace_memberships.joined_at date is used as the lower bound for brand-new users). Flagged as a minor gap: the activity query as designed uses a fixed 7-day lookback; for new users, the query would naturally return only items since they joined if workspace membership is the join condition. This should be verified during implementation.\" No design element in the body of the document computes MAX(window_start, user.created_at) or otherwise bounds the window for new users. The treatment is deferred as an implementation note, not designed."
+    },
+    {
+      "text": "The unsubscribe link is designed to be unguessable and scoped to the issuing account (a signed or random token, not a sequential identifier), addressing the adversarial scenario; and digest content is scoped to only what each user is permitted to see.",
+      "passed": true,
+      "evidence": "D6: token is \"HMAC-SHA256(secret_key, 'digest-unsubscribe:#{user_id}')\" — not guessable without the key; encodes user_id so it cannot act on a different account. §8: \"The activity query joins through workspace membership (D5). A user can only see items in workspaces they belong to, and only if that workspace is not deleted. This is enforced at query time, not in application code.\""
+    },
+    {
+      "text": "The design names the central scheduling trade-off and resolves it with principle-grounded reasoning, and the digest-assembly query is bounded — the 'up to ten highlighted items, +N more' cap is reflected as a real query limit, not unbounded fetching.",
+      "passed": false,
+      "evidence": "The central scheduling trade-off is named and resolved: D1 and D2 are both named trade-offs resolved with principle citations. However, the digest-assembly query is never given a concrete LIMIT. D4 describes the query as \"WHERE created_at >= :window_start AND created_at < :window_end\" with no LIMIT clause. §6 says \"Activity query per job: 1 Postgres query — Scoped join; bounded result set\" — but this is prose asserting bounded, not an actual query LIMIT. The blueprint's 'up to ten highlighted items, +N more' cap is never reflected as a LIMIT N in any query or pseudocode."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 2,
+    "total": 8,
+    "pass_rate": 0.75
+  }
+}

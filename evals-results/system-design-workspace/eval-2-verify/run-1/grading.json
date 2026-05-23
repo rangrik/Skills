@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "The document is complete to the skill's template: all 15 sections are present and filled, and the Decision Coverage Checklist accounts for every one of the 22 taxonomy dimensions (A1-A14 and B1-B8) with a status (Resolved / Assumed / N/A) and a substantive note — no row left blank or rubber-stamped.",
+      "passed": true,
+      "evidence": "Sections 1–15 (plus §16 Blueprint Coverage and Appendix A) are all present and substantively filled. §15 Decision Coverage Checklist contains all 22 rows: A1–A14 and B1–B8, each with a status (Resolved / Assumed / N/A) and a non-trivial note pointing to a specific section or decision. Example: \"A3 Concurrency & consistency | Resolved | D2 — unique constraint on digest_sends(user_id, week_start) prevents double-send; idempotency survives concurrent workers.\""
+    },
+    {
+      "text": "Assumptions and Accepted Compromises are each first-class tables (not prose); every accepted compromise names the specific design principle it bends and gives a concrete revisit trigger.",
+      "passed": true,
+      "evidence": "§11 Assumptions is a markdown table with columns: #, Assumption, Why safe to assume, Needs confirmation?. §12 Accepted Compromises is a table with columns: #, Compromise, What we give up, Principle bent, Why acceptable now, Revisit trigger. Each compromise names the principle bent, e.g. C1: \"Design for failure (Principle 5)\", and gives a concrete revisit trigger, e.g. \"If missed-digest rate exceeds 1% of sends, invest in the reconciliation pass as a first-class feature.\""
+    },
+    {
+      "text": "The idempotency mechanism guarantees one digest per user per week even under a concurrent double-run of the job — it relies on a database-enforced dedup (e.g. a unique key on user + week), not a check-then-send that has a race window. (Correctness trap: an application-level 'already sent?' check is not concurrency-safe.)",
+      "passed": true,
+      "evidence": "D2 states: \"Before calling SendGrid, each DigestSendJob inserts a row into digest_sends(user_id, week_start, status, created_at) with a unique constraint on (user_id, week_start). If the insert fails due to a conflict, the job exits cleanly without sending.\" The schema in §4 shows `CONSTRAINT digest_sends_user_week_unique UNIQUE (user_id, week_start)`. The alternatives section explicitly rejects \"Check-then-send without a unique constraint: race condition between two concurrent workers for the same user.\""
+    },
+    {
+      "text": "The design handles the email-provider failure rule correctly: retries are time-bounded, and on continued failure the digest is dropped for the week rather than delayed — and the design explicitly ties this to the blueprint's 'a late digest is worse than a skipped one' rule.",
+      "passed": true,
+      "evidence": "§7 states: \"Retry deadline: The retry schedule must exhaust before ~12:00 local Monday... Configure sidekiq_options retry: 5 with exponential backoff — 5 retries cover ~2–4 hours, exhausting by mid-morning.\" And: \"On final retry exhaustion, Sidekiq moves the job to the dead queue; a sidekiq_retries_exhausted callback marks digest_sends.status = 'failed' and logs the error.\" D2's trade-off section explicitly cites: \"A missed digest is acceptable per the blueprint's 'a digest that arrives late is worse than one skipped' preference.\""
+    },
+    {
+      "text": "Per-user-timezone send scheduling is designed concretely (how 8am-local across many timezones becomes scheduled sends), and the design handles the blueprint's 'job runs late' deviation without corrupting the seven-day content window.",
+      "passed": true,
+      "evidence": "D1 describes: \"Run one Sidekiq cron job every hour. It queries users whose configured timezone places them at Monday 08:00–08:59 UTC at that moment, filtered to those who have not yet received a digest for the current week_start.\" §7 \"Job delayed and starts late\" states: \"The scheduler computes week_start and the 7-day window from the user's timezone — not from the wall clock at job execution time. A late job uses the same window bounds, so content is unaffected. Send time may slip, which the blueprint accepts.\""
+    },
+    {
+      "text": "The design specifies that no email is sent when a user has no relevant activity, and correctly handles the mid-week new-user partial window — both blueprint rules.",
+      "passed": true,
+      "evidence": "D6 handles no-activity: \"Before inserting the idempotency row, DigestSendJob queries for activity counts. If all counts are zero, the job exits without inserting into digest_sends and without sending an email.\" D7 handles mid-week partial window: \"The rolling 7-day window is computed as [user.created_at OR (monday_00:00 - 7 days), monday_00:00), whichever is later. For a user who joined mid-week, user.created_at is the window start.\" The blueprint coverage checklist also confirms: \"Window start is MAX(user.created_at, monday_minus_7_days).\""
+    },
+    {
+      "text": "The unsubscribe link is designed to be unguessable and scoped to the issuing account (a signed or random token, not a sequential identifier), addressing the adversarial scenario; and digest content is scoped to only what each user is permitted to see.",
+      "passed": true,
+      "evidence": "D5 defines: \"HMAC-SHA256(secret_key, \\\"unsubscribe:#{user_id}:#{week_start_epoch}\\\")\" as the token, and the controller \"validates the HMAC, extracts the user_id.\" D4 states the activity query \"is always scoped to items the user is authorized to see: filtered by workspace_id values the user belongs to (standard workspace-membership join). Items in deleted workspaces are excluded by joining on workspaces WHERE deleted_at IS NULL.\""
+    },
+    {
+      "text": "The design names the central scheduling trade-off and resolves it with principle-grounded reasoning, and the digest-assembly query is bounded — the 'up to ten highlighted items, +N more' cap is reflected as a real query limit, not unbounded fetching.",
+      "passed": true,
+      "evidence": "D1 names the scheduling trade-off explicitly: \"Trade-off accepted: Send time can slip by up to 59 minutes relative to the user's exact 08:00 (the job fires at most once per hour). The blueprint explicitly accepts 'send time may slip' for late jobs, and sub-hour precision has no material user value for a weekly digest.\" D3 states: \"the top ten most recent items are selected for the highlight list using ORDER BY created_at DESC LIMIT 10. An +N more count is computed as total_count - 10 when the total exceeds ten.\""
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 0,
+    "total": 8,
+    "pass_rate": 1.00
+  }
+}

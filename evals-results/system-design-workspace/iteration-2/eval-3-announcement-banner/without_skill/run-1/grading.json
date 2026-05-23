@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "The document is complete to the skill's template: all 15 sections are present and filled, and the Decision Coverage Checklist accounts for every one of the 22 taxonomy dimensions (A1-A14 and B1-B8) with a status (Resolved / Assumed / N/A) and a substantive note — no row left blank or rubber-stamped.",
+      "passed": false,
+      "evidence": "The document has 12 sections with different names and organization. There is no Decision Coverage Checklist anywhere in the document. The following required sections are entirely absent: Architecture Decisions (there is no dedicated ADR section), External Services, Performance/Scale/Caching (§8 has a brief volume estimate under 'Database Considerations' but no dedicated performance section), Reliability, Observability, Rollout, Assumptions, Accepted Compromises, Out of Scope, and Decision Coverage Checklist. The 22 taxonomy dimensions (A1-A14, B1-B8) are never enumerated or assessed."
+    },
+    {
+      "text": "Assumptions and Accepted Compromises are each first-class tables (not prose); every accepted compromise names the specific design principle it bends and gives a concrete revisit trigger.",
+      "passed": false,
+      "evidence": "There is no Assumptions section and no Accepted Compromises section. Assumptions appear only as inline prose, e.g., §5.5: 'Assumption: near-real-time propagation (within the polling interval) is acceptable.' Trade-offs are mentioned briefly in prose, e.g., §6.1: 'A WebSocket push could reduce latency but adds significant complexity for a low-urgency feature.' No named design principles are cited anywhere in the document, and no revisit triggers appear."
+    },
+    {
+      "text": "The design stores per-user dismissal server-side so it persists across a user's devices and sessions — it does NOT rely on client-only storage (localStorage or cookies), which would fail the blueprint's cross-device requirement. (Correctness trap: client-side dismissal is the easy wrong answer.)",
+      "passed": true,
+      "evidence": "The announcement_dismissals table in §3.2 stores dismissals server-side, keyed by (announcement_id, user_id) with a composite primary key. §2 non-functional requirements states: 'Dismissal must be recorded durably (survives server restart, re-login, new device).' The useActiveBanner hook in §6.2 calls the server dismiss API; local state is only a rendering optimization after a confirmed server write. Client-only storage is not used."
+    },
+    {
+      "text": "The design is proportional to a small feature: it does not introduce infrastructure the feature does not need (no message queue, websockets, Redis, or a background job purely to expire banners — expiry is handled at query time), and any such omission is a deliberate, stated choice.",
+      "passed": true,
+      "evidence": "§5.5 explicitly states: 'There is no background job for expiry. Expiry is enforced purely at query time: the GET /active-announcement query filters ends_at IS NULL OR ends_at > NOW().' §6.1 explicitly rejects WebSocket: 'A WebSocket push could reduce latency but adds significant complexity for a low-urgency feature; the simpler polling approach is preferred.' No Redis, message queue, or background expiry worker is introduced. §12 notes push/SSE as future work, not current scope. The omissions are stated as deliberate choices with rationale."
+    },
+    {
+      "text": "The 'one active banner per workspace' rule is enforced structurally (e.g. a partial unique index) so that two admins publishing concurrently resolve deterministically rather than leaving two active banners.",
+      "passed": false,
+      "evidence": "The design uses a boolean is_active column and relies on application-layer enforcement. §3.1 states: 'Only one row per workspace should have is_active = TRUE at any time; this invariant is maintained by the service layer (see §5.2).' The index defined is 'CREATE INDEX idx_announcements_workspace_active ON announcements (workspace_id, is_active, starts_at, ends_at)' — a regular index, not a partial unique index. There is no DB-level constraint preventing two concurrent INSERT/UPDATE operations from producing two rows with is_active = TRUE. The concurrent-publish race described in the blueprint is not deterministically resolved; §7 says 'last write wins' via the transaction, but without a unique constraint a race between two transactions can both succeed and leave two active rows."
+    },
+    {
+      "text": "Dismissal is keyed to the banner's identity, not its text, so that an admin editing the banner text does not resurface it for users who already dismissed it — matching the blueprint rule explicitly.",
+      "passed": true,
+      "evidence": "§3.2 explicitly states: 'Rows are tied to the announcement_id, not to the banner text. Editing the text does not affect existing dismissals, satisfying the \"edit does not un-dismiss\" rule.' The dismissals table uses announcement_id (UUID primary key) as the foreign key, not any text field. §5.3 confirms: 'PATCH only updates the existing row. No dismissal records are touched.'"
+    },
+    {
+      "text": "Admin-only authorization for create, edit, and remove is enforced server-side, addressing the adversarial scenario that a non-admin must not publish a banner via a crafted request.",
+      "passed": true,
+      "evidence": "§5.4 states: 'A shared Express middleware requireWorkspaceAdmin(req, res, next) checks that req.user.workspaceRoles[workspaceId] includes \"admin\". This middleware is applied to the POST, PATCH, and DELETE admin routes.' §7 security table explicitly addresses the adversarial scenario: 'Non-admin publishes a banner via crafted HTTP request | requireWorkspaceAdmin middleware enforces the check server-side; client role checks are cosmetic only.'"
+    },
+    {
+      "text": "The taxonomy walk is scoped honestly to the feature's real risk: low-relevance dimensions (e.g. external services, heavy scale, caching) are marked N/A or low-risk Assumed with a genuine one-line reason — not padded with invented concerns to look thorough.",
+      "passed": false,
+      "evidence": "There is no taxonomy checklist in the document. Without a Decision Coverage Checklist enumerating the 22 dimensions with statuses and notes, there is no taxonomy walk to evaluate for honest scoping. This assertion cannot be satisfied by a document that does not contain the checklist."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 4,
+    "total": 8,
+    "pass_rate": 0.50
+  }
+}

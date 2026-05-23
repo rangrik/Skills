@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "The document is complete to the skill's template: all 15 sections are present and filled, and the Decision Coverage Checklist accounts for every one of the 22 taxonomy dimensions (A1-A14 and B1-B8) with a status (Resolved / Assumed / N/A) and a substantive note — no row left blank or rubber-stamped.",
+      "passed": true,
+      "evidence": "Sections 1–16 plus Appendix A are all present and substantively filled. §15 Decision Coverage Checklist contains all 22 rows: A1–A14 and B1–B8, each with a status (Resolved / Assumed / N/A) and a non-trivial note. Example: \"A3 Concurrency & consistency | Resolved | D2 — DB unique constraint on digest_sends(user_id, iso_week) is the atomic idempotency guard; §7 failure matrix.\""
+    },
+    {
+      "text": "Assumptions and Accepted Compromises are each first-class tables (not prose); every accepted compromise names the specific design principle it bends and gives a concrete revisit trigger.",
+      "passed": true,
+      "evidence": "§11 Assumptions is a markdown table with columns: #, Assumption, Why safe to assume, Needs confirmation?. §12 Accepted Compromises is a table with columns: #, Compromise, What we give up, Principle bent, Why acceptable now, Revisit trigger. Each compromise names the principle, e.g. C2: \"Principle 8 (Measure, don't guess)\" with concrete trigger: \"When Monday digest queries account for > 5% of Postgres read load, introduce a nightly incremental aggregate.\""
+    },
+    {
+      "text": "The idempotency mechanism guarantees one digest per user per week even under a concurrent double-run of the job — it relies on a database-enforced dedup (e.g. a unique key on user + week), not a check-then-send that has a race window. (Correctness trap: an application-level 'already sent?' check is not concurrency-safe.)",
+      "passed": true,
+      "evidence": "D2 states: \"DigestSendJob performs an atomic INSERT INTO digest_sends (user_id, iso_week) ... ON CONFLICT DO NOTHING and checks the row count. If 0 rows inserted (conflict), the job exits immediately.\" The alternatives explicitly reject \"Application-level check then insert (non-atomic): race condition between two concurrent workers. Rejected.\" §7 idempotency section: \"even if two concurrent DigestSendJob workers race for the same user, the DB constraint ensures only one proceeds to SendGrid.\""
+    },
+    {
+      "text": "The design handles the email-provider failure rule correctly: retries are time-bounded, and on continued failure the digest is dropped for the week rather than delayed — and the design explicitly ties this to the blueprint's 'a late digest is worse than a skipped one' rule.",
+      "passed": true,
+      "evidence": "D7 states: \"DigestSendJob retries on SendGrid failure up to 3 times with exponential back-off (5 s, 25 s, 125 s — fitting within a ~3-minute window). After exhausting retries, the job is marked dead in Sidekiq's dead-job queue... The digest is not re-queued for later in the day.\" D7's Why section cites: \"Direct blueprint requirement: 'A digest that arrives late is worse than one skipped — drop it for the week rather than delay into the afternoon.'\" The Accepted Compromises C2 also references the blueprint rule."
+    },
+    {
+      "text": "Per-user-timezone send scheduling is designed concretely (how 8am-local across many timezones becomes scheduled sends), and the design handles the blueprint's 'job runs late' deviation without corrupting the seven-day content window.",
+      "passed": true,
+      "evidence": "D1 describes a per-minute scheduler that \"queries users for those whose digest_send_at time falls within the current minute's window (i.e., timezone maps to an 8:00 AM UTC offset that is 'now').\" The §7 failure matrix row \"Scheduler job delayed (late start)\" states: \"Users still get correct 7-day window; absolute send time may slip\" with note \"Window is computed from monday_00:00_local regardless of when job runs; content is unaffected.\""
+    },
+    {
+      "text": "The design specifies that no email is sent when a user has no relevant activity, and correctly handles the mid-week new-user partial window — both blueprint rules.",
+      "passed": true,
+      "evidence": "D5 handles no-activity: \"After the activity query, if total activity count is zero, DigestSendJob exits without sending and without inserting into digest_sends.\" D8 handles mid-week partial window: \"The activity assembly query uses MAX(created_at, user.created_at) as the window start, rather than a fixed Monday-00:00 cutoff. This ensures a user who joined mid-week gets a digest covering only the days since joining.\" The blueprint coverage checklist confirms: \"Window start = GREATEST(monday_00:00_local, user.created_at).\""
+    },
+    {
+      "text": "The unsubscribe link is designed to be unguessable and scoped to the issuing account (a signed or random token, not a sequential identifier), addressing the adversarial scenario; and digest content is scoped to only what each user is permitted to see.",
+      "passed": true,
+      "evidence": "D6 defines: \"token of the form HMAC-SHA256(secret_key, user_id + \\\":\\\" + iso_week), URL-safe base64 encoded. The unsubscribe endpoint validates the signature and acts only on the user_id embedded in the verified payload.\" D4 states: \"activity assembly queries JOIN on the user's workspace memberships and apply the same permission predicates used elsewhere... The query must not return items from deleted workspaces.\""
+    },
+    {
+      "text": "The design names the central scheduling trade-off and resolves it with principle-grounded reasoning, and the digest-assembly query is bounded — the 'up to ten highlighted items, +N more' cap is reflected as a real query limit, not unbounded fetching.",
+      "passed": true,
+      "evidence": "D1 names and resolves the scheduling trade-off between per-minute sweep vs. 24 timezone-bucket queues, citing Principle 1 (Simplicity first) and Principle 2 (Match existing patterns). For the bounded query, §6 states: \"The top-10 highlighted items query uses ORDER BY created_at DESC LIMIT 11 (11 to detect '+N more').\" D3 describes assembly of \"top-10 highlighted items\" and the blueprint coverage checklist confirms: \"ORDER BY created_at DESC LIMIT 11; if 11 rows returned — '+N more' in template.\""
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 0,
+    "total": 8,
+    "pass_rate": 1.00
+  }
+}

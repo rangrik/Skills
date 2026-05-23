@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "The document is complete to the skill's template: all 15 sections are present and filled, and the Decision Coverage Checklist accounts for every one of the 22 taxonomy dimensions (A1-A14 and B1-B8) with a status (Resolved / Assumed / N/A) and a substantive note — no row left blank or rubber-stamped.",
+      "passed": true,
+      "evidence": "Document has exactly 15 numbered sections (§1 Summary through §15 Decision Coverage Checklist) plus Appendix A. §15 contains all 22 rows (A1–A14 and B1–B8), each with a status and a non-trivial note. Example: A14 reads 'Assumed — Blueprint does not specify a11y requirements… Assumed: WCAG 2.1 AA color contrast for the grid, ARIA label on the grid, keyboard-accessible Refresh button.' B7 reads 'Assumed (A5) — GITHUB_WIDGET_ENABLED flag; confirm flag system with team — §10.' No row is blank or rubber-stamped."
+    },
+    {
+      "text": "Assumptions and Accepted Compromises are each first-class tables (not prose); every accepted compromise names the specific design principle it bends and gives a concrete revisit trigger.",
+      "passed": true,
+      "evidence": "§11 is a 4-column Assumptions table (9 rows, A1–A9). §12 is a 6-column Accepted Compromises table (5 rows, C1–C5) with a dedicated 'Principle bent' column and a 'Revisit trigger' column. Every row names a principle explicitly: C1 'Principle 8 (Measure, don't guess)', revisit trigger 'If the product adds email digests'; C2 'Principle 6 (bounded operations)', trigger 'If Redis availability SLO degrades'; C5 'Principle 11 (Security & privacy)', trigger 'If the scope is ever expanded to include write permissions.'"
+    },
+    {
+      "text": "The design guarantees that a visitor viewing a profile never triggers a GitHub API call — reads are always served from stored data — and this is stated as a deliberate design property, not left incidental. (Correctness trap: a naive design fetches on page view.)",
+      "passed": true,
+      "evidence": "§1 frames the core architectural choice as 'served directly from the database on every page load — visitors never hit the GitHub API.' D1 §3 states as an explicit decision: 'No read request, from any user, ever triggers a live GitHub API call.' The §8 adversarial table entry 'Visitor triggers a data fetch' lists the mitigation: 'Visitors hit a pure DB-read endpoint. No fetch is ever triggered by an unauthenticated or non-owner request.' This is stated three times as a deliberate property, not incidental."
+    },
+    {
+      "text": "The once-per-hour owner refresh cooldown is enforced server-side in a way a scripted client cannot bypass (server-checked timestamp, lock, or equivalent), explicitly addressing the blueprint's adversarial 'scripting the request' scenario — not merely a disabled button or client-side timer.",
+      "passed": true,
+      "evidence": "D4 specifies a Redis key 'github_refresh_cooldown:<user_id> with a 3600-second TTL… the POST endpoint checks this key before enqueuing; if present, it returns 429.' D4 quotes the blueprint adversarial scenario directly: 'The blueprint's adversarial scenario (\"scripting the request\") requires a server-side, cross-process lock. Redis is the right answer.' The §8 adversarial table adds: 'Rate-limiting is per user_id (not per IP), so proxying doesn't help the attacker.'"
+    },
+    {
+      "text": "The design specifies what the owner and visitors each see for all three GitHub-failure deviation scenarios — GitHub unreachable/slow, token revoked/expired, and a rate-limit response — with a concrete mechanism for each, and never surfaces a hard error to visitors.",
+      "passed": true,
+      "evidence": "§7 covers all three with concrete mechanisms: (1) GitHub unreachable: Celery retry policy (3x exponential backoff), last snapshot always served, 'Last updated <time>' label shown; visitors see no error. (2) Token revoked/expired: task catches 401, sets token_status='revoked'/'expired', owner sees 'Reconnect GitHub', visitors see last stored grid. (3) Rate limit 429: respects Retry-After header via Celery countdown, sets fetch_status='error', owner sees 'Couldn't refresh right now, try again later', visitors see last snapshot. All three visitor experiences are error-free."
+    },
+    {
+      "text": "The design explicitly names the central architectural trade-off (serving stored, possibly-stale data to avoid GitHub API load) and resolves it with principle-grounded reasoning about the freshness-vs-cost balance.",
+      "passed": true,
+      "evidence": "D1 states: 'Trade-off accepted: Data shown to visitors can be up to 24 hours stale. This is explicitly allowed by the blueprint and is the core freshness-vs-cost trade-off the product owner accepted.' The resolution cites Principle 13 (Cache invalidation is a design decision) and Principle 12 (Cost as a first-class constraint). §12 C3 labels it 'Principle 8 (Measure for accuracy)' with the revisit trigger 'If the product changes the freshness requirement.' §1 calls the background-cache model 'the core architectural choice.'"
+    },
+    {
+      "text": "OAuth token handling is specified concretely — encrypted at rest and never returned in any API response or exposed to visitors — addressing the blueprint's scenario that a visitor must never see another member's token.",
+      "passed": true,
+      "evidence": "§4 schema defines `access_token_enc BYTEA NOT NULL` with table invariant: 'access_token_enc is never readable in API responses.' §8 Secrets handling: 'Per-user OAuth access tokens are encrypted at rest using a symmetric key (e.g. Fernet / cryptography library)… Tokens are never included in logs, error messages, or API responses.' §8 adversarial table: 'The token is stored encrypted in Postgres and never serialized in any API response. The widget read endpoint returns only contribution data, not connection metadata.'"
+    },
+    {
+      "text": "GitHub API consumption is bounded: background refresh runs only for stale data and cannot fan out without limit, and per-call cost or quota is acknowledged — directly serving the user's stated priority of not hammering the API.",
+      "passed": true,
+      "evidence": "D5 adopts lazy read-time refresh 'only [for] profiles that are actually being viewed' plus an in-flight guard (Redis key github_fetch_in_flight:<user_id>) preventing duplicate tasks. §6 quantifies the bound: 'at most ~20k tasks/day… roughly 0.23 tasks/second average, well within Celery + Postgres capacity.' §5 external services table acknowledges quota: '5,000 points/hour per authenticated user (GraphQL cost: ~1 point per contributionsCollection query).'"
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 0,
+    "total": 8,
+    "pass_rate": 1.00
+  }
+}

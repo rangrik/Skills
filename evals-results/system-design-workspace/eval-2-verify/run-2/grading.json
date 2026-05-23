@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "The document is complete to the skill's template: all 15 sections are present and filled, and the Decision Coverage Checklist accounts for every one of the 22 taxonomy dimensions (A1-A14 and B1-B8) with a status (Resolved / Assumed / N/A) and a substantive note — no row left blank or rubber-stamped.",
+      "passed": true,
+      "evidence": "Sections 1–16 plus Appendix A are all present and substantively filled. §15 Decision Coverage Checklist contains all 22 rows: A1–A14 and B1–B8, each with a status and a non-trivial note. Example: \"A3 Concurrency & consistency | Resolved | D2, §6 — UNIQUE (user_id, week_start_date) handles duplicate jobs; no application lock needed.\""
+    },
+    {
+      "text": "Assumptions and Accepted Compromises are each first-class tables (not prose); every accepted compromise names the specific design principle it bends and gives a concrete revisit trigger.",
+      "passed": true,
+      "evidence": "§11 Assumptions is a markdown table with columns: #, Assumption, Why safe to assume, Needs confirmation?. §12 Accepted Compromises is a table with columns: #, Compromise, What we give up, Principle bent, Why acceptable now, Revisit trigger. Each compromise names the principle, e.g. C1: \"Design for failure — ideal system would retry across the week\" and a concrete trigger: \"If blueprint changes to allow late delivery.\""
+    },
+    {
+      "text": "The idempotency mechanism guarantees one digest per user per week even under a concurrent double-run of the job — it relies on a database-enforced dedup (e.g. a unique key on user + week), not a check-then-send that has a race window. (Correctness trap: an application-level 'already sent?' check is not concurrency-safe.)",
+      "passed": true,
+      "evidence": "D2 states: \"A digest_sends table with a UNIQUE (user_id, week_start_date) constraint serves as the at-most-one-per-week guarantee. Before doing any work, DigestEmailJob attempts an INSERT; if the row already exists (duplicate job, scheduler re-run), it exits immediately without sending.\" The alternatives explicitly reject \"Application-level check-before-insert: Race-prone (TOCTOU). Rejected.\""
+    },
+    {
+      "text": "The design handles the email-provider failure rule correctly: retries are time-bounded, and on continued failure the digest is dropped for the week rather than delayed — and the design explicitly ties this to the blueprint's 'a late digest is worse than a skipped one' rule.",
+      "passed": true,
+      "evidence": "D3 states: \"the retry window is capped to the same calendar day (Monday). If all retries are exhausted, the digest_sends row is marked status='failed' and the send is dropped for that week. No attempt is made to deliver late.\" D3's Why section explicitly quotes the blueprint: \"The blueprint explicitly states: 'a digest that arrives late is worse than one skipped.' This is a hard product requirement.\""
+    },
+    {
+      "text": "Per-user-timezone send scheduling is designed concretely (how 8am-local across many timezones becomes scheduled sends), and the design handles the blueprint's 'job runs late' deviation without corrupting the seven-day content window.",
+      "passed": true,
+      "evidence": "D7 states: \"The DigestSchedulerJob cron runs hourly at :00 UTC. Each run queries for users where ((8:00 AM in user.timezone) BETWEEN now() AND now() + 1 hour).\" §7 \"Late job start\" states: \"week_start_date is computed from the user's local time at job enqueue time, not job execution time. The content query uses Monday 00:00 local time as the window end, derived from the same week_start_date. A late start shifts send time but does not change the seven-day content window.\""
+    },
+    {
+      "text": "The design specifies that no email is sent when a user has no relevant activity, and correctly handles the mid-week new-user partial window — both blueprint rules.",
+      "passed": true,
+      "evidence": "§7 states for no-activity: \"Job exits before send if DigestContentQuery returns zero activity rows; digest_sends.status = 'skipped_no_activity'.\" For the mid-week new-user case, §7 \"New user mid-week\" states: \"DigestContentQuery uses MAX(user.created_at, week_start_date_utc) as the lower bound of the activity window. This naturally covers only the days since the user joined.\" This explicitly clamps the window start to the user's creation date."
+    },
+    {
+      "text": "The unsubscribe link is designed to be unguessable and scoped to the issuing account (a signed or random token, not a sequential identifier), addressing the adversarial scenario; and digest content is scoped to only what each user is permitted to see.",
+      "passed": true,
+      "evidence": "D4 states: \"Unsubscribe links embed an HMAC-SHA256 token derived from user_id + issued_week signed with a server-side secret.\" D5 states: \"DigestContentQuery applies the same row-level permission filters used elsewhere in the application when fetching activity data. Items in a deleted workspace are excluded by joining against active workspaces. The query is never a raw 'all activity for this user_id.'\""
+    },
+    {
+      "text": "The design names the central scheduling trade-off and resolves it with principle-grounded reasoning, and the digest-assembly query is bounded — the 'up to ten highlighted items, +N more' cap is reflected as a real query limit, not unbounded fetching.",
+      "passed": true,
+      "evidence": "D1 and D7 together name the scheduling trade-off (single fixed UTC cron vs. hourly computed timezone filter vs. precomputed next_send_at column) and resolve with principle-grounded reasoning citing Simplicity and Principle of least surprise. §6 Bounded operations explicitly states: \"Highlighted items are capped at ten in the query (LIMIT 10), matching the blueprint's stated cap. The '+N more' count is derived from a separate COUNT(*) query with the same filters but without the LIMIT, or from a LIMIT 11 query where an 11th result signals overflow.\""
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 0,
+    "total": 8,
+    "pass_rate": 1.00
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "The document is complete to the skill's template: all 15 sections are present and filled, and the Decision Coverage Checklist accounts for every one of the 22 taxonomy dimensions (A1-A14 and B1-B8) with a status (Resolved / Assumed / N/A) and a substantive note — no row left blank or rubber-stamped.",
+      "passed": false,
+      "evidence": "The document has 13 sections, not 15. Missing entirely: 'External Services', 'Reliability & Failure Handling', 'Observability', 'Rollout & Operability', and 'Decision Coverage Checklist'. There is no section covering taxonomy dimensions A1-A14 or B1-B8. §2 Goals/Non-Goals covers some scope items, §10 Performance and §11 Security cover parts of A1/A8, but there is no Decision Coverage Checklist and at least five required sections are absent."
+    },
+    {
+      "text": "Assumptions and Accepted Compromises are each first-class tables (not prose); every accepted compromise names the specific design principle it bends and gives a concrete revisit trigger.",
+      "passed": false,
+      "evidence": "§13 'Open Questions (resolved as assumptions)' is a two-column table (Question / Assumption Made) with 6 rows — it functions as a partial assumptions table but is not titled 'Assumptions' and is incomplete (many assumptions made in the document body are not captured here). There is no 'Accepted Compromises' section anywhere in the document. No compromise names a design principle it bends, and no revisit trigger is provided for any tradeoff."
+    },
+    {
+      "text": "The single-default-per-user-per-table invariant and the unique-view-name-per-user-per-table invariant are enforced at the database level (constraint or partial unique index), not only in application code — a substantive application of 'make illegal states unrepresentable'.",
+      "passed": true,
+      "evidence": "For name uniqueness: §3.2 specifies 'CREATE UNIQUE INDEX idx_saved_views_unique_name ON saved_views (user_id, table_identifier, name)' and §9 migration confirms 'add_index :saved_views, [:user_id, :table_identifier, :name], unique: true'. For single-default: §3.4 uses a separate 'user_default_views' table with 'CREATE UNIQUE INDEX idx_user_default_views_unique ON user_default_views (user_id, table_identifier)' — the unique index on this table enforces at most one default row per user per table at the DB level. Both invariants are enforced by DB constraints, not only application code."
+    },
+    {
+      "text": "The design correctly resolves the blueprint's concurrent-save race (two browser tabs saving the same view name): the chosen mechanism actually closes the race (a DB uniqueness constraint with a caught error), rather than a check-then-insert that still has a time-of-check/time-of-use gap.",
+      "passed": true,
+      "evidence": "§8.1: 'Two tabs submitting the same name simultaneously both hit POST /views. The database unique index on (user_id, table_identifier, name) ensures only one insert succeeds. Rails rescues ActiveRecord::RecordNotUnique and re-raises it as a 422 with error: \"name_taken\".' The mechanism is constraint-at-insert with a caught error, not a prior existence check. The race is closed."
+    },
+    {
+      "text": "Read-only enforcement for shared views is server-side on every write path (rename, edit, delete) — addressing the adversarial scenario that a recipient must not modify the original through any crafted request — not merely hiding the edit controls in the UI.",
+      "passed": true,
+      "evidence": "§6 Authorization Model: Pundit policy shows 'update?' requires 'record.user_id == current_user.id' and 'destroy?' requires 'record.user_id == current_user.id'. The section explicitly states: 'Recipients of shared views have no write path to the original. The update? and destroy? checks ensure a 403 is returned even if a recipient constructs a raw request to PATCH /api/v1/views/:id.' Server-side enforcement on all write paths is confirmed."
+    },
+    {
+      "text": "The design prevents a user from accessing or enumerating views not shared with them, with a concrete query-scoping mechanism (and does not leak existence through error differences).",
+      "passed": false,
+      "evidence": "§5.1 provides a concrete SQL scoping mechanism (UNION of owned views and joined shared views). §11 states the GET endpoint 'scopes results to the current user — no view belonging to a non-sharing user can leak into the response.' However, the document is silent on what error is returned when a user directly requests GET /views/:id for a view they have no access to. §6 specifies 403 for write paths (update?, destroy?), but no error code or policy is specified for direct read access to an unshared view ID. The document does not address the existence-leakage concern (returning 404 vs 403 on a direct ID lookup), leaving the enumeration gap unaddressed."
+    },
+    {
+      "text": "The design handles the blueprint's data-drift edge cases — a saved view referencing a since-removed column, and a filter on a since-deleted value — specifying graceful behavior rather than an error.",
+      "passed": true,
+      "evidence": "§7.3: 'When applying a view, the frontend filters column_order against the table's current registered columns. Unknown column keys are silently dropped (matching the blueprint's edge-case rule).' And: 'when filters reference values that no longer exist, the filter is applied as-is; a zero-result set is a valid outcome and the user can edit the filter.' Both blueprint edge cases are explicitly addressed with the specified graceful behavior."
+    },
+    {
+      "text": "The design names the central data-model decision (how a view's filter/sort/column configuration is stored, and how sharing is represented) and justifies it with principle-grounded reasoning that treats the schema as the hard-to-change thing.",
+      "passed": false,
+      "evidence": "§3.2 and §3.5 describe the config storage choice (separate JSONB columns for filters and column_order, plus discrete varchar columns for sort_field and sort_direction) and §3.3 describes view_shares, but neither section justifies these choices with principle-grounded reasoning. The only near-justification is §3.5: 'No schema migration is required when new operators are added; JSONB is intentionally schemaless here' — a single sentence with no named principle, no alternatives-considered, and no explicit treatment of the schema as hard-to-change. The sharing table is introduced without any 'why this and not that' reasoning. The document makes the decisions but does not justify them."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 4,
+    "total": 8,
+    "pass_rate": 0.50
+  }
+}

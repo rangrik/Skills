@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "The document is complete to the skill's template: all 15 sections are present and filled, and the Decision Coverage Checklist accounts for every one of the 22 taxonomy dimensions (A1-A14 and B1-B8) with a status (Resolved / Assumed / N/A) and a substantive note — no row left blank or rubber-stamped.",
+      "passed": true,
+      "evidence": "All 15 numbered sections are present (1. Summary through 15. Decision Coverage Checklist). Section 15 contains a table with all 22 dimensions: A1–A14 and B1–B8. Every row has a status (20 Resolved, 1 Assumed, 1 N/A) and a substantive note citing the specific section or decision where each dimension is addressed, e.g., 'A3 Concurrency & consistency | Resolved | §7, D2 — digest_sends unique constraint; scheduler idempotent' and 'B6 Frontend integration | N/A | No frontend changes; unsubscribe redirects to a static confirmation page; feature is email-only'."
+    },
+    {
+      "text": "Assumptions and Accepted Compromises are each first-class tables (not prose); every accepted compromise names the specific design principle it bends and gives a concrete revisit trigger.",
+      "passed": true,
+      "evidence": "Section 11 is a table with columns (#, Assumption, Why safe to assume, Needs confirmation?) containing 10 rows (A1–A10). Section 12 is a table with columns (#, Compromise, What we give up, Principle bent, Why acceptable now, Revisit trigger) containing 5 rows (C1–C5). Every compromise explicitly names the bent principle, e.g., C1: 'Principle 8 (measure, don’t guess)', C2: 'Principle 7 (prefer reversible)', C3: 'Principle 11 (security & privacy by design)'. Every row has a concrete revisit trigger, e.g., C1: 'If per-job p95 query time > 5s, add covering indexes or a weekly activity summary table'."
+    },
+    {
+      "text": "The idempotency mechanism guarantees one digest per user per week even under a concurrent double-run of the job — it relies on a database-enforced dedup (e.g. a unique key on user + week), not a check-then-send that has a race window. (Correctness trap: an application-level 'already sent?' check is not concurrency-safe.)",
+      "passed": true,
+      "evidence": "D2 specifies 'A dedicated digest_sends table with a UNIQUE(user_id, week_start_date) constraint is the canonical idempotency record. Before any work, WeeklyDigestJob attempts an INSERT INTO digest_sends ... ON CONFLICT DO NOTHING and aborts if the row already exists.' D2 explicitly rejects check-then-insert as 'Race-prone. Rejected: concurrent jobs can both pass the check before either inserts.' The DB constraint is the sole primary gate, not an application-level check."
+    },
+    {
+      "text": "The design handles the email-provider failure rule correctly: retries are time-bounded, and on continued failure the digest is dropped for the week rather than delayed — and the design explicitly ties this to the blueprint's 'a late digest is worse than a skipped one' rule.",
+      "passed": true,
+      "evidence": "D5 states: 'WeeklyDigestJob uses Sidekiq’s built-in retry mechanism with sidekiq_options retry: 3 and an exponential back-off capped at ~5 minutes per retry. After 3 failures, the job goes to Sidekiq’s Dead queue (not retried).' The rationale directly quotes the blueprint: 'The blueprint is explicit: “a digest that arrives late is worse than one skipped.” This rules out unbounded retries or rescheduling to the afternoon.' Section 7 also lists this explicitly: 'SendGrid returns 5xx | Sidekiq retries up to 3 times, ~5-minute window. After 3 failures, job goes to Dead queue; no digest sent that week. | “Dropped for the week rather than delayed”'."
+    },
+    {
+      "text": "Per-user-timezone send scheduling is designed concretely (how 8am-local across many timezones becomes scheduled sends), and the design handles the blueprint's 'job runs late' deviation without corrupting the seven-day content window.",
+      "passed": true,
+      "evidence": "D1 specifies: 'A Sidekiq cron job runs every minute 24/7. Each tick queries for users where EXTRACT(DOW FROM NOW() AT TIME ZONE user_timezone) = 1 (Monday) and the local hour/minute is 08:00. It enqueues one WeeklyDigestJob per matched user.' Section 7 addresses the late-job deviation: 'Scheduler delayed / starts late | week_start_date is computed from the user’s local Monday midnight, not from the scheduler’s run time. Content window is unaffected.'"
+    },
+    {
+      "text": "The design specifies that no email is sent when a user has no relevant activity, and correctly handles the mid-week new-user partial window — both blueprint rules.",
+      "passed": false,
+      "evidence": "No-activity guard is handled: Section 7 states 'Activity query returns no rows | Job inserts (user_id, week_start_date, send_status=‘skipped_empty’) into digest_sends and exits without sending.' However, the mid-week new-user partial window is never addressed. D4 specifies the query 'filtering by user_id and created_at BETWEEN week_start AND week_end' with no mention of clamping window_start to user.created_at. No assumption, edge-case note, or code shows the blueprint's rule that a new user gets a digest covering only the days since they joined."
+    },
+    {
+      "text": "The unsubscribe link is designed to be unguessable and scoped to the issuing account (a signed or random token, not a sequential identifier), addressing the adversarial scenario; and digest content is scoped to only what each user is permitted to see.",
+      "passed": true,
+      "evidence": "D3: 'The token is HMAC-SHA256(secret_key, “unsubscribe:#{user_id}:#{week_start_date}”) Base64-URL-encoded.' Section 8.2 states: 'Unsubscribing another user: HMAC includes user_id; a token for user A cannot unsubscribe user B.' Content scoping: Section 8 ‘Content authorization’ states 'The activity query for user U must be scoped to items/workspaces that U has permission to see. The WHERE clause must include the same visibility conditions applied to in-app item listings (e.g., workspace_id IN (SELECT workspace_id FROM memberships WHERE user_id = U.id AND deleted_at IS NULL)).' Declared a 'critical security invariant'."
+    },
+    {
+      "text": "The design names the central scheduling trade-off and resolves it with principle-grounded reasoning, and the digest-assembly query is bounded — the 'up to ten highlighted items, +N more' cap is reflected as a real query limit, not unbounded fetching.",
+      "passed": false,
+      "evidence": "D1 names and resolves the scheduling trade-off with principled reasoning: 'Per-minute cron fan-out instead of a single Monday 00:00 batch job' is the heading, and the rationale cites 'Principle 2 (match existing patterns)' and 'Principle 6 (bounded operations)'. However, the digest-assembly query (D4) never specifies a LIMIT. D4 states the query 'filter[s] by user_id and created_at BETWEEN week_start AND week_end' with no cap. The blueprint’s '10 highlighted items, +N more' is mentioned in the Summary section but is not reflected as a SQL LIMIT or application-level bound in the query design. The query is unbounded as specified in D4."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 2,
+    "total": 8,
+    "pass_rate": 0.75
+  }
+}
