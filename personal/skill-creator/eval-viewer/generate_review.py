@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Generate and serve a review page for eval results.
 
-Reads the workspace directory, discovers runs (directories with outputs/),
-embeds all output data into a self-contained HTML page, and serves it via
-a tiny HTTP server. Feedback auto-saves to feedback.json in the workspace.
+Reads one skill-creator iteration results directory, discovers runs
+(directories with outputs/), embeds all output data into a self-contained HTML
+page, and serves it via a tiny HTTP server. Feedback auto-saves to
+feedback.json in the iteration directory.
 
 Usage:
-    python generate_review.py <workspace-path> [--port PORT] [--skill-name NAME]
-    python generate_review.py <workspace-path> --previous-feedback /path/to/old/feedback.json
+    python generate_review.py <results-dir>/iteration-1 [--port PORT] [--skill-name NAME]
+    python generate_review.py <results-dir>/iteration-2 --previous-results <results-dir>/iteration-1
 
 No dependencies beyond the Python stdlib are required.
 """
@@ -49,6 +50,25 @@ MIME_OVERRIDES = {
 }
 
 
+def infer_skill_name(iteration_dir: Path) -> str:
+    """Infer skill name from the current Skills repo eval-results layout."""
+    parts = iteration_dir.resolve().parts
+    if "_evals" in parts:
+        idx = len(parts) - 1 - list(reversed(parts)).index("_evals")
+        if idx + 1 < len(parts):
+            return parts[idx + 1]
+
+    # Current layout when passed .../<skill>/results/iteration-N.
+    if iteration_dir.name.startswith("iteration-") and iteration_dir.parent.name == "results":
+        return iteration_dir.parent.parent.name
+
+    # Backward compatibility with the old <skill-name>-workspace convention.
+    if iteration_dir.name.endswith("-workspace"):
+        return iteration_dir.name[:-len("-workspace")]
+
+    return iteration_dir.name
+
+
 def get_mime_type(path: Path) -> str:
     ext = path.suffix.lower()
     if ext in MIME_OVERRIDES:
@@ -87,8 +107,14 @@ def build_run(root: Path, run_dir: Path) -> dict | None:
     prompt = ""
     eval_id = None
 
-    # Try eval_metadata.json
-    for candidate in [run_dir / "eval_metadata.json", run_dir.parent / "eval_metadata.json"]:
+    # Try eval_metadata.json. Current layout stores it at the eval directory:
+    # <iteration>/eval-name/<config>/run-1/outputs -> run_dir is run-1,
+    # so check run_dir.parent.parent as well as legacy locations.
+    for candidate in [
+        run_dir / "eval_metadata.json",
+        run_dir.parent / "eval_metadata.json",
+        run_dir.parent.parent / "eval_metadata.json",
+    ]:
         if candidate.exists():
             try:
                 metadata = json.loads(candidate.read_text())
@@ -385,13 +411,13 @@ class ReviewHandler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate and serve eval review")
-    parser.add_argument("workspace", type=Path, help="Path to workspace directory")
+    parser = argparse.ArgumentParser(description="Generate and serve an eval review for one results iteration")
+    parser.add_argument("workspace", type=Path, help="Path to an iteration directory, e.g. personal/_evals/<skill>/results/iteration-1")
     parser.add_argument("--port", "-p", type=int, default=3117, help="Server port (default: 3117)")
     parser.add_argument("--skill-name", "-n", type=str, default=None, help="Skill name for header")
     parser.add_argument(
-        "--previous-workspace", type=Path, default=None,
-        help="Path to previous iteration's workspace (shows old outputs and feedback as context)",
+        "--previous-results", "--previous-workspace", dest="previous_results", type=Path, default=None,
+        help="Path to previous iteration's results directory (shows old outputs and feedback as context)",
     )
     parser.add_argument(
         "--benchmark", type=Path, default=None,
@@ -413,12 +439,12 @@ def main() -> None:
         print(f"No runs found in {workspace}", file=sys.stderr)
         sys.exit(1)
 
-    skill_name = args.skill_name or workspace.name.replace("-workspace", "")
+    skill_name = args.skill_name or infer_skill_name(workspace)
     feedback_path = workspace / "feedback.json"
 
     previous: dict[str, dict] = {}
-    if args.previous_workspace:
-        previous = load_previous_iteration(args.previous_workspace.resolve())
+    if args.previous_results:
+        previous = load_previous_iteration(args.previous_results.resolve())
 
     benchmark_path = args.benchmark.resolve() if args.benchmark else None
     benchmark = None
@@ -450,10 +476,10 @@ def main() -> None:
     print(f"\n  Eval Viewer")
     print(f"  ─────────────────────────────────")
     print(f"  URL:       {url}")
-    print(f"  Workspace: {workspace}")
+    print(f"  Results:   {workspace}")
     print(f"  Feedback:  {feedback_path}")
     if previous:
-        print(f"  Previous:  {args.previous_workspace} ({len(previous)} runs)")
+        print(f"  Previous:  {args.previous_results} ({len(previous)} runs)")
     if benchmark_path:
         print(f"  Benchmark: {benchmark_path}")
     print(f"\n  Press Ctrl+C to stop.\n")

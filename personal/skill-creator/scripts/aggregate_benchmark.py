@@ -7,16 +7,19 @@ Reads grading.json files from run directories and produces:
 - delta between with_skill and without_skill configurations
 
 Usage:
-    python aggregate_benchmark.py <benchmark_dir>
+    python aggregate_benchmark.py <iteration_dir>
 
 Example:
-    python aggregate_benchmark.py benchmarks/2026-01-15T10-30-00/
+    python -m scripts.aggregate_benchmark \
+        personal/_evals/blueprint/results/iteration-1 \
+        --skill-name blueprint \
+        --skill-path personal/blueprint
 
 The script supports two directory layouts:
 
-    Workspace layout (from skill-creator iterations):
-    <benchmark_dir>/
-    └── eval-N/
+    Current Skills repo layout (one iteration directory):
+    <bucket-root>/_evals/<skill-name>/results/iteration-N/
+    └── eval-N-descriptive-name/
         ├── with_skill/
         │   ├── run-1/grading.json
         │   └── run-2/grading.json
@@ -25,7 +28,7 @@ The script supports two directory layouts:
             └── run-2/grading.json
 
     Legacy layout (with runs/ subdirectory):
-    <benchmark_dir>/
+    <iteration_dir>/
     └── runs/
         └── eval-N/
             ├── with_skill/
@@ -40,6 +43,17 @@ import math
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+
+def config_sort_key(path: Path) -> tuple[int, str]:
+    """Keep the candidate/current skill before its baseline in summaries."""
+    order = {
+        "with_skill": 0,
+        "new_skill": 0,
+        "without_skill": 1,
+        "old_skill": 1,
+    }
+    return (order.get(path.name, 99), path.name)
 
 
 def calculate_stats(values: list[float]) -> dict:
@@ -85,10 +99,13 @@ def load_run_results(benchmark_dir: Path) -> dict:
 
     for eval_idx, eval_dir in enumerate(sorted(search_dir.glob("eval-*"))):
         metadata_path = eval_dir / "eval_metadata.json"
+        eval_name = eval_dir.name
         if metadata_path.exists():
             try:
                 with open(metadata_path) as mf:
-                    eval_id = json.load(mf).get("eval_id", eval_idx)
+                    metadata = json.load(mf)
+                eval_id = metadata.get("eval_id", eval_idx)
+                eval_name = metadata.get("eval_name") or metadata.get("name") or eval_dir.name
             except (json.JSONDecodeError, OSError):
                 eval_id = eval_idx
         else:
@@ -97,8 +114,9 @@ def load_run_results(benchmark_dir: Path) -> dict:
             except ValueError:
                 eval_id = eval_idx
 
-        # Discover config directories dynamically rather than hardcoding names
-        for config_dir in sorted(eval_dir.iterdir()):
+        # Discover config directories dynamically while keeping candidate/current
+        # configs before baselines so deltas read as candidate minus baseline.
+        for config_dir in sorted(eval_dir.iterdir(), key=config_sort_key):
             if not config_dir.is_dir():
                 continue
             # Skip non-config directories (inputs, outputs, etc.)
@@ -126,6 +144,7 @@ def load_run_results(benchmark_dir: Path) -> dict:
                 # Extract metrics
                 result = {
                     "eval_id": eval_id,
+                    "eval_name": eval_name,
                     "run_number": run_number,
                     "pass_rate": grading.get("summary", {}).get("pass_rate", 0.0),
                     "passed": grading.get("summary", {}).get("passed", 0),
@@ -237,6 +256,7 @@ def generate_benchmark(benchmark_dir: Path, skill_name: str = "", skill_path: st
         for result in results[config]:
             runs.append({
                 "eval_id": result["eval_id"],
+                "eval_name": result.get("eval_name", str(result["eval_id"])),
                 "configuration": config,
                 "run_number": result["run_number"],
                 "result": {
@@ -253,12 +273,16 @@ def generate_benchmark(benchmark_dir: Path, skill_name: str = "", skill_path: st
                 "notes": result["notes"]
             })
 
-    # Determine eval IDs from results
+    # Determine eval IDs and observed run count from results
     eval_ids = sorted(set(
         r["eval_id"]
         for config in results.values()
         for r in config
     ))
+    runs_per_configuration = max(
+        (r["run_number"] for config in results.values() for r in config),
+        default=0,
+    )
 
     benchmark = {
         "metadata": {
@@ -268,7 +292,7 @@ def generate_benchmark(benchmark_dir: Path, skill_name: str = "", skill_path: st
             "analyzer_model": "<model-name>",
             "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "evals_run": eval_ids,
-            "runs_per_configuration": 3
+            "runs_per_configuration": runs_per_configuration
         },
         "runs": runs,
         "run_summary": run_summary,
@@ -337,12 +361,12 @@ def generate_markdown(benchmark: dict) -> str:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Aggregate benchmark run results into summary statistics"
+        description="Aggregate one skill-creator iteration directory into benchmark summary statistics"
     )
     parser.add_argument(
         "benchmark_dir",
         type=Path,
-        help="Path to the benchmark directory"
+        help="Path to an iteration directory, e.g. personal/_evals/<skill>/results/iteration-1"
     )
     parser.add_argument(
         "--skill-name",
@@ -357,7 +381,7 @@ def main():
     parser.add_argument(
         "--output", "-o",
         type=Path,
-        help="Output path for benchmark.json (default: <benchmark_dir>/benchmark.json)"
+        help="Output path for benchmark.json (default: <iteration_dir>/benchmark.json)"
     )
 
     args = parser.parse_args()

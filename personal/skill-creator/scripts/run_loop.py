@@ -255,7 +255,7 @@ def main():
     parser.add_argument("--model", required=True, help="Model for improvement")
     parser.add_argument("--verbose", action="store_true", help="Print progress to stderr")
     parser.add_argument("--report", default="auto", help="Generate HTML report at this path (default: 'auto' for temp file, 'none' to disable)")
-    parser.add_argument("--results-dir", default=None, help="Save all outputs (results.json, report.html, log.txt) to a timestamped subdirectory here")
+    parser.add_argument("--results-dir", default=None, help="Save all outputs (results.json, report.html, logs/) to a timestamped subdirectory here, e.g. <bucket-root>/_evals/<skill>/results/description-optimization")
     args = parser.parse_args()
 
     eval_set = json.loads(Path(args.eval_set).read_text())

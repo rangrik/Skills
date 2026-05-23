@@ -83,6 +83,50 @@ skill-name/
     └── assets/     - Files used in output (templates, icons, fonts)
 ```
 
+#### Repository layout in this Skills repo
+
+Runtime skill folders should contain only files an agent may use while applying the skill: `SKILL.md`, `references/`, `assets/`, and runtime helper scripts. Eval suites and eval results live outside the runtime skill folder.
+
+Derive eval paths from the skill path. These match the entries in the repo's `catalog.yaml`, so you don't need to parse that file just to locate a skill's evals:
+
+- `<skill-path>`: the runtime skill directory that contains `SKILL.md`
+- `<skill-name>`: the skill directory name, matching the `name` frontmatter
+- `<bucket-root>`: the bucket that owns the skill
+  - `personal/<skill-name>` → `personal`
+  - `private/<skill-name>` → `private`
+  - `wip/<skill-name>` → `wip`
+  - `vendor/<vendor>/<skill-name>` → `vendor/<vendor>`
+- `<eval-root>`: `<bucket-root>/_evals/<skill-name>`
+- `<suite-dir>`: `<eval-root>/suite`
+- `<results-dir>`: `<eval-root>/results`
+
+For a personal skill named `pdf-helper`, use:
+
+```
+personal/pdf-helper/                 # runtime skill
+personal/_evals/pdf-helper/suite/    # eval definitions and fixtures
+personal/_evals/pdf-helper/results/  # eval outputs, benchmarks, feedback
+```
+
+If creating a new skill in this repo and the bucket is ambiguous, ask whether it belongs in `personal/`, `private/`, or `wip/`. Keep vendor snapshots under `vendor/<vendor>/` only when the user is intentionally preserving a vendor-authored reference.
+
+#### Registering a new skill in `catalog.yaml`
+
+`catalog.yaml` at the repo root is the source of truth for which skills exist and whether they get symlinked into the local agent skill store (`tools/sync-skills.sh`) and surfaced in reports (`tools/report-skills.sh`). A new skill is invisible to that tooling until it has an entry. After scaffolding the runtime folder, add one:
+
+```yaml
+  - id: <skill-name>            # unique across the catalog; for vendor skills prefix the vendor, e.g. vendor-anthropic-<name>
+    name: <skill-name>
+    bucket: personal            # personal | private | wip | vendor
+    path: personal/<skill-name>
+    install: false              # true to symlink it into the local skill store on the next sync
+    evals:
+      suite: personal/_evals/<skill-name>/suite
+      results: personal/_evals/<skill-name>/results
+```
+
+For a `vendor` skill, also set `vendor: <vendor>` and use the `vendor/<vendor>/<skill-name>` path. Ask the user whether the skill should be installed locally (`install: true`); the repo default (`sync.defaultInstall`) is `false`. `wip/` skills stay `install: false` unless the user explicitly opts in.
+
 #### Progressive Disclosure
 
 Skills use a three-level loading system:
@@ -142,7 +186,9 @@ Try to explain to the model why things are important in lieu of heavy-handed mus
 
 After writing the skill draft, come up with 2-3 realistic test prompts — the kind of thing a real user would actually say. Share them with the user: [you don't have to use this exact language] "Here are a few test cases I'd like to try. Do these look right, or do you want to add more?" Then run them.
 
-Save test cases to `evals/evals.json`. Don't write assertions yet — just the prompts. You'll draft assertions in the next step while the runs are in progress.
+Save test cases to `<suite-dir>/evals.json`, where `<suite-dir>` is derived from the skill path as described in “Repository layout in this Skills repo.” Don't write assertions yet — just the prompts. You'll draft assertions in the next step while the runs are in progress.
+
+Put fixture files under `<suite-dir>/files/`. In `evals.json`, list fixture paths relative to `<suite-dir>` (for example, `files/sample.pdf`) so the suite remains portable even if the repo moves.
 
 ```json
 {
@@ -158,13 +204,22 @@ Save test cases to `evals/evals.json`. Don't write assertions yet — just the p
 }
 ```
 
-See `references/schemas.md` for the full schema (including the `assertions` field, which you'll add later).
+See `references/schemas.md` for the full schema (including the `expectations` field, which you'll add later) and the exact suite/results directory conventions.
 
 ## Running and evaluating test cases
 
 This section is one continuous sequence — don't stop partway through. Do NOT use `/skill-test` or any other testing skill.
 
-Put results in `<skill-name>-workspace/` as a sibling to the skill directory. Within the workspace, organize results by iteration (`iteration-1/`, `iteration-2/`, etc.) and within that, each test case gets a directory (`eval-0/`, `eval-1/`, etc.). Don't create all of this upfront — just create directories as you go.
+Put results in `<results-dir>/`, where `<results-dir>` is `<bucket-root>/_evals/<skill-name>/results`. Within the results directory, organize outputs by iteration (`iteration-1/`, `iteration-2/`, etc.). Within each iteration, each test case gets a descriptive directory (`eval-0-short-name/`, `eval-1-short-name/`, etc.). Don't create all of this upfront — just create directories as you go.
+
+Before running, resolve these paths explicitly and say them back to yourself:
+
+- Skill path: `<skill-path>`
+- Eval suite: `<suite-dir>/evals.json`
+- Results root: `<results-dir>`
+- Current iteration: `<iteration-dir>` (for example, `<results-dir>/iteration-1`)
+
+When an eval lists files, resolve them relative to `<suite-dir>` and pass absolute paths to subagents.
 
 ### Step 1: Spawn all runs (with-skill AND baseline) in the same turn
 
@@ -177,32 +232,32 @@ Execute this task:
 - Skill path: <path-to-skill>
 - Task: <eval prompt>
 - Input files: <eval files if any, or "none">
-- Save outputs to: <workspace>/iteration-<N>/eval-<ID>/with_skill/outputs/
+- Save outputs to: <iteration-dir>/eval-<ID>-<short-name>/with_skill/run-1/outputs/
 - Outputs to save: <what the user cares about — e.g., "the .docx file", "the final CSV">
 ```
 
 **Baseline run** (same prompt, but the baseline depends on context):
-- **Creating a new skill**: no skill at all. Same prompt, no skill path, save to `without_skill/outputs/`.
-- **Improving an existing skill**: the old version. Before editing, snapshot the skill (`cp -r <skill-path> <workspace>/skill-snapshot/`), then point the baseline subagent at the snapshot. Save to `old_skill/outputs/`.
+- **Creating a new skill**: no skill at all. Same prompt, no skill path, save to `<iteration-dir>/eval-<ID>-<short-name>/without_skill/run-1/outputs/`.
+- **Improving an existing skill**: the old version. Before editing, snapshot the skill outside the runtime folder (`cp -r <skill-path> <results-dir>/skill-snapshot/`), then point the baseline subagent at the snapshot. Save to `<iteration-dir>/eval-<ID>-<short-name>/old_skill/run-1/outputs/`.
 
-Write an `eval_metadata.json` for each test case (assertions can be empty for now). Give each eval a descriptive name based on what it's testing — not just "eval-0". Use this name for the directory too. If this iteration uses new or modified eval prompts, create these files for each new eval directory — don't assume they carry over from previous iterations.
+Write an `eval_metadata.json` in each eval directory (expectations can be empty for now). Give each eval a descriptive name based on what it's testing — not just "eval-0". Use this name for the directory too. If this iteration uses new or modified eval prompts, create these files for each new eval directory — don't assume they carry over from previous iterations.
 
 ```json
 {
   "eval_id": 0,
   "eval_name": "descriptive-name-here",
   "prompt": "The user's task prompt",
-  "assertions": []
+  "expectations": []
 }
 ```
 
 ### Step 2: While runs are in progress, draft assertions
 
-Don't just wait for the runs to finish — you can use this time productively. Draft quantitative assertions for each test case and explain them to the user. If assertions already exist in `evals/evals.json`, review them and explain what they check.
+Don't just wait for the runs to finish — you can use this time productively. Draft quantitative assertions for each test case and explain them to the user. If expectations already exist in `<suite-dir>/evals.json`, review them and explain what they check.
 
 Good assertions are objectively verifiable and have descriptive names — they should read clearly in the benchmark viewer so someone glancing at the results immediately understands what each one checks. Subjective skills (writing style, design quality) are better evaluated qualitatively — don't force assertions onto things that need human judgment.
 
-Update the `eval_metadata.json` files and `evals/evals.json` with the assertions once drafted. Also explain to the user what they'll see in the viewer — both the qualitative outputs and the quantitative benchmark.
+Update the `eval_metadata.json` files and `<suite-dir>/evals.json` with the expectations once drafted. Also explain to the user what they'll see in the viewer — both the qualitative outputs and the quantitative benchmark.
 
 ### Step 3: As runs complete, capture timing data
 
@@ -226,7 +281,7 @@ Once all runs are done:
 
 2. **Aggregate into benchmark** — run the aggregation script from the skill-creator directory:
    ```bash
-   python -m scripts.aggregate_benchmark <workspace>/iteration-N --skill-name <name>
+   python -m scripts.aggregate_benchmark <iteration-dir> --skill-name <name> --skill-path <skill-path>
    ```
    This produces `benchmark.json` and `benchmark.md` with pass_rate, time, and tokens for each configuration, with mean ± stddev and the delta. If generating benchmark.json manually, see `references/schemas.md` for the exact schema the viewer expects.
 Put each with_skill version before its baseline counterpart.
@@ -236,15 +291,15 @@ Put each with_skill version before its baseline counterpart.
 4. **Launch the viewer** with both qualitative outputs and quantitative data:
    ```bash
    nohup python <skill-creator-path>/eval-viewer/generate_review.py \
-     <workspace>/iteration-N \
+     <iteration-dir> \
      --skill-name "my-skill" \
-     --benchmark <workspace>/iteration-N/benchmark.json \
+     --benchmark <iteration-dir>/benchmark.json \
      > /dev/null 2>&1 &
    VIEWER_PID=$!
    ```
-   For iteration 2+, also pass `--previous-workspace <workspace>/iteration-<N-1>`.
+   For iteration 2+, also pass `--previous-results <results-dir>/iteration-<N-1>`.
 
-   **Cowork / headless environments:** If `webbrowser.open()` is not available or the environment has no display, use `--static <output_path>` to write a standalone HTML file instead of starting a server. Feedback will be downloaded as a `feedback.json` file when the user clicks "Submit All Reviews". After download, copy `feedback.json` into the workspace directory for the next iteration to pick up.
+   **Cowork / headless environments:** If `webbrowser.open()` is not available or the environment has no display, use `--static <iteration-dir>/review.html` to write a standalone HTML file instead of starting a server. Feedback will be downloaded as a `feedback.json` file when the user clicks "Submit All Reviews". After download, copy `feedback.json` into the same `<iteration-dir>` so the next iteration can pick it up.
 
 Note: please use generate_review.py to create the viewer; there's no need to write custom HTML.
 
@@ -266,14 +321,14 @@ Navigation is via prev/next buttons or arrow keys. When done, they click "Submit
 
 ### Step 5: Read the feedback
 
-When the user tells you they're done, read `feedback.json`:
+When the user tells you they're done, read `<iteration-dir>/feedback.json`:
 
 ```json
 {
   "reviews": [
-    {"run_id": "eval-0-with_skill", "feedback": "the chart is missing axis labels", "timestamp": "..."},
-    {"run_id": "eval-1-with_skill", "feedback": "", "timestamp": "..."},
-    {"run_id": "eval-2-with_skill", "feedback": "perfect, love this", "timestamp": "..."}
+    {"run_id": "eval-0-chart-with_skill-run-1", "feedback": "the chart is missing axis labels", "timestamp": "..."},
+    {"run_id": "eval-1-summary-with_skill-run-1", "feedback": "", "timestamp": "..."},
+    {"run_id": "eval-2-report-with_skill-run-1", "feedback": "perfect, love this", "timestamp": "..."}
   ],
   "status": "complete"
 }
@@ -310,8 +365,8 @@ This task is pretty important (we are trying to create billions a year in econom
 After improving the skill:
 
 1. Apply your improvements to the skill
-2. Rerun all test cases into a new `iteration-<N+1>/` directory, including baseline runs. If you're creating a new skill, the baseline is always `without_skill` (no skill) — that stays the same across iterations. If you're improving an existing skill, use your judgment on what makes sense as the baseline: the original version the user came in with, or the previous iteration.
-3. Launch the reviewer with `--previous-workspace` pointing at the previous iteration
+2. Rerun all test cases into a new `<results-dir>/iteration-<N+1>/` directory, including baseline runs. If you're creating a new skill, the baseline is always `without_skill` (no skill) — that stays the same across iterations. If you're improving an existing skill, use your judgment on what makes sense as the baseline: the original version the user came in with, or the previous iteration.
+3. Launch the reviewer with `--previous-results` pointing at the previous iteration
 4. Wait for the user to review and tell you they're done
 5. Read the new feedback, improve again, repeat
 
@@ -336,7 +391,7 @@ The description field in SKILL.md frontmatter is the primary mechanism that dete
 
 ### Step 1: Generate trigger eval queries
 
-Create 20 eval queries — a mix of should-trigger and should-not-trigger. Save as JSON:
+Create 20 eval queries — a mix of should-trigger and should-not-trigger. Save them to `<suite-dir>/trigger-evals.json` as JSON:
 
 ```json
 [
@@ -376,22 +431,26 @@ This step matters — bad eval queries lead to bad descriptions.
 
 Tell the user: "This will take some time — I'll run the optimization loop in the background and check on it periodically."
 
-Save the eval set to the workspace, then run in the background:
+Save the eval set to `<suite-dir>/trigger-evals.json`, then run in the background and store optimization artifacts under `<results-dir>/description-optimization/`:
 
 ```bash
+mkdir -p <results-dir>/description-optimization
 python -m scripts.run_loop \
-  --eval-set <path-to-trigger-eval.json> \
+  --eval-set <suite-dir>/trigger-evals.json \
   --skill-path <path-to-skill> \
   --model <model-id-powering-this-session> \
   --max-iterations 5 \
-  --verbose
+  --results-dir <results-dir>/description-optimization \
+  --verbose \
+  > <results-dir>/description-optimization/latest-output.json \
+  2> <results-dir>/description-optimization/latest.log &
 ```
 
 Use the model ID from your system prompt (the one powering the current session) so the triggering test matches what the user actually experiences.
 
-While it runs, periodically tail the output to give the user updates on which iteration it's on and what the scores look like.
+While it runs, periodically tail `<results-dir>/description-optimization/latest.log` to give the user updates on which iteration it's on and what the scores look like.
 
-This handles the full optimization loop automatically. It splits the eval set into 60% train and 40% held-out test, evaluates the current description (running each query 3 times to get a reliable trigger rate), then calls Claude to propose improvements based on what failed. It re-evaluates each new description on both train and test, iterating up to 5 times. When it's done, it opens an HTML report in the browser showing the results per iteration and returns JSON with `best_description` — selected by test score rather than train score to avoid overfitting.
+This handles the full optimization loop automatically. It splits the eval set into 60% train and 40% held-out test, evaluates the current description (running each query 3 times to get a reliable trigger rate), then calls Claude to propose improvements based on what failed. It re-evaluates each new description on both train and test, iterating up to 5 times. When it's done, it writes timestamped artifacts under `<results-dir>/description-optimization/`, opens an HTML report in the browser when possible, and returns JSON with `best_description` — selected by test score rather than train score to avoid overfitting.
 
 ### How skill triggering works
 
@@ -427,7 +486,7 @@ In Claude.ai, the core workflow is the same (draft → test → review → impro
 
 **Benchmarking**: Skip the quantitative benchmarking — it relies on baseline comparisons which aren't meaningful without subagents. Focus on qualitative feedback from the user.
 
-**The iteration loop**: Same as before — improve the skill, rerun the test cases, ask for feedback — just without the browser reviewer in the middle. You can still organize results into iteration directories on the filesystem if you have one.
+**The iteration loop**: Same as before — improve the skill, rerun the test cases, ask for feedback — just without the browser reviewer in the middle. If you have a filesystem, still use this repo's eval layout: `<bucket-root>/_evals/<skill-name>/suite/` for eval definitions and `<bucket-root>/_evals/<skill-name>/results/iteration-N/` for outputs.
 
 **Description optimization**: This section requires the `claude` CLI tool (specifically `claude -p`) which is only available in Claude Code. Skip it if you're on Claude.ai.
 
@@ -447,7 +506,7 @@ In Claude.ai, the core workflow is the same (draft → test → review → impro
 If you're in Cowork, the main things to know are:
 
 - You have subagents, so the main workflow (spawn test cases in parallel, run baselines, grade, etc.) all works. (However, if you run into severe problems with timeouts, it's OK to run the test prompts in series rather than parallel.)
-- You don't have a browser or display, so when generating the eval viewer, use `--static <output_path>` to write a standalone HTML file instead of starting a server. Then proffer a link that the user can click to open the HTML in their browser.
+- You don't have a browser or display, so when generating the eval viewer, use `--static <iteration-dir>/review.html` to write a standalone HTML file instead of starting a server. Then proffer a link that the user can click to open the HTML in their browser.
 - For whatever reason, the Cowork setup seems to disincline Claude from generating the eval viewer after running the tests, so just to reiterate: whether you're in Cowork or in Claude Code, after running tests, you should always generate the eval viewer for the human to look at examples before revising the skill yourself and trying to make corrections, using `generate_review.py` (not writing your own boutique html code). Sorry in advance but I'm gonna go all caps here: GENERATE THE EVAL VIEWER *BEFORE* evaluating inputs yourself. You want to get them in front of the human ASAP!
 - Feedback works differently: since there's no running server, the viewer's "Submit All Reviews" button will download `feedback.json` as a file. You can then read it from there (you may have to request access first).
 - Packaging works — `package_skill.py` just needs Python and a filesystem.

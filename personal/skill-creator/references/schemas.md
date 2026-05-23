@@ -6,7 +6,14 @@ This document defines the JSON schemas used by skill-creator.
 
 ## evals.json
 
-Defines the evals for a skill. Located at `evals/evals.json` within the skill directory.
+Defines the evals for a skill. In this Skills repo it lives outside the runtime skill directory at `<bucket-root>/_evals/<skill-name>/suite/evals.json`.
+
+Derive these paths from the skill path; they match the repo's `catalog.yaml` entries, so you don't need to parse it just to locate a suite:
+
+- `personal/<skill-name>` → suite at `personal/_evals/<skill-name>/suite/`
+- `private/<skill-name>` → suite at `private/_evals/<skill-name>/suite/`
+- `wip/<skill-name>` → suite at `wip/_evals/<skill-name>/suite/`
+- `vendor/<vendor>/<skill-name>` → suite at `vendor/<vendor>/_evals/<skill-name>/suite/`
 
 ```json
 {
@@ -16,7 +23,7 @@ Defines the evals for a skill. Located at `evals/evals.json` within the skill di
       "id": 1,
       "prompt": "User's example prompt",
       "expected_output": "Description of expected result",
-      "files": ["evals/files/sample1.pdf"],
+      "files": ["files/sample1.pdf"],
       "expectations": [
         "The output includes X",
         "The skill used script Y"
@@ -29,16 +36,68 @@ Defines the evals for a skill. Located at `evals/evals.json` within the skill di
 **Fields:**
 - `skill_name`: Name matching the skill's frontmatter
 - `evals[].id`: Unique integer identifier
+- `evals[].name`: Optional descriptive slug/name for the eval; if omitted, derive a slug from the prompt
 - `evals[].prompt`: The task to execute
 - `evals[].expected_output`: Human-readable description of success
-- `evals[].files`: Optional list of input file paths (relative to skill root)
+- `evals[].files`: Optional list of input file paths, relative to the suite directory (`<bucket-root>/_evals/<skill-name>/suite/`). Put fixtures under `suite/files/` and use paths like `files/sample1.pdf`.
 - `evals[].expectations`: List of verifiable statements
+
+---
+
+## Results directory layout
+
+Eval outputs live under `<bucket-root>/_evals/<skill-name>/results/`, not inside the runtime skill folder.
+
+```text
+<results-dir>/
+├── skill-snapshot/                 # optional baseline copy for existing-skill improvements
+├── history.json                    # optional version progression
+├── description-optimization/       # trigger-eval optimization artifacts
+└── iteration-1/
+    ├── benchmark.json
+    ├── benchmark.md
+    ├── feedback.json               # created by the review UI or copied from a static review download
+    ├── review.html                 # optional static review page
+    └── eval-0-descriptive-name/
+        ├── eval_metadata.json
+        ├── with_skill/run-1/
+        │   ├── outputs/
+        │   ├── grading.json
+        │   └── timing.json
+        └── without_skill/run-1/
+            ├── outputs/
+            ├── grading.json
+            └── timing.json
+```
+
+For existing-skill improvement baselines, use `old_skill/run-1/` instead of `without_skill/run-1/`.
+
+---
+
+## eval_metadata.json
+
+Located at `<iteration-dir>/eval-<id>-<name>/eval_metadata.json`. The review UI reads this file to display the prompt for every run under that eval directory.
+
+```json
+{
+  "eval_id": 0,
+  "eval_name": "descriptive-name-here",
+  "prompt": "The user's task prompt",
+  "expectations": []
+}
+```
+
+**Fields:**
+- `eval_id`: Numeric eval identifier matching `evals.json`
+- `eval_name`: Human-readable eval name/slug
+- `prompt`: The exact task prompt executed
+- `expectations`: Optional copy of expectations used for grading; `grading.json` remains the authoritative graded result
 
 ---
 
 ## history.json
 
-Tracks version progression in Improve mode. Located at workspace root.
+Tracks version progression in Improve mode. Located under the skill's results root, typically `<bucket-root>/_evals/<skill-name>/results/history.json`.
 
 ```json
 {
@@ -218,7 +277,7 @@ Wall clock timing for a run. Located at `<run-dir>/timing.json`.
 
 ## benchmark.json
 
-Output from Benchmark mode. Located at `benchmarks/<timestamp>/benchmark.json`.
+Output from Benchmark mode. Located in an iteration directory under the skill's results root, for example `<bucket-root>/_evals/<skill-name>/results/iteration-1/benchmark.json`.
 
 ```json
 {

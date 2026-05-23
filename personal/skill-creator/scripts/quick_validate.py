@@ -4,10 +4,64 @@ Quick validation script for skills - minimal version
 """
 
 import sys
-import os
 import re
-import yaml
 from pathlib import Path
+
+try:
+    import yaml
+except ModuleNotFoundError:  # PyYAML is optional; most skill frontmatter is simple.
+    yaml = None
+
+
+def parse_frontmatter(frontmatter_text):
+    """Parse SKILL.md frontmatter with PyYAML when available, else a small fallback.
+
+    The fallback intentionally supports the subset used by skills: top-level
+    scalar keys, quoted strings, and block scalars for long descriptions. It is
+    enough for validation and keeps packaging usable in stdlib-only Python envs.
+    """
+    if yaml is not None:
+        return yaml.safe_load(frontmatter_text)
+
+    parsed = {}
+    lines = frontmatter_text.splitlines()
+    i = 0
+    while i < len(lines):
+        raw = lines[i]
+        stripped = raw.strip()
+        if not stripped or stripped.startswith("#"):
+            i += 1
+            continue
+        if raw.startswith((" ", "\t")):
+            # Nested content belongs to the previous top-level key. Validation
+            # only checks top-level keys, so nested values can be ignored here.
+            i += 1
+            continue
+        if ":" not in raw:
+            raise ValueError(f"Invalid frontmatter line: {raw}")
+
+        key, value = raw.split(":", 1)
+        key = key.strip()
+        value = value.strip()
+
+        if value in {">", "|", ">-", "|-"}:
+            i += 1
+            continuation = []
+            while i < len(lines) and (lines[i].startswith((" ", "\t")) or not lines[i].strip()):
+                if lines[i].strip():
+                    continuation.append(lines[i].strip())
+                i += 1
+            parsed[key] = " ".join(continuation)
+            continue
+
+        if value == "":
+            parsed[key] = {}
+        else:
+            parsed[key] = value.strip('"').strip("'")
+        i += 1
+
+    return parsed
+
 
 def validate_skill(skill_path):
     """Basic validation of a skill"""
@@ -30,12 +84,13 @@ def validate_skill(skill_path):
 
     frontmatter_text = match.group(1)
 
-    # Parse YAML frontmatter
+    # Parse YAML frontmatter. PyYAML is optional; fall back to a minimal parser
+    # so package_skill.py works in environments without third-party packages.
     try:
-        frontmatter = yaml.safe_load(frontmatter_text)
+        frontmatter = parse_frontmatter(frontmatter_text)
         if not isinstance(frontmatter, dict):
             return False, "Frontmatter must be a YAML dictionary"
-    except yaml.YAMLError as e:
+    except Exception as e:
         return False, f"Invalid YAML in frontmatter: {e}"
 
     # Define allowed properties

@@ -3,11 +3,11 @@
 Skill Packager - Creates a distributable .skill file of a skill folder
 
 Usage:
-    python utils/package_skill.py <path/to/skill-folder> [output-directory]
+    python -m scripts.package_skill <path/to/skill-folder> [output-directory]
 
 Example:
-    python utils/package_skill.py skills/public/my-skill
-    python utils/package_skill.py skills/public/my-skill ./dist
+    python -m scripts.package_skill personal/my-skill
+    python -m scripts.package_skill personal/my-skill ./dist
 """
 
 import fnmatch
@@ -21,7 +21,9 @@ EXCLUDE_DIRS = {"__pycache__", "node_modules"}
 EXCLUDE_GLOBS = {"*.pyc"}
 EXCLUDE_FILES = {".DS_Store"}
 # Directories excluded only at the skill root (not when nested deeper).
-ROOT_EXCLUDE_DIRS = {"evals"}
+# Current repo layout keeps eval suites/results outside runtime skill folders, but
+# exclude legacy in-skill eval directories as a safety net when packaging copies.
+ROOT_EXCLUDE_DIRS = {"evals", "_evals"}
 
 
 def should_exclude(rel_path: Path) -> bool:
@@ -110,10 +112,10 @@ def package_skill(skill_path, output_dir=None):
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python utils/package_skill.py <path/to/skill-folder> [output-directory]")
+        print("Usage: python -m scripts.package_skill <path/to/skill-folder> [output-directory]")
         print("\nExample:")
-        print("  python utils/package_skill.py skills/public/my-skill")
-        print("  python utils/package_skill.py skills/public/my-skill ./dist")
+        print("  python -m scripts.package_skill personal/my-skill")
+        print("  python -m scripts.package_skill personal/my-skill ./dist")
         sys.exit(1)
 
     skill_path = sys.argv[1]
