@@ -53,7 +53,7 @@ Usage:
   ./sync-skills.sh --help     Show this message
 
 It links both public skills (a folder with a SKILL.md at the repo root) and
-private skills (the same, under private-skills/, which is gitignored). Stale
+private skills (the same, under private-skills/, kept separate). Stale
 symlinks from renamed or removed skills are cleaned up automatically. Real
 skill folders are never touched unless you pass --force, and even then only
 ones whose name matches a skill in this repo.
