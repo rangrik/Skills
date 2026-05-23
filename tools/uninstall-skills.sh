@@ -7,24 +7,18 @@
 # It never removes the source skill folders in this repository.
 #
 # Usage:
-#   ./uninstall-skills.sh            Choose installed repo skills to uninstall
-#   ./uninstall-skills.sh --all      Uninstall every installed repo skill
-#   ./uninstall-skills.sh --dry-run  Show what would be removed
-#   ./uninstall-skills.sh --help
+#   ./tools/uninstall-skills.sh            Choose installed repo skills to uninstall
+#   ./tools/uninstall-skills.sh --all      Uninstall every installed repo skill
+#   ./tools/uninstall-skills.sh --dry-run  Show what would be removed
+#   ./tools/uninstall-skills.sh --help
 
-set -euo pipefail
+set -eo pipefail
 shopt -s nullglob
 
-# Keep these in sync with sync-skills.sh.
+# Keep these in sync with tools/sync-skills.sh.
 AGENT_SKILL_DIRS=(
   "$HOME/.agents/skills"
   "$HOME/.claude/skills"
-)
-
-IGNORED_SKILL_PARENT_DIR_NAMES=(
-  "by-anthropic"
-  "by-openai"
-  "wip"
 )
 
 usage() {
@@ -32,19 +26,19 @@ usage() {
 uninstall-skills.sh — remove installed skills from this repo
 
 Usage:
-  ./uninstall-skills.sh            Choose installed repo skills to uninstall
-  ./uninstall-skills.sh --all      Uninstall every installed repo skill
-  ./uninstall-skills.sh --dry-run  Show what would be removed, without deleting
-  ./uninstall-skills.sh --help     Show this message
+  ./tools/uninstall-skills.sh            Choose installed repo skills to uninstall
+  ./tools/uninstall-skills.sh --all      Uninstall every installed repo skill
+  ./tools/uninstall-skills.sh --dry-run  Show what would be removed, without deleting
+  ./tools/uninstall-skills.sh --help     Show this message
 
 What it removes:
   - symlinks in the configured agent skill dirs that point into this repo
-  - copied skill folders with names matching skills in this repo, after confirmation
+  - copied skill folders with names appearing in catalog.yaml, after confirmation
 
 What it never removes:
   - source skill folders in this repo
   - symlinks that point outside this repo
-  - unrelated installed skills whose names do not match this repo's skills
+  - unrelated copied skills whose names do not appear in catalog.yaml
 
 Selection syntax:
   1,3,5       select individual entries
@@ -65,30 +59,14 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PRIVATE_DIR="$REPO_DIR/private-skills"
+TOOL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(cd "$TOOL_DIR/.." && pwd)"
+CATALOG_FILE="$REPO_DIR/catalog.yaml"
 
-is_ignored_skill_path() {
-  local path="${1%/}"
-  local rel component ignored
-
-  case "$path" in
-    "$REPO_DIR") rel="" ;;
-    "$REPO_DIR"/*) rel="${path#"$REPO_DIR"/}" ;;
-    *) rel="$path" ;;
-  esac
-
-  local IFS='/'
-  for component in $rel; do
-    for ignored in "${IGNORED_SKILL_PARENT_DIR_NAMES[@]}"; do
-      if [ "$component" = "$ignored" ]; then
-        return 0
-      fi
-    done
-  done
-
-  return 1
-}
+if [ ! -f "$CATALOG_FILE" ]; then
+  echo "catalog.yaml not found at $CATALOG_FILE" >&2
+  exit 1
+fi
 
 if [ -t 1 ]; then
   B=$'\033[1m'; D=$'\033[2m'; G=$'\033[32m'; Y=$'\033[33m'; R=$'\033[31m'; X=$'\033[0m'
@@ -96,28 +74,60 @@ else
   B=""; D=""; G=""; Y=""; R=""; X=""
 fi
 
-# Discover repo skills using the same rules as sync-skills.sh.
-skill_dirs=()
-for d in "$REPO_DIR"/*/; do
-  if is_ignored_skill_path "${d%/}"; then continue; fi
-  if [ -f "${d}SKILL.md" ]; then skill_dirs+=("${d%/}"); fi
-done
-if [ -d "$PRIVATE_DIR" ]; then
-  for d in "$PRIVATE_DIR"/*/; do
-    if is_ignored_skill_path "${d%/}"; then continue; fi
-    if [ -f "${d}SKILL.md" ]; then skill_dirs+=("${d%/}"); fi
-  done
-fi
-
-if [ "${#skill_dirs[@]}" -eq 0 ]; then
-  echo "${Y}No skills found in this repo.${X}"
-  exit 0
-fi
-
 skill_names=()
-for src in "${skill_dirs[@]}"; do
-  skill_names+=("$(basename "$src")")
-done
+while IFS= read -r name; do
+  [ -n "${name:-}" ] || continue
+  skill_names+=("$name")
+done < <(python3 -c '
+from pathlib import Path
+import sys
+
+catalog_path = Path(sys.argv[1])
+names = set()
+current = None
+for raw in catalog_path.read_text().splitlines():
+    line = raw.rstrip("\n")
+    stripped = line.strip()
+    if line.startswith("  - id: "):
+        current = {}
+        continue
+    if current is not None and line.startswith("    ") and ": " in stripped:
+        key, value = stripped.split(": ", 1)
+        if key == "name":
+            names.add(value)
+for name in sorted(names):
+    print(name)
+' "$CATALOG_FILE")
+
+name_in_catalog() {
+  local name="$1"
+  local existing
+  for existing in "${skill_names[@]}"; do
+    if [ "$existing" = "$name" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+points_into_repo() {
+  local installed_path="$1"
+  local link_target resolved
+
+  link_target="$(readlink "$installed_path")"
+  case "$link_target" in
+    "$REPO_DIR"|"$REPO_DIR"/*) return 0 ;;
+  esac
+
+  # Handle relative symlinks too, if they resolve to an existing repo path.
+  if resolved="$(cd -P "$installed_path" 2>/dev/null && pwd -P)"; then
+    case "$resolved" in
+      "$REPO_DIR"|"$REPO_DIR"/*) return 0 ;;
+    esac
+  fi
+
+  return 1
+}
 
 entry_skill=()
 entry_target=()
@@ -133,30 +143,11 @@ add_entry() {
   entry_note+=("$5")
 }
 
-points_into_repo() {
-  local installed_path="$1"
-  local link_target resolved
-
-  link_target="$(readlink "$installed_path")"
-  case "$link_target" in
-    "$REPO_DIR"|"$REPO_DIR"/*) return 0 ;;
-  esac
-
-  # Handle relative symlinks too, if they resolve to an existing repo path.
-  if resolved="$(cd "$installed_path" 2>/dev/null && pwd -P)"; then
-    case "$resolved" in
-      "$REPO_DIR"|"$REPO_DIR"/*) return 0 ;;
-    esac
-  fi
-
-  return 1
-}
-
 for target in "${AGENT_SKILL_DIRS[@]}"; do
   [ -d "$target" ] || continue
 
-  for name in "${skill_names[@]}"; do
-    installed="$target/$name"
+  for installed in "$target"/*; do
+    name="$(basename "$installed")"
 
     if [ -L "$installed" ]; then
       if points_into_repo "$installed"; then
@@ -166,8 +157,8 @@ for target in "${AGENT_SKILL_DIRS[@]}"; do
           add_entry "$name" "$target" "$installed" "broken symlink" "points into this repo"
         fi
       fi
-    elif [ -d "$installed" ] && [ -f "$installed/SKILL.md" ]; then
-      add_entry "$name" "$target" "$installed" "copied folder" "name matches a repo skill"
+    elif [ -d "$installed" ] && [ -f "$installed/SKILL.md" ] && name_in_catalog "$name"; then
+      add_entry "$name" "$target" "$installed" "copied folder" "name appears in catalog.yaml"
     fi
   done
 done

@@ -1,57 +1,43 @@
 # Skills
 
-Agent Skills for Claude Code and other AI coding agents, published to [skills.sh](https://www.skills.sh).
+Private repository for maintaining personal, private, vendor, and work-in-progress agent skills.
 
----
+## Layout
 
-## blueprint
-
-[![skills.sh](https://skills.sh/b/rangrik/Skills)](https://skills.sh/rangrik/Skills)
-
-Turn a loosely-stated product problem into a complete, unambiguous **behavior blueprint** — a specification of exactly how a user and the product interact, covering the happy paths *and* every deviation off them, written as Gherkin.
-
-### Install
-
-```sh
-npx skills add rangrik/Skills/blueprint
-```
-
-Or install every skill in this repo at once:
-
-```sh
-npx skills add rangrik/Skills
-```
-
-Built for Claude Code; compatible with any agent that supports the `SKILL.md` format.
-
-### The problem it solves
-
-Problem statements and PRDs answer *what* and *why*. They rarely pin down the full *how* — the concrete, step-by-step interaction — and almost never enumerate what happens when the user leaves the intended path. Two failure modes follow:
-
-- **Happy-path bias** — people describe the ideal flow and stop. Nothing forces a check that *all* the normal cases were captured.
-- **The deviation blind spot** — half-filled forms, retried actions, rate limits, dropped connections, abandoned sessions, out-of-order steps. These are exactly what a happy-path description omits, and they surface late — in QA, code review, or production — where they are expensive to fix.
-
-`blueprint` closes that gap by splitting the work: **you own intent, the skill owns completeness.**
-
-### How it works
-
-1. **It interviews you — only about the happy path(s).** The one thing a human must supply is what *should* happen when everything goes right.
-2. **It enumerates every deviation itself.** Using a 14-category taxonomy and a step-by-step traversal matrix, it systematically finds the edge cases you would never think to list — and proposes graceful product behavior for each.
-3. **It writes it all up as Gherkin** — a markdown blueprint document plus a Cucumber `.feature` file, so engineering, design, and QA all read the specification the same way.
-
-### Usage
-
-Once installed, describe a feature to your agent:
-
-> "We're adding a 'forgot password' flow. Turn this into a behavior blueprint."
-
-The skill interviews you about the intended flow, then autonomously produces `<feature>-blueprint.md` and `<feature>.feature` — including a coverage checklist across all 14 deviation categories and a list of flagged assumptions for you to confirm.
-
-### What's inside
-
-| File | Purpose |
+| Path | Purpose |
 |------|---------|
-| `SKILL.md` | The five-phase workflow |
-| `references/deviation-taxonomy.md` | 14 deviation categories and graceful-behavior principles |
-| `references/gherkin-style.md` | Gherkin / Cucumber conventions |
-| `references/blueprint-template.md` | Structure of the output document |
+| `personal/` | Skills authored for personal/general use. |
+| `private/` | Skills tied to private work context. |
+| `vendor/` | Reference skills authored by vendors, grouped by vendor name. |
+| `wip/` | Skills currently being developed; ignored by sync tooling unless explicitly enabled in `catalog.yaml`. |
+| `*/_evals/<skill>/suite/` | Eval definitions and suite helper files for a skill. |
+| `*/_evals/<skill>/results/` | Eval run outputs for a skill. |
+| `docs/` | Research, guides, factory notes, and implementation plans. |
+| `tools/` | Maintenance scripts and viewers. |
+| `generated/` | Generated local reports; ignored by git except `.gitkeep`. |
+
+## Runtime skill rule
+
+A runtime skill folder should contain only the files an agent may use while applying that skill, such as `SKILL.md`, `references/`, `assets/`, and runtime helper scripts. Eval suites and eval results live outside the skill folder under the bucket's `_evals/` directory.
+
+## Catalog
+
+`catalog.yaml` is the source of truth for which skills exist, where they live, whether they should be synced into local agent skill stores, and where their eval suite/results directories are.
+
+## Syncing skills locally
+
+```sh
+./tools/sync-skills.sh --dry-run
+./tools/sync-skills.sh
+```
+
+The sync script links only skills marked `install: true` in `catalog.yaml`. It ignores `wip/`, `_evals/`, `docs/`, `tools/`, and `generated/` unless the catalog explicitly changes.
+
+## Reporting and uninstalling local skill links
+
+```sh
+./tools/report-skills.sh --no-open
+./tools/uninstall-skills.sh --dry-run --all
+```
+
+Generated report data is written to `generated/`; the static viewer lives at `tools/installed-skills.html`.

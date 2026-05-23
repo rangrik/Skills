@@ -170,15 +170,14 @@ mkdir -p \
   vendor/openai/_evals/skill-creator/results \
   wip/_evals/backend-standards/suite \
   wip/_evals/backend-standards/results \
-  docs/guides \
-  docs/research \
-  docs/factory \
   docs/superpowers/plans \
   tools \
   generated
 ```
 
 Expected: command exits with status `0`.
+
+Do not pre-create `docs/guides`, `docs/research`, or `docs/factory`; `git mv guides docs/guides`, `git mv research docs/research`, and `git mv skills-factory docs/factory` should create those destination directories during Task 6. Pre-creating those exact leaf directories would nest the moved directories one level too deep.
 
 - [ ] **Step 2: Add `.gitkeep` files for intentionally empty directories**
 
@@ -836,10 +835,11 @@ Expected: command exits with status `0`. It may list installed repo skills, or i
 
 ---
 
-### Task 10: Update `tools/report-skills.sh` for moved generated output
+### Task 10: Update `tools/report-skills.sh` and `tools/installed-skills.html` for moved generated output
 
 **Files:**
 - Modify: `tools/report-skills.sh`
+- Modify: `tools/installed-skills.html`
 
 - [ ] **Step 1: Update repo path and output paths**
 
@@ -872,7 +872,23 @@ Writes generated/installed-skills.json and generated/installed-skills.js, then o
 
 Expected: `./tools/report-skills.sh --help` no longer says the generated files are at the repo root.
 
-- [ ] **Step 3: Run report generation without opening browser**
+- [ ] **Step 3: Update viewer data paths**
+
+Update `tools/installed-skills.html` so the file-based script shim and HTTP JSON fetch both load from `generated/` relative to the viewer:
+
+```html
+<script src="../generated/installed-skills.js" onerror="window.__shimMissing=true"></script>
+```
+
+```js
+const res = await fetch("../generated/installed-skills.json", { cache: "no-store" });
+```
+
+Also update the page hint/error text to tell users to run `./tools/report-skills.sh` and look for `generated/installed-skills.{js,json}`.
+
+Expected: `tools/installed-skills.html` no longer references root-level `installed-skills.js`, root-level `installed-skills.json`, or `./report-skills.sh`.
+
+- [ ] **Step 4: Run report generation without opening browser**
 
 Run:
 

@@ -1,0 +1,77 @@
+version: 1
+
+sync:
+  defaultInstall: false
+  ignoredRoots:
+    - wip
+    - docs
+    - tools
+    - generated
+  ignoredDirectoryNames:
+    - _evals
+
+skills:
+  - id: blueprint
+    name: blueprint
+    bucket: personal
+    path: personal/blueprint
+    install: true
+    evals:
+      suite: personal/_evals/blueprint/suite
+      results: personal/_evals/blueprint/results
+
+  - id: system-design
+    name: system-design
+    bucket: personal
+    path: personal/system-design
+    install: true
+    evals:
+      suite: personal/_evals/system-design/suite
+      results: personal/_evals/system-design/results
+
+  - id: skill-creator
+    name: skill-creator
+    bucket: personal
+    path: personal/skill-creator
+    install: true
+    evals:
+      suite: personal/_evals/skill-creator/suite
+      results: personal/_evals/skill-creator/results
+
+  - id: kite-arch-compass
+    name: kite-arch-compass
+    bucket: private
+    path: private/kite-arch-compass
+    install: true
+    evals:
+      suite: private/_evals/kite-arch-compass/suite
+      results: private/_evals/kite-arch-compass/results
+
+  - id: vendor-anthropic-skill-creator
+    name: skill-creator
+    bucket: vendor
+    vendor: anthropic
+    path: vendor/anthropic/skill-creator
+    install: false
+    evals:
+      suite: vendor/anthropic/_evals/skill-creator/suite
+      results: vendor/anthropic/_evals/skill-creator/results
+
+  - id: vendor-openai-skill-creator
+    name: skill-creator
+    bucket: vendor
+    vendor: openai
+    path: vendor/openai/skill-creator
+    install: false
+    evals:
+      suite: vendor/openai/_evals/skill-creator/suite
+      results: vendor/openai/_evals/skill-creator/results
+
+  - id: backend-standards
+    name: backend-standards
+    bucket: wip
+    path: wip/backend-standards
+    install: false
+    evals:
+      suite: wip/_evals/backend-standards/suite
+      results: wip/_evals/backend-standards/results

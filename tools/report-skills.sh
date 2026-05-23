@@ -15,19 +15,20 @@
 #   • the link target (for symlinks)
 #   • the one-line description from the skill's SKILL.md frontmatter
 #
-# Outputs two generated (git-ignored) files at the repo root:
-#   • installed-skills.json   the data, as plain JSON for any consumer
-#   • installed-skills.js     the same data as `window.INSTALLED_SKILLS = …;`,
-#                             a shim so installed-skills.html can load it when
-#                             opened straight off disk (file:// blocks fetch of
-#                             local JSON, but a <script src> works)
-# then opens installed-skills.html (committed, static) in your browser.
+# Outputs two generated (git-ignored) files under generated/:
+#   • generated/installed-skills.json   the data, as plain JSON for any consumer
+#   • generated/installed-skills.js     the same data as `window.INSTALLED_SKILLS = …;`,
+#                                       a shim so tools/installed-skills.html can
+#                                       load it when opened straight off disk
+#                                       (file:// blocks fetch of local JSON, but
+#                                       a <script src> works)
+# then opens tools/installed-skills.html (committed, static) in your browser.
 #
 # Usage:
-#   ./report-skills.sh                Write the data files and open the viewer
-#   ./report-skills.sh --no-open      Write the data files; don't open a browser
-#   ./report-skills.sh --dry-run      Print the JSON to stdout; write nothing
-#   ./report-skills.sh --help
+#   ./tools/report-skills.sh                Write the data files and open the viewer
+#   ./tools/report-skills.sh --no-open      Write the data files; don't open a browser
+#   ./tools/report-skills.sh --dry-run      Print the JSON to stdout; write nothing
+#   ./tools/report-skills.sh --help
 
 set -euo pipefail
 shopt -s nullglob
@@ -44,23 +45,26 @@ report-skills.sh — report which skills are installed in your agent skill
 stores (~/.agents/skills and ~/.claude/skills) as JSON, and open a viewer.
 
 Usage:
-  ./report-skills.sh                Write the data files and open the viewer
-  ./report-skills.sh --no-open      Write the data files; don't open a browser
-  ./report-skills.sh --dry-run      Print the JSON to stdout; write nothing
-  ./report-skills.sh --help         Show this message
+  ./tools/report-skills.sh                Write the data files and open the viewer
+  ./tools/report-skills.sh --no-open      Write the data files; don't open a browser
+  ./tools/report-skills.sh --dry-run      Print the JSON to stdout; write nothing
+  ./tools/report-skills.sh --help         Show this message
 
-Writes installed-skills.json (plain data) and installed-skills.js (a shim for
-the file:// viewer), then opens installed-skills.html. For each store it lists
-every installed skill, how it is installed (copied folder, symlink into this
-repo, symlink into the shared store, symlink elsewhere, or a broken link), the
-link target, and the one-line description from the skill's SKILL.md.
+Writes generated/installed-skills.json (plain data) and
+generated/installed-skills.js (a shim for the file:// viewer), then opens
+tools/installed-skills.html. For each store it lists every installed skill, how
+it is installed (copied folder, symlink into this repo, symlink into the shared
+store, symlink elsewhere, or a broken link), the link target, and the one-line
+description from the skill's SKILL.md.
 EOF
 }
 
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-JSON_FILE="$REPO_DIR/installed-skills.json"
-JS_FILE="$REPO_DIR/installed-skills.js"
-HTML_FILE="$REPO_DIR/installed-skills.html"
+TOOL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(cd "$TOOL_DIR/.." && pwd)"
+GENERATED_DIR="$REPO_DIR/generated"
+JSON_FILE="$GENERATED_DIR/installed-skills.json"
+JS_FILE="$GENERATED_DIR/installed-skills.js"
+HTML_FILE="$TOOL_DIR/installed-skills.html"
 DRY_RUN=false
 OPEN=true
 
@@ -213,6 +217,7 @@ if $DRY_RUN; then
   exit 0
 fi
 
+mkdir -p "$GENERATED_DIR"
 printf '%s\n' "$JSON" > "$JSON_FILE"
 printf 'window.INSTALLED_SKILLS = %s;\n' "$JSON" > "$JS_FILE"
 
