@@ -7,6 +7,7 @@ Rules:
 - Assumptions and accepted compromises live in their own tables (§11, §12) — never bury them in prose.
 - Each architecture decision (§3) cites the governing principle it upholds — the **Kite principle number** (e.g. `[P<n>]`, looked up in `kite-arch-compass`) in the Kite repo, or the generic principle by name off-repo.
 - §15 (Decision Coverage Checklist) must account for **every** row in `decision-taxonomy.md`.
+- §16 (Blueprint Coverage Checklist) must account for **every** behavior rule, edge case, and deviation/adversarial scenario in the blueprint — each mapped to where the design handles it, or marked N/A with a reason.
 - Appendix A must faithfully capture what the user actually said — decisions, intent, callouts, and notes — so a reader can reconstruct *why* the design is what it is.
 
 Replace every `<…>` placeholder. Delete this instruction block from the final file.
@@ -112,6 +113,13 @@ Replace every `<…>` placeholder. Delete this instruction block from the final 
 | B6 Frontend integration | … | … |
 | B7 Feature flags & rollout | … | … |
 | B8 Error handling | … | … |
+
+## 16. Blueprint Coverage Checklist
+<Every behavior rule, edge case, and deviation/adversarial scenario named in the blueprint, mapped to where this design handles it. §15 proves the *architectural dimensions* were all considered; this proves the *product behavior* was. A feature can satisfy every taxonomy row and still silently drop a blueprint item that maps to no single dimension — a partial-window edge case, a stated cap like "show up to ten items", a specific deviation. Walk the blueprint top to bottom. If an item genuinely needs no system-design treatment, mark it N/A with a reason.>
+
+| Blueprint item | Type | Handled in | Note |
+|---|---|---|---|
+| <behavior / edge case / scenario — quoted or closely paraphrased> | Behavior / Edge case / Deviation / Adversarial | §<n> / D<n> | <how it's handled, or N/A + why> |
 
 ---
 

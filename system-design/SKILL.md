@@ -155,9 +155,20 @@ If anything surfaces, loop back into P3 and resolve it. Do not skip this gate.
 
 Produce `<feature>-system-design.md` (next to the blueprint, at repo root) using
 `references/design-doc-template.md`. The synthesized design goes up top; the
-captured interview goes in the appendix. **Fill the Decision Coverage
-Checklist** so every taxonomy item is marked Resolved / Assumed / N/A — nothing
-is silently skipped.
+captured interview goes in the appendix.
+
+Then fill **both** completeness checklists — they catch different gaps:
+
+- **Decision Coverage Checklist** — every taxonomy dimension marked Resolved /
+  Assumed / N/A, so no _architectural dimension_ is silently skipped.
+- **Blueprint Coverage Checklist** — walk the blueprint top to bottom and map
+  every behavior rule, edge case, and deviation/adversarial scenario to where
+  the design handles it. The taxonomy checklist proves the dimensions were
+  covered, but a feature can pass every dimension and still drop a blueprint
+  behavior that belongs to no single dimension — a partial-window edge case, a
+  stated cap like "show up to ten items", a specific deviation. Any blueprint
+  item with no home is either a missing design decision (go resolve it) or a
+  genuine N/A (say why) — never a silent omission.
 
 ### P6 — Stop
 
@@ -180,8 +191,11 @@ not invoke them or generate them here.
   and land in their own tables in the document — never buried in prose.
 - **Codebase-aware.** Explore the codebase and the compass before asking; fit
   existing patterns over invention.
-- **Completeness via the checklist.** The taxonomy coverage table is the forcing
-  function that proves nothing was skipped.
+- **Completeness via two checklists.** The taxonomy coverage table proves every
+  _architectural dimension_ was considered; the blueprint coverage table proves
+  every _blueprint behavior, edge case, and deviation_ was. A feature can pass
+  the first and still silently drop something only the second catches — both are
+  forcing functions, not formalities.
 
 ## Output structure
 
@@ -189,8 +203,8 @@ See `references/design-doc-template.md`. In short: Summary → System Placement 
 Architecture Decisions (ADR-style, each citing the principle it upholds) → Data
 Model → External Services → Performance/Scale/Caching → Reliability → Security →
 Observability → Rollout → Assumptions → Compromises → Open Risks → Out of Scope
-→ Decision Coverage Checklist → **Appendix A: Captured Inputs** (the faithful
-interview record).
+→ Decision Coverage Checklist → Blueprint Coverage Checklist → **Appendix A:
+Captured Inputs** (the faithful interview record).
 
 ## Gotchas
 

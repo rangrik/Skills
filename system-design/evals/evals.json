@@ -1,90 +1,91 @@
 {
   "skill_name": "system-design",
   "notes": "The skill is interactive (interviews via AskUserQuestion) and is built for the Kite repo with the kite-arch-compass companion skill. These evals run autonomously and off-repo: each run is given a behavior-blueprint fixture and produces a system-design document. They test document quality, taxonomy coverage, structure, and principle-grounded reasoning — not the live interview UX, which needs a human.",
+  "assertion_design": "v2 assertion set. The v1 set was dominated by template-compliance checks (5 of 8) plus a non-discriminating filename check, so it measured structure more than reasoning. v2 keeps only 2 consolidated structural checks (S1 completeness, S2 honest assumptions/compromises) and devotes the remaining 6 per eval to architectural reasoning: correctness traps (the naive wrong choice), coverage of the blueprint's specific deviation and adversarial scenarios, structural enforcement of invariants, identification of the central trade-off, and proportionality. These are deliberately hard — a competent design should pass most, and a miss is real signal.",
   "evals": [
     {
       "id": 0,
       "name": "github-contributions-widget",
       "prompt": "Design the system for the GitHub contributions widget — the blueprint is github-contributions-blueprint.md in this folder. We're a Django + Postgres + Celery app with a React frontend. I really want to avoid hammering the GitHub API, so be deliberate about caching and refresh. Write the design doc.",
-      "expected_output": "A <feature>-system-design.md document following the skill's template: all 15 sections filled, a Decision Coverage Checklist covering all 22 taxonomy dimensions, an External Services table covering the GitHub API (rate limits, auth, failure fallback), an explicit caching strategy (~24h TTL, once-per-hour owner refresh cooldown), and Assumptions/Compromises as tables.",
+      "expected_output": "A complete system-design document that serves all reads from stored data (visitors never trigger a fetch), enforces the refresh cooldown server-side against scripted bypass, covers all three GitHub-failure deviation scenarios, names the freshness-vs-cost trade-off, handles OAuth tokens safely, and bounds GitHub API consumption.",
       "files": ["../system-design-workspace/iteration-1/eval-0-github-contributions-widget/inputs/github-contributions-blueprint.md"],
       "expectations": [
-        "The output is a single Markdown system-design document, saved with a filename ending in -system-design.md.",
-        "The document contains all 15 template sections: Summary, System Placement, Architecture Decisions, Data Model, External Services, Performance/Scale/Caching, Reliability, Security, Observability, Rollout, Assumptions, Accepted Compromises, Open Risks, Out of Scope, and Decision Coverage Checklist.",
-        "The Decision Coverage Checklist accounts for all 22 taxonomy dimensions (A1-A14 and B1-B8), each marked Resolved, Assumed, or N/A.",
-        "Assumptions are presented as a table rather than buried in prose.",
-        "Accepted Compromises are presented as a table that names the principle each compromise bends.",
-        "At least one architecture decision is written in ADR style (Decision / Why / Alternatives considered / Trade-off accepted), and its rationale cites a named design principle.",
-        "The External Services section identifies the GitHub API and addresses its rate limits, authentication/token handling, and failure fallback.",
-        "The design specifies a caching strategy with an explicit TTL/freshness window (about 24h) and the once-per-hour owner refresh cooldown."
+        "The document is complete to the skill's template: all 15 sections are present and filled, and the Decision Coverage Checklist accounts for every one of the 22 taxonomy dimensions (A1-A14 and B1-B8) with a status (Resolved / Assumed / N/A) and a substantive note — no row left blank or rubber-stamped.",
+        "Assumptions and Accepted Compromises are each first-class tables (not prose); every accepted compromise names the specific design principle it bends and gives a concrete revisit trigger.",
+        "The design guarantees that a visitor viewing a profile never triggers a GitHub API call — reads are always served from stored data — and this is stated as a deliberate design property, not left incidental. (Correctness trap: a naive design fetches on page view.)",
+        "The once-per-hour owner refresh cooldown is enforced server-side in a way a scripted client cannot bypass (server-checked timestamp, lock, or equivalent), explicitly addressing the blueprint's adversarial 'scripting the request' scenario — not merely a disabled button or client-side timer.",
+        "The design specifies what the owner and visitors each see for all three GitHub-failure deviation scenarios — GitHub unreachable/slow, token revoked/expired, and a rate-limit response — with a concrete mechanism for each, and never surfaces a hard error to visitors.",
+        "The design explicitly names the central architectural trade-off (serving stored, possibly-stale data to avoid GitHub API load) and resolves it with principle-grounded reasoning about the freshness-vs-cost balance.",
+        "OAuth token handling is specified concretely — encrypted at rest and never returned in any API response or exposed to visitors — addressing the blueprint's scenario that a visitor must never see another member's token.",
+        "GitHub API consumption is bounded: background refresh runs only for stale data and cannot fan out without limit, and per-call cost or quota is acknowledged — directly serving the user's stated priority of not hammering the API."
       ]
     },
     {
       "id": 1,
       "name": "saved-views",
       "prompt": "Turn the saved-views blueprint in this folder (saved-views-blueprint.md) into a technical system design. It's a Rails + Postgres app with a React frontend. Write it up as a design document.",
-      "expected_output": "A <feature>-system-design.md document following the skill's template, with a Data Model section specifying concrete tables/columns for saved views and sharing, security handling for read-only shared views and access scoping, all 15 sections, and a complete Decision Coverage Checklist.",
+      "expected_output": "A complete system-design document that enforces the single-default and unique-name invariants at the database level, closes the concurrent-save race, enforces read-only sharing and access scoping server-side, handles the data-drift edge cases, and justifies the view storage/sharing data model with principle-grounded reasoning.",
       "files": ["../system-design-workspace/iteration-1/eval-1-saved-views/inputs/saved-views-blueprint.md"],
       "expectations": [
-        "The output is a single Markdown system-design document, saved with a filename ending in -system-design.md.",
-        "The document contains all 15 template sections: Summary, System Placement, Architecture Decisions, Data Model, External Services, Performance/Scale/Caching, Reliability, Security, Observability, Rollout, Assumptions, Accepted Compromises, Open Risks, Out of Scope, and Decision Coverage Checklist.",
-        "The Decision Coverage Checklist accounts for all 22 taxonomy dimensions (A1-A14 and B1-B8), each marked Resolved, Assumed, or N/A.",
-        "Assumptions are presented as a table rather than buried in prose.",
-        "Accepted Compromises are presented as a table that names the principle each compromise bends.",
-        "At least one architecture decision is written in ADR style (Decision / Why / Alternatives considered / Trade-off accepted), and its rationale cites a named design principle.",
-        "The Data Model section specifies concrete table(s) and columns for a saved view (filters, sort, column config, owning user, table) and how view sharing is represented.",
-        "The design addresses read-only enforcement for shared views and prevents users from accessing or enumerating views not shared with them."
+        "The document is complete to the skill's template: all 15 sections are present and filled, and the Decision Coverage Checklist accounts for every one of the 22 taxonomy dimensions (A1-A14 and B1-B8) with a status (Resolved / Assumed / N/A) and a substantive note — no row left blank or rubber-stamped.",
+        "Assumptions and Accepted Compromises are each first-class tables (not prose); every accepted compromise names the specific design principle it bends and gives a concrete revisit trigger.",
+        "The single-default-per-user-per-table invariant and the unique-view-name-per-user-per-table invariant are enforced at the database level (constraint or partial unique index), not only in application code — a substantive application of 'make illegal states unrepresentable'.",
+        "The design correctly resolves the blueprint's concurrent-save race (two browser tabs saving the same view name): the chosen mechanism actually closes the race (a DB uniqueness constraint with a caught error), rather than a check-then-insert that still has a time-of-check/time-of-use gap.",
+        "Read-only enforcement for shared views is server-side on every write path (rename, edit, delete) — addressing the adversarial scenario that a recipient must not modify the original through any crafted request — not merely hiding the edit controls in the UI.",
+        "The design prevents a user from accessing or enumerating views not shared with them, with a concrete query-scoping mechanism (and does not leak existence through error differences).",
+        "The design handles the blueprint's data-drift edge cases — a saved view referencing a since-removed column, and a filter on a since-deleted value — specifying graceful behavior rather than an error.",
+        "The design names the central data-model decision (how a view's filter/sort/column configuration is stored, and how sharing is represented) and justifies it with principle-grounded reasoning that treats the schema as the hard-to-change thing."
       ]
     },
     {
       "id": 2,
       "name": "weekly-digest-email",
       "prompt": "I need a system design for the weekly digest email feature — blueprint's in this folder (weekly-digest-blueprint.md). Stack is Postgres, Sidekiq for background jobs, and SendGrid for email delivery. Design it and write the doc.",
-      "expected_output": "A <feature>-system-design.md document following the skill's template, addressing a scheduled background job, idempotency (one digest per user per week), per-user timezone scheduling, SendGrid as an external service with failure handling, all 15 sections, and a complete Decision Coverage Checklist.",
+      "expected_output": "A complete system-design document whose idempotency survives a concurrent double-run, whose provider-failure handling drops rather than delays, that schedules per-user-timezone sends, suppresses empty digests, handles the mid-week new user, secures the unsubscribe link, and bounds the digest query.",
       "files": ["../system-design-workspace/iteration-1/eval-2-weekly-digest-email/inputs/weekly-digest-blueprint.md"],
       "expectations": [
-        "The output is a single Markdown system-design document, saved with a filename ending in -system-design.md.",
-        "The document contains all 15 template sections: Summary, System Placement, Architecture Decisions, Data Model, External Services, Performance/Scale/Caching, Reliability, Security, Observability, Rollout, Assumptions, Accepted Compromises, Open Risks, Out of Scope, and Decision Coverage Checklist.",
-        "The Decision Coverage Checklist accounts for all 22 taxonomy dimensions (A1-A14 and B1-B8), each marked Resolved, Assumed, or N/A.",
-        "Assumptions are presented as a table rather than buried in prose.",
-        "Accepted Compromises are presented as a table that names the principle each compromise bends.",
-        "At least one architecture decision is written in ADR style (Decision / Why / Alternatives considered / Trade-off accepted), and its rationale cites a named design principle.",
-        "The design uses a scheduled background job and addresses idempotency so a user receives at most one digest per week even if the job runs twice.",
-        "The design addresses per-user timezone send scheduling and the email-provider (SendGrid) failure behavior (retry, then skip rather than delay)."
+        "The document is complete to the skill's template: all 15 sections are present and filled, and the Decision Coverage Checklist accounts for every one of the 22 taxonomy dimensions (A1-A14 and B1-B8) with a status (Resolved / Assumed / N/A) and a substantive note — no row left blank or rubber-stamped.",
+        "Assumptions and Accepted Compromises are each first-class tables (not prose); every accepted compromise names the specific design principle it bends and gives a concrete revisit trigger.",
+        "The idempotency mechanism guarantees one digest per user per week even under a concurrent double-run of the job — it relies on a database-enforced dedup (e.g. a unique key on user + week), not a check-then-send that has a race window. (Correctness trap: an application-level 'already sent?' check is not concurrency-safe.)",
+        "The design handles the email-provider failure rule correctly: retries are time-bounded, and on continued failure the digest is dropped for the week rather than delayed — and the design explicitly ties this to the blueprint's 'a late digest is worse than a skipped one' rule.",
+        "Per-user-timezone send scheduling is designed concretely (how 8am-local across many timezones becomes scheduled sends), and the design handles the blueprint's 'job runs late' deviation without corrupting the seven-day content window.",
+        "The design specifies that no email is sent when a user has no relevant activity, and correctly handles the mid-week new-user partial window — both blueprint rules.",
+        "The unsubscribe link is designed to be unguessable and scoped to the issuing account (a signed or random token, not a sequential identifier), addressing the adversarial scenario; and digest content is scoped to only what each user is permitted to see.",
+        "The design names the central scheduling trade-off and resolves it with principle-grounded reasoning, and the digest-assembly query is bounded — the 'up to ten highlighted items, +N more' cap is reflected as a real query limit, not unbounded fetching."
       ]
     },
     {
       "id": 3,
       "name": "announcement-banner",
       "prompt": "Here's the blueprint for an admin announcement banner (announcement-banner-blueprint.md in this folder). Design the system for it — it's a fairly small feature, standard Node/Express + Postgres app with a React frontend. Produce the design doc.",
-      "expected_output": "A <feature>-system-design.md document following the skill's template that stays proportional to a small feature: it does not over-engineer, marks several taxonomy dimensions N/A or simple low-risk Assumptions, but still covers banner storage, per-user dismissal, and admin-only authorization, with all 15 sections and a complete Decision Coverage Checklist.",
+      "expected_output": "A complete system-design document that stores dismissal server-side (cross-device), stays proportional (no unneeded infrastructure), enforces the one-active-banner rule structurally, keys dismissal to banner identity, enforces admin-only authorization server-side, and scopes the taxonomy walk honestly to the feature's real risk.",
       "files": ["../system-design-workspace/iteration-1/eval-3-announcement-banner/inputs/announcement-banner-blueprint.md"],
       "expectations": [
-        "The output is a single Markdown system-design document, saved with a filename ending in -system-design.md.",
-        "The document contains all 15 template sections: Summary, System Placement, Architecture Decisions, Data Model, External Services, Performance/Scale/Caching, Reliability, Security, Observability, Rollout, Assumptions, Accepted Compromises, Open Risks, Out of Scope, and Decision Coverage Checklist.",
-        "The Decision Coverage Checklist accounts for all 22 taxonomy dimensions (A1-A14 and B1-B8), each marked Resolved, Assumed, or N/A.",
-        "Assumptions are presented as a table rather than buried in prose.",
-        "Accepted Compromises are presented as a table that names the principle each compromise bends.",
-        "At least one architecture decision is written in ADR style (Decision / Why / Alternatives considered / Trade-off accepted), and its rationale cites a named design principle.",
-        "The design stays proportional to a small feature: it does not over-engineer, and several taxonomy dimensions are explicitly marked N/A or simple low-risk Assumptions in the Decision Coverage Checklist.",
-        "The Data Model and Security sections cover banner storage, per-user dismissal state, and admin-only authorization."
+        "The document is complete to the skill's template: all 15 sections are present and filled, and the Decision Coverage Checklist accounts for every one of the 22 taxonomy dimensions (A1-A14 and B1-B8) with a status (Resolved / Assumed / N/A) and a substantive note — no row left blank or rubber-stamped.",
+        "Assumptions and Accepted Compromises are each first-class tables (not prose); every accepted compromise names the specific design principle it bends and gives a concrete revisit trigger.",
+        "The design stores per-user dismissal server-side so it persists across a user's devices and sessions — it does NOT rely on client-only storage (localStorage or cookies), which would fail the blueprint's cross-device requirement. (Correctness trap: client-side dismissal is the easy wrong answer.)",
+        "The design is proportional to a small feature: it does not introduce infrastructure the feature does not need (no message queue, websockets, Redis, or a background job purely to expire banners — expiry is handled at query time), and any such omission is a deliberate, stated choice.",
+        "The 'one active banner per workspace' rule is enforced structurally (e.g. a partial unique index) so that two admins publishing concurrently resolve deterministically rather than leaving two active banners.",
+        "Dismissal is keyed to the banner's identity, not its text, so that an admin editing the banner text does not resurface it for users who already dismissed it — matching the blueprint rule explicitly.",
+        "Admin-only authorization for create, edit, and remove is enforced server-side, addressing the adversarial scenario that a non-admin must not publish a banner via a crafted request.",
+        "The taxonomy walk is scoped honestly to the feature's real risk: low-relevance dimensions (e.g. external services, heavy scale, caching) are marked N/A or low-risk Assumed with a genuine one-line reason — not padded with invented concerns to look thorough."
       ]
     },
     {
       "id": 4,
       "name": "collab-cursors",
       "prompt": "Grill me on the system design for real-time collaborative cursors and write it up. Blueprint is collab-cursors-blueprint.md in this folder. We've got a Node backend that's REST-only today, Postgres, React frontend.",
-      "expected_output": "A <feature>-system-design.md document following the skill's template that selects a real-time transport over the REST-only baseline, justifies it against the sub-250ms latency expectation, treats cursor/presence state as ephemeral, handles concurrency/disconnect/out-of-order updates, with all 15 sections and a complete Decision Coverage Checklist.",
+      "expected_output": "A complete system-design document that selects and justifies a real-time transport against the latency budget, treats presence as ephemeral (not in Postgres), degrades gracefully when the presence service is down, bounds update floods, prevents identity spoofing and unauthorized access, and handles out-of-order updates and disconnects.",
       "files": ["../system-design-workspace/iteration-1/eval-4-collab-cursors/inputs/collab-cursors-blueprint.md"],
       "expectations": [
-        "The output is a single Markdown system-design document, saved with a filename ending in -system-design.md.",
-        "The document contains all 15 template sections: Summary, System Placement, Architecture Decisions, Data Model, External Services, Performance/Scale/Caching, Reliability, Security, Observability, Rollout, Assumptions, Accepted Compromises, Open Risks, Out of Scope, and Decision Coverage Checklist.",
-        "The Decision Coverage Checklist accounts for all 22 taxonomy dimensions (A1-A14 and B1-B8), each marked Resolved, Assumed, or N/A.",
-        "Assumptions are presented as a table rather than buried in prose.",
-        "Accepted Compromises are presented as a table that names the principle each compromise bends.",
-        "At least one architecture decision is written in ADR style (Decision / Why / Alternatives considered / Trade-off accepted), and its rationale cites a named design principle.",
-        "The design selects a real-time transport (e.g. WebSocket or SSE) over the existing REST-only setup and justifies it against the sub-250ms latency expectation.",
-        "The design recognizes cursor/presence state as ephemeral (not persisted to the document store) and handles disconnect and out-of-order cursor updates."
+        "The document is complete to the skill's template: all 15 sections are present and filled, and the Decision Coverage Checklist accounts for every one of the 22 taxonomy dimensions (A1-A14 and B1-B8) with a status (Resolved / Assumed / N/A) and a substantive note — no row left blank or rubber-stamped.",
+        "Assumptions and Accepted Compromises are each first-class tables (not prose); every accepted compromise names the specific design principle it bends and gives a concrete revisit trigger.",
+        "The design selects a real-time transport (WebSocket or SSE) over the existing REST-only backend and justifies the choice specifically against the blueprint's sub-250ms perceived-latency requirement with actual reasoning, not just an assertion.",
+        "Cursor/presence state is treated as ephemeral — explicitly NOT persisted to the document store (Postgres) — and the design names where transient presence state lives instead. (Correctness trap: persisting cursors to the main DB.)",
+        "The design handles graceful degradation when the presence service is unavailable: the document still opens and is fully editable with no error blocking the editor — matching the blueprint deviation and applying 'design for failure'.",
+        "The design defends against the abuse scenario of one client flooding cursor updates — it bounds or throttles the update rate (backpressure) so a flood does not degrade other participants.",
+        "Cursor identity (name and color) is assigned or validated server-side so a client cannot spoof another user, and cursor data is delivered only for documents the user is authorized to open — both adversarial scenarios.",
+        "The design handles out-of-order cursor updates (only the latest position per user is shown) and unclean-disconnect detection, and it identifies the central trade-off — adding an always-on transport and a presence tier to a REST-only system — with principle-grounded reasoning."
       ]
     }
   ]
