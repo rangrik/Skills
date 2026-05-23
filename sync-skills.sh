@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# sync-skills.sh — link every skill in this repo into your shared agent
-# skills store, so editing a skill here updates it for every agent at once.
+# sync-skills.sh — link every skill in this repo into your agent skills
+# stores, so editing a skill here updates it for every agent at once.
 #
 # Background
 #   The `skills` CLI (skills.sh / `npx skills`) installs skills into one shared
@@ -26,19 +26,23 @@ set -euo pipefail
 shopt -s nullglob
 
 # ─── Configuration ─────────────────────────────────────────────────────────
-# The shared skills store(s) to link into. ~/.agents/skills is the store the
-# `skills` CLI manages and exposes to every agent, so one entry covers them
-# all. Add a line only if some agent keeps its own separate skills directory.
+# The skills store(s) to link into:
+#   • ~/.agents/skills — the store the `skills` CLI manages and exposes to
+#     most agents (pi, Cursor, Codex, …) from one place.
+#   • ~/.claude/skills — Claude Code reads its skills straight from here, so it
+#     needs its own link target.
+# Add another line only if some other agent keeps its own separate directory.
 AGENT_SKILL_DIRS=(
-  "$HOME/.agents/skills"   # shared store — reaches Claude Code, pi, Cursor, …
+  "$HOME/.agents/skills"   # shared store — reaches pi, Cursor, Codex, …
+  "$HOME/.claude/skills"   # Claude Code's own skills directory
 )
 # ───────────────────────────────────────────────────────────────────────────
 
 usage() {
   cat <<'EOF'
-sync-skills.sh — link every skill in this repo into your shared agent skills
-store (~/.agents/skills), so editing a skill here updates it for every agent
-instantly. No reinstall, no copies going stale.
+sync-skills.sh — link every skill in this repo into your agent skills stores
+(~/.agents/skills and ~/.claude/skills), so editing a skill here updates it
+for every agent instantly. No reinstall, no copies going stale.
 
 Usage:
   ./sync-skills.sh            Link new skills and refresh existing symlinks
