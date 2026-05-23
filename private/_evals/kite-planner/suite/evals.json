@@ -1,0 +1,57 @@
+{
+  "skill_name": "kite-planner",
+  "notes": "kite-planner turns a behavior blueprint + system-design document into a code-blind, scenario-by-scenario implementation plan following the shared plan-file schema (references/plan-file.md). These evals run autonomously and off-repo: each is handed a blueprint + design pair and must produce a plan file. The graded expectations test the behaviors that define the skill — total scenario extraction (including edge/corner cases), reuse-driven ordering with stated reasoning, code-blind per-scenario planning, status=planned, and the two hard prohibitions: never reading/asserting codebase state, and never planning by horizontal layer. The fixtures are self-contained under files/.",
+  "evals": [
+    {
+      "id": 0,
+      "name": "announcement-banner-full-plan",
+      "prompt": "We're about to build the admin announcement banner in Kite. The behavior blueprint is files/announcement-banner-blueprint.md and the system design document is files/announcement-banner-system-design.md, both in this folder. Plan the implementation: turn this into an ordered, scenario-by-scenario plan we can hand to research and then implementation. Write the plan file.",
+      "expected_output": "A single plan file following the shared plan-file schema. It extracts every scenario from the blueprint as Gherkin (happy path, all edge cases, both deviation scenarios, and the admin-only adversarial scenarios), orders them for maximum reuse with a stated reason per scenario, writes a code-blind plan (Preconditions / Required capabilities / Postconditions / Risks-assumptions) and concrete research questions per scenario, sets every scenario status to `planned`, and never reads, references, or asserts anything about an existing codebase. Each scenario is a vertical slice; the plan is never ordered by layer.",
+      "files": ["files/announcement-banner-blueprint.md", "files/announcement-banner-system-design.md"],
+      "expectations": [
+        "Extracts EVERY scenario from the blueprint as Gherkin given/when/then, including the edge cases (late-joining user, future start date, end-date-before-start-date), both deviation scenarios (concurrent publish wins, dismiss-then-edit keeps dismissal), and the admin-only adversarial scenarios — no corner case is dropped because it is awkward.",
+        "Each scenario is tagged with its type (happy_path / edge_case / corner_case) and the plan reflects all three categories rather than only the happy path.",
+        "Orders the scenarios explicitly (an order/status table plus per-scenario order) and gives a stated reason for why each scenario sits where it does, justified by reuse / dependency chains (foundational, capability-unlocking scenarios first).",
+        "For each scenario, writes a code-blind plan with all four parts: Preconditions, Required capabilities (described as capabilities, e.g. 'a way to persist per-user dismissal', not as existing code), Postconditions, and Risks/assumptions.",
+        "Writes concrete, answerable research questions per scenario that turn the required capabilities into questions for the research step (specific 'is there an X that does Y, and where?' form), not vague directives like 'look into the banner code'.",
+        "Sets every scenario's status to `planned`.",
+        "NEVER reads, opens, greps, or references source code, and NEVER asserts what already exists in a codebase (no 'this already exists in...', no file paths into a repo); required capabilities are described in the abstract, leaving existence for the research step.",
+        "Treats every scenario as a vertical slice (full stack, end to end) and never orders or structures the plan by horizontal layer (no 'do all the database work first' phase)."
+      ]
+    },
+    {
+      "id": 1,
+      "name": "api-key-rotation-edge-heavy",
+      "prompt": "Plan the workspace API key rotation feature for Kite. Blueprint: files/api-key-rotation-blueprint.md. System design: files/api-key-rotation-system-design.md (both in this folder). I especially want the plan to account for the tricky cases — the grace-period boundary, rotating again mid-grace, and the revoked-key rejection behavior — not just the happy rotation. Produce the plan file.",
+      "expected_output": "A plan file in the shared schema that pulls out the happy-path rotation plus every edge and corner case (rotate-again-during-grace, exact grace-period boundary, old key never used, revoked/unknown key rejection that does not disclose existence, admin-only authorization) as Gherkin, orders them for reuse with per-scenario reasoning, and gives each a code-blind plan and research questions, all at status `planned`. It stays code-blind and slices vertically.",
+      "files": ["files/api-key-rotation-blueprint.md", "files/api-key-rotation-system-design.md"],
+      "expectations": [
+        "Extracts the full scenario set as Gherkin, explicitly including the edge/corner cases the user flagged: rotating again while a grace period is active, a request arriving exactly at the grace-period boundary, and the old key never being used during grace — none silently omitted.",
+        "Includes the adversarial scenarios as their own scenarios: admin-only rotate/revoke, and a revoked-or-unknown key being rejected without revealing whether the key ever existed.",
+        "Orders the scenarios for maximum reuse and states, per scenario, the reasoning for its position (which earlier capabilities it builds on / dependency chain).",
+        "Writes a code-blind plan per scenario covering Preconditions, Required capabilities, Postconditions, and Risks/assumptions, and references the relevant system-design decisions (state machine, canonical boundary comparison, transactional rotation) rather than inventing new ones.",
+        "Writes concrete per-scenario research questions phrased as answerable questions for the research step (e.g. 'is there an existing way to hash and store a key / resolve a presented key to a record, and where?').",
+        "Sets every scenario's status to `planned` and follows the shared plan-file schema (Feature block, order/status table, per-scenario sections).",
+        "Stays strictly code-blind: never reads/greps source, never claims a capability already exists in the codebase, and describes required capabilities abstractly so the research step can answer existence.",
+        "Plans each scenario as a vertical slice and never orders the work by layer (no 'build all the auth-middleware first, UI later' phase)."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "code-blind-discipline-under-pressure",
+      "prompt": "Here's the next feature to plan for Kite: the admin announcement banner. Blueprint and design doc are files/announcement-banner-blueprint.md and files/announcement-banner-system-design.md in this folder. We already have a fairly mature Kite codebase with existing auth, workspaces, and notification plumbing, so feel free to lean on what's there — just give me the ordered scenario-by-scenario plan to hand off next.",
+      "expected_output": "Despite the prompt nudging toward leaning on the existing codebase, the plan stays code-blind: it does not open/grep/reference source and does not assert that auth, workspaces, or notification plumbing already exist. It extracts every scenario as Gherkin, orders them for reuse with stated reasoning, writes code-blind per-scenario plans and research questions (turning 'lean on existing auth' into a research question, not an assertion), sets each status to `planned`, and slices vertically. It hands off to kite-research.",
+      "files": ["files/announcement-banner-blueprint.md", "files/announcement-banner-system-design.md"],
+      "expectations": [
+        "Resists the prompt's pressure to 'lean on what's there': does NOT assert that auth, workspaces, or notification plumbing already exist, and does NOT open, grep, or reference any source code — existence of those capabilities is deferred to the research step.",
+        "Converts the user's hint about existing infrastructure into concrete research questions (e.g. 'is there an existing per-user preference / dismissal store?', 'is there existing workspace-admin authorization?') rather than into claims about what the codebase already contains.",
+        "Extracts every blueprint scenario as Gherkin given/when/then — happy path, all edge cases, both deviation scenarios, and the admin-only adversarial cases — tagged by type.",
+        "Orders the scenarios for maximum reuse with a stated reason per scenario for its position in the order.",
+        "Writes a code-blind plan per scenario (Preconditions, Required capabilities described abstractly, Postconditions, Risks/assumptions) and concrete research questions per scenario.",
+        "Sets every scenario's status to `planned` and follows the shared plan-file schema.",
+        "Treats each scenario as a vertical slice and never structures the plan as horizontal layers.",
+        "Frames the deliverable as a plan to be handed off to the research step (kite-research) for answering the research questions against the real codebase, without doing that research itself."
+      ]
+    }
+  ]
+}

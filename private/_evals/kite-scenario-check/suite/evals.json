@@ -1,0 +1,46 @@
+{
+  "skill_name": "kite-scenario-check",
+  "notes": "kite-scenario-check is a fast pre-commit gate: given ONE scenario's code changes plus its Gherkin definition, it returns PASS or FAIL. On FAIL it must tie each gap to the specific Gherkin clause it violates. Each fixture under files/ bundles a small set of code changes together with the scenario's Gherkin (given/when/then). The evals deliberately test that the skill (a) PASSes a satisfying implementation and FAILs a gap, (b) names the exact violated clause on FAIL, (c) flags scenario drift / out-of-scope additions, and (d) stays a focused gate rather than a full-feature audit or architecture critique.",
+  "evals": [
+    {
+      "id": 1,
+      "name": "passing-scenario-public-profile",
+      "prompt": "I'm working in appsmith-v2 and just finished implementing the public-profile scenario. Here are my code changes plus the Gherkin for the scenario (in profile.md attached). Check this scenario against the Gherkin and tell me whether I can commit it.",
+      "expected_output": "A clear PASS verdict. The implementation satisfies every clause: GET /api/profiles/{username} returns 200 with display_name and join_date and deliberately omits email. The skill should confirm there are no gaps and that the scenario can be committed, without launching a full-feature audit or a principle-by-principle architecture critique.",
+      "files": ["files/pass-case.md"],
+      "expectations": [
+        "Returns a clear PASS verdict and states the scenario can be committed",
+        "Confirms each then-clause is satisfied: 200 status, display_name present, join_date present, and email deliberately absent from PublicProfileResponse",
+        "Does not invent gaps or fail the scenario over things the Gherkin never asked for",
+        "Stays a fast, focused gate: does not perform a full-feature audit, does not hunt for other scenarios' corner cases, and does not deliver a principle-by-principle architecture critique"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "failing-scenario-avatar-validation-gap",
+      "prompt": "Quick gate check before I commit in appsmith-v2: this is the avatar-upload scenario I just built (code changes plus its Gherkin are in avatar.md attached). Did I actually implement this scenario correctly, and should I commit it?",
+      "expected_output": "A clear FAIL verdict. The upload happy path is implemented, but two then-clauses are unmet: the file is never rejected when larger than 5 MB, and it is never rejected when it is not a PNG or JPEG (no size check or content-type validation exists in the changes). Each gap must be tied to the specific Gherkin clause it violates. The scenario should not be committed.",
+      "files": ["files/fail-case.md"],
+      "expectations": [
+        "Returns a clear FAIL verdict and states the scenario should NOT be committed",
+        "Flags that there is no rejection of files larger than 5 MB, and ties it concretely to the Gherkin clause 'the uploaded file is rejected if it is larger than 5 MB'",
+        "Flags that there is no PNG/JPEG content-type validation, and ties it concretely to the Gherkin clause 'the uploaded file is rejected if it is not a PNG or JPEG'",
+        "Each reported gap is precise and actionable (names the missing check and the clause it violates), not vague commentary",
+        "Stays a focused gate: does not expand into a full-feature audit or a principle-by-principle architecture critique, while still being allowed to note a single glaring architectural mismatch if one exists"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "scenario-drift-display-name",
+      "prompt": "Pre-commit check in appsmith-v2: here's the display-name update scenario plus my code changes (in member.md attached). Verify this scenario against the Gherkin before I commit.",
+      "expected_output": "The skill should confirm the display_name update clauses are satisfied, but flag scenario drift: the changes also add marketing-email opt-in handling (including sending an email) and a theme preference, none of which this scenario called for. It should answer the drift question directly (the implementation drifted outside this scenario) and keep the verdict focused on this one scenario rather than auditing the whole feature.",
+      "files": ["files/drift-case.md"],
+      "expectations": [
+        "Confirms the display_name then-clauses (200, returns updated display_name, persisted) are satisfied",
+        "Explicitly flags that the implementation drifted outside this scenario by adding things the scenario never called for: marketing_emails_opt_in handling (and sending an email) and theme_preference",
+        "Identifies the out-of-scope additions concretely by name rather than vaguely noting 'extra code'",
+        "Stays a focused gate scoped to this one scenario: does not turn into a full-feature audit or a principle-by-principle architecture critique"
+      ]
+    }
+  ]
+}

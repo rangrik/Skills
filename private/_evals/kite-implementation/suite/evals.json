@@ -1,0 +1,42 @@
+{
+  "skill_name": "kite-implementation",
+  "evals": [
+    {
+      "id": 1,
+      "name": "implement-team-invites-from-researched-plan",
+      "prompt": "We've finished researching the team-invites feature for appsmith-v2 — the annotated plan file is team-invites-plan.md in this folder. Work through it and build the feature in the appsmith-v2 repo, one scenario at a time, committing each scenario as you go.",
+      "expected_output": "A FAITHFUL BENCHMARK OF THIS EVAL REQUIRES THE LIVE appsmith-v2 REPO CHECKED OUT AS THE WORKING CODEBASE — the plan fixture points at real appsmith-v2 files (backend/app/auth/guards.py, backend/app/services/workspace_membership.py, backend/app/queue/email_jobs.py, backend/app/routes/) and the skill cannot meaningfully reuse EXISTS findings, add code at MISSING extension points, run kite-arch-compass, or commit without that repo present. With the repo present, the run should implement S1, S2, and S3 IN PLAN ORDER, each as a complete vertical slice (route -> service -> model/migration, end to end) rather than any single layer in isolation. It must REUSE the things research marked EXISTS (require_workspace_admin, enqueue_email, WorkspaceMembershipService.add_member) at their given locations instead of re-discovering or rebuilding them, and add new code only at the MISSING extension points (the invitations model + migration, the partial unique index, the accept-invite route). Testing must be SELECTIVE — covering the idempotent re-invite (S3), the atomic single-membership-on-double-accept boundary (S2), and the admin-authorization boundary (S1) — not exhaustive mechanical tests of every detail. Before each commit it must run the kite-arch-compass architecture check and an independent kite-scenario-check, and must NOT commit a scenario whose scenario-check returns FAIL. It must SKIP S4 (marked blocked) and surface that it is blocked and needs re-planning rather than implementing it. For each committed scenario it should fill in the Implementation record (changed files, tests, arch-check result, scenario-check verdict, commit) and set the scenario status to committed in the plan file.",
+      "files": ["files/team-invites-plan.md"],
+      "expectations": [
+        "A faithful benchmark requires the live appsmith-v2 repository checked out as the working codebase; the run cannot reuse the EXISTS findings, add code at the MISSING extension points, run the architecture check, or produce real commits without it, and the run states this dependency rather than fabricating file contents.",
+        "Implements the scenarios in plan order (S1 then S2 then S3) and never starts a later scenario before the earlier one is committed.",
+        "Builds each scenario as a vertical end-to-end slice spanning every layer it touches (route, service, model/migration) so the scenario actually works for a user — it does NOT implement a single layer in isolation or batch all the database work first.",
+        "Reuses exactly what kite-research marked EXISTS at the stated locations — require_workspace_admin (guards.py:88), enqueue_email (email_jobs.py:31), and WorkspaceMembershipService.add_member (workspace_membership.py:54) — instead of re-discovering or reimplementing them.",
+        "Adds new code only at the MISSING extension points research identified — the invitations model and migration, the partial unique index on (workspace_id, lower(email)) WHERE status = pending, and the new accept-invite route — rather than re-deciding where things should live.",
+        "Tests selectively at the boundaries that matter — the S1 admin-authorization boundary, the S2 atomic single-membership-on-double-accept data-integrity boundary, and the S3 idempotent re-invite behavior — and does NOT generate exhaustive or mechanical tests for every implementation detail.",
+        "Runs the kite-arch-compass architecture check on each slice before committing it, and fixes any flagged violation before the commit rather than carrying it into the commit.",
+        "Runs an independent kite-scenario-check against each scenario's Gherkin before committing, and does NOT commit a scenario whose scenario-check returns FAIL — it fixes the listed gaps and re-checks first.",
+        "Skips scenario S4 because research marked it blocked, does not attempt to implement it, and surfaces it clearly as needing kite-planner to re-plan.",
+        "For each committed scenario, fills in the plan file's Implementation record (changed files, tests added, architecture-check result, scenario-check verdict, commit) and sets that scenario's status to committed."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "resume-partially-committed-plan",
+      "prompt": "Pick up the team-invites build in appsmith-v2 from the attached plan file (team-invites-plan.md) and finish it. Some scenarios may already be done — don't redo committed work. Commit each remaining scenario only after it's verified.",
+      "expected_output": "A FAITHFUL BENCHMARK OF THIS EVAL REQUIRES THE LIVE appsmith-v2 REPO AS THE WORKING CODEBASE — without it the skill cannot reuse the researched EXISTS capabilities, add code at the MISSING extension points, run kite-arch-compass, or create real commits, so any run is only a dry walkthrough until the repo is present. With the repo present, the run should read the plan file as the state machine: skip scenarios already marked committed, resume from the first non-committed, non-blocked scenario, and process the rest in plan order. Each resumed scenario is built as a vertical slice reusing the EXISTS findings and adding code at the MISSING extension points; testing stays selective at the behavior/security/data-integrity/regression boundaries; the kite-arch-compass architecture check and an independent kite-scenario-check both run before every commit, with no commit on a FAIL verdict. S4 (blocked) is skipped and surfaced for re-planning. Each finished scenario gets its Implementation record filled in and status set to committed.",
+      "files": ["files/team-invites-plan.md"],
+      "expectations": [
+        "A faithful benchmark requires the live appsmith-v2 repository as the working codebase; without it the run cannot reuse the EXISTS findings, add code at the MISSING extension points, run the architecture check, or produce real commits, and the run states this rather than inventing repo contents.",
+        "Treats the plan file as the resumable state machine: scenarios already marked committed are not rebuilt, and work resumes from the first non-committed, non-blocked scenario.",
+        "Processes the remaining scenarios in plan order, each as a vertical end-to-end slice across every layer it touches rather than as an isolated single layer.",
+        "Reuses the capabilities kite-research marked EXISTS at their given locations and adds new code only at the MISSING extension points, without re-discovering what research already settled.",
+        "Tests selectively at the behavior, security/authorization, data-integrity, and reuse-regression boundaries, not exhaustively across every implementation detail.",
+        "Runs the kite-arch-compass architecture check on each slice before committing and fixes violations before the commit.",
+        "Runs an independent kite-scenario-check before each commit and does NOT commit any scenario whose check returns FAIL, fixing the named gaps and re-checking instead.",
+        "Skips the blocked scenario S4, does not implement it, and surfaces it as needing re-planning by kite-planner.",
+        "Fills in the Implementation record and sets status to committed for each scenario it finishes."
+      ]
+    }
+  ]
+}

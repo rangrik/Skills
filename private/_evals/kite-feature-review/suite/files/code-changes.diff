@@ -1,0 +1,103 @@
+Full set of code changes for the "App Export Download" feature (every commit
+squashed for review). Stack: FastAPI backend (routes -> services -> db modules
+-> models), Celery workers, SQLAlchemy, Postgres.
+
+=============================================================================
+commit 1 — add export route + assembly  (claims: S1, S2)
+=============================================================================
+
+--- /dev/null
++++ backend/app/routes/export_routes.py
+@@
++import io, zipfile, os
++from fastapi import APIRouter
++from sqlalchemy import text
++from app.db.session import engine
++
++router = APIRouter()
++
++# POST /exports  -- create an export
++@router.post("/exports")
++def create_export(app_id: str, workspace_id: str):
++    # build the zip right here, in the request handler
++    buf = io.BytesIO()
++    with zipfile.ZipFile(buf, "w") as zf:
++        base = f"/data/apps/{app_id}/files"
++        for root, _dirs, files in os.walk(base):          # can be thousands of files
++            for f in files:
++                full = os.path.join(root, f)
++                zf.write(full, os.path.relpath(full, base))
++    artifact_path = f"/data/exports/{app_id}.zip"
++    with open(artifact_path, "wb") as out:
++        out.write(buf.getvalue())
++
++    # write straight to the DB from the route, no service layer
++    with engine.begin() as conn:
++        row = conn.execute(
++            text("INSERT INTO app_exports (app_id, workspace_id, artifact_path) "
++                 "VALUES (:a, :w, :p) RETURNING id"),
++            {"a": app_id, "w": workspace_id, "p": artifact_path},
++        ).first()
++    return {"export_id": row[0], "artifact_path": artifact_path}
++
++# GET /exports/{id}/download
++@router.get("/exports/{export_id}/download")
++def download_export(export_id: str):
++    with engine.begin() as conn:
++        row = conn.execute(
++            text("SELECT artifact_path FROM app_exports WHERE id = :id"),
++            {"id": export_id},
++        ).first()
++    # stream whatever artifact_path points at -- no status check
++    return {"path": row[0]}
+
+--- /dev/null
++++ backend/migrations/0042_app_exports.sql
+@@
++CREATE TABLE app_exports (
++  id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
++  app_id        text NOT NULL,
++  workspace_id  text NOT NULL,
++  artifact_path text,
++  created_at    timestamptz NOT NULL DEFAULT now()
++);
++-- note: no status column, no app_version, no idempotency_key,
++-- no unique index.
+
+=============================================================================
+commit 2 — usage analytics  (NOT referenced by any scenario in the blueprint)
+=============================================================================
+
+--- /dev/null
++++ backend/app/services/usage_analytics.py
+@@
++# New cross-cutting analytics module. Fires a PostHog event on every export
++# AND back-fills a daily "active creators" rollup table. Nobody asked for this
++# in the blueprint or the system design; it was added "while we were in here".
++import requests
++from app.db.session import engine
++from sqlalchemy import text
++
++def track_export(app_id: str, workspace_id: str):
++    requests.post("https://app.posthog.com/capture/", json={
++        "event": "app_exported", "distinct_id": workspace_id,
++        "properties": {"app_id": app_id},
++    }, timeout=2)
++    with engine.begin() as conn:
++        conn.execute(text(
++            "INSERT INTO active_creators_daily (workspace_id, day) "
++            "VALUES (:w, current_date) ON CONFLICT DO NOTHING"),
++            {"w": workspace_id})
+
+--- backend/app/routes/export_routes.py
+@@ create_export
++    from app.services.usage_analytics import track_export
++    track_export(app_id, workspace_id)   # called inline from the route
+
+=============================================================================
+What was NOT changed
+=============================================================================
+- No idempotency handling of any kind on POST /exports.
+- No ownership / workspace authorization check on either endpoint;
+  workspace_id is taken straight from the client.
+- No status column, no failure handling, no `failed` state, no Celery task.
