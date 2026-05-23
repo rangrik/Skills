@@ -4,7 +4,7 @@
 
 ### Why
 
-`skills-factory/Kite-Skill-Prompts.md` contains the finished `SKILL.md` text for
+`docs/factory/Kite-Skill-Prompts.md` contains the finished `SKILL.md` text for
 five new skills that together form a **feature-delivery pipeline** for the
 appsmith-v2 (Kite) platform. They are written but not yet installed as skills.
 The job is to turn each verbatim block into a real, installed skill on disk,
@@ -50,15 +50,26 @@ into a single doc.
 
 ### Verified facts grounding this plan
 
-- Skills in this repo live at `private-skills/<name>/SKILL.md` (internal) with
-  optional `references/*.md`, `evals/evals.json`, and `evals/files/` fixtures.
-  Confirmed against `private-skills/kite-arch-compass/`, `blueprint/`,
-  `system-design/`.
+- This repository is bucketed by skill ownership: `personal/`, `private/`,
+  `vendor/`, and `wip/`.
+- Runtime skill folders contain only runtime resources an agent may use while
+  applying the skill: `SKILL.md`, optional `references/`, `assets/`, and runtime
+  helper scripts. Eval suites and eval results do **not** live inside runtime
+  skill folders.
+- The five Kite pipeline skills belong in the `private` bucket:
+  `private/<name>/SKILL.md` with optional `private/<name>/references/*.md`.
+- Eval suites/results for private skills live outside the runtime skill folder:
+  - Suite: `private/_evals/<name>/suite/evals.json`
+  - Fixtures: `private/_evals/<name>/suite/files/` and referenced from
+    `evals.json` as `files/<fixture>`
+  - Results: `private/_evals/<name>/results/`
+- `catalog.yaml` is the source of truth for skill paths, install flags, and eval
+  suite/result locations. New installed private skills need catalog entries.
 - `kite-arch-compass` already exists at
-  `/Users/pranavkanade/Skills/private-skills/kite-arch-compass/` — **must not be
-  recreated**.
-- The five SKILL.md bodies already exist verbatim in
-  `skills-factory/Kite-Skill-Prompts.md`. The instruction is to copy each block
+  `/Users/pranavkanade/Skills/private/kite-arch-compass/` with evals at
+  `private/_evals/kite-arch-compass/` — **must not be recreated**.
+- The five `SKILL.md` bodies already exist verbatim in
+  `docs/factory/Kite-Skill-Prompts.md`. The instruction is to copy each block
   verbatim — no rewriting.
 - The shared **plan-file schema** (Section 0) is a _reference_, not a skill, and
   is bundled as `references/plan-file.md` inside each skill that touches the
@@ -67,17 +78,22 @@ into a single doc.
   directly).
 - `skill-creator` supports the "content already written" path: _"maybe they
   already have a draft of the skill — in this case you can go straight to the
-  eval/iterate part of the loop."_ No init script; scaffolding is manual.
+  eval/iterate part of the loop."_ No init script is required; scaffolding is
+  manual.
 
 ### Decisions confirmed with the user
 
-- **Location:** `private-skills/` (alongside `kite-arch-compass`).
+- **Runtime location:** `private/<name>/` (alongside `private/kite-arch-compass/`).
+- **Eval suite location:** `private/_evals/<name>/suite/`.
+- **Eval results location:** `private/_evals/<name>/results/`.
+- **Catalog:** add all five skills to `catalog.yaml` with `bucket: private`,
+  `install: true`, and the matching suite/results paths.
 - **Eval scope:** the **full skill-creator loop** (scaffold → evals → benchmark
   with-skill vs baseline → grade → review viewer → iterate).
 
 ---
 
-## Approach (two stages)
+## Approach (three stages)
 
 Because the full loop has an inherent **human-review checkpoint** (the HTML
 viewer → `feedback.json`) and the five skills differ in how autonomously they
@@ -86,10 +102,51 @@ can be evaluated, the work is staged:
 ### Stage 1 — Generate all five skills (parallel: 5 `skill-creator` subagents)
 
 One subagent per skill, dispatched in a single message so they run concurrently.
-Each owns its own `private-skills/<name>/` directory (no shared state), invokes
-the `skill-creator` skill, and produces: verbatim `SKILL.md`, bundled
-`references/plan-file.md` (4 of 5), and an authored `evals/evals.json` with
-realistic test prompts + fixtures under `evals/files/`.
+Each owns its own runtime skill directory and eval-suite directory (no shared
+state):
+
+- Runtime: `private/<name>/`
+- Eval suite: `private/_evals/<name>/suite/`
+
+Each subagent invokes the `skill-creator` skill and produces: verbatim
+`SKILL.md`, bundled `references/plan-file.md` (4 of 5), and an authored
+`private/_evals/<name>/suite/evals.json` with realistic test prompts + fixtures
+under `private/_evals/<name>/suite/files/` as needed.
+
+The parallel subagents **do not edit `catalog.yaml`** and **do not write eval
+results**. That avoids shared-file conflicts and keeps runtime files separate
+from eval artifacts.
+
+### Stage 1b — Register the skills and create result roots (serial orchestrator step)
+
+After all five Stage 1 outputs exist, the main orchestrator updates shared repo
+state in one serial edit:
+
+1. Add five `catalog.yaml` entries:
+
+   ```yaml
+   - id: kite-planner
+     name: kite-planner
+     bucket: private
+     path: private/kite-planner
+     install: true
+     evals:
+       suite: private/_evals/kite-planner/suite
+       results: private/_evals/kite-planner/results
+   ```
+
+   Repeat for `kite-research`, `kite-implementation`, `kite-scenario-check`, and
+   `kite-feature-review`.
+
+2. Create each empty results directory as `private/_evals/<name>/results/`
+   (with `.gitkeep` if needed so the directory is tracked before any benchmark
+   output exists).
+3. Run a dry-run sync/report check after catalog update:
+
+   ```sh
+   ./tools/sync-skills.sh --dry-run
+   ./tools/report-skills.sh --no-open
+   ```
 
 ### Stage 2 — Run the full eval/iterate loop (orchestrated, prioritized)
 
@@ -113,51 +170,66 @@ feedback, then iterates (`iteration-2/`...) until the user is satisfied.
 
 ## Exact subagent prompts — Stage 1
 
-All five are dispatched together (one message, five `Agent` tool calls,
-`subagent_type: general-purpose`). Shared template below; per-skill specifics
-follow.
+All five are dispatched together (one message, five subagent runs). Shared
+template below; per-skill specifics follow.
 
 ### Shared prompt template
 
 `````
 You are creating a new agent skill in the repo /Users/pranavkanade/Skills.
-First invoke the `skill-creator` skill (Skill tool → name
-`skill-creator:skill-creator`) and follow its conventions for scaffolding a
-skill whose full SKILL.md content is ALREADY written (go straight to the
-scaffold + eval-authoring part of the loop — do not redraft the body).
+First invoke the installed `skill-creator` skill (runtime name `skill-creator`)
+and follow its conventions for scaffolding a skill whose full SKILL.md content
+is ALREADY written (go straight to the scaffold + eval-authoring part of the
+loop — do not redraft the body).
 
-Verified repo conventions (mirror private-skills/kite-arch-compass/):
-- Skill path: private-skills/<name>/SKILL.md
-- Optional: references/*.md, evals/evals.json, evals/files/ fixtures
+Verified repo conventions (mirror private/kite-arch-compass/ and catalog.yaml):
+- Runtime skill path: private/<NAME>/SKILL.md
+- Runtime bundled references: private/<NAME>/references/*.md
+- Eval suite path: private/_evals/<NAME>/suite/evals.json
+- Eval fixtures path: private/_evals/<NAME>/suite/files/
+- Eval fixture paths in evals.json are relative to the suite directory, e.g.
+  "files/example.md"
+- Eval results path, used later by the orchestrator: private/_evals/<NAME>/results/
+- Do NOT put evals or eval results inside private/<NAME>/.
 
 Your skill: <NAME>
 
-STEP 1 — Scaffold the directory private-skills/<NAME>/.
+STEP 1 — Scaffold these directories only:
+- private/<NAME>/
+- private/_evals/<NAME>/suite/
+- private/_evals/<NAME>/suite/files/ if fixtures are needed
+
+Do not edit catalog.yaml; the main orchestrator will register all five skills in
+one serial edit after parallel generation completes.
 
 STEP 2 — Write SKILL.md VERBATIM. Open
-/Users/pranavkanade/Skills/skills-factory/Kite-Skill-Prompts.md and copy the
+/Users/pranavkanade/Skills/docs/factory/Kite-Skill-Prompts.md and copy the
 fenced SKILL.md block for <NAME> (Skill <N>, lines <RANGE>) verbatim into
-private-skills/<NAME>/SKILL.md. Copy only the content INSIDE the outer fence —
-do NOT include the opening ```md / ````md line or the closing fence line.
-Preserve everything else exactly: the YAML frontmatter and any nested code
-blocks. Do not edit, rephrase, reflow, or "improve" a single word.
+private/<NAME>/SKILL.md. Copy only the content INSIDE the outer fence — do NOT
+include the opening ```md / ````md line or the closing fence line. Preserve
+everything else exactly: the YAML frontmatter and any nested code blocks. Do not
+edit, rephrase, reflow, or "improve" a single word.
 
 STEP 3 — <plan-file reference: see per-skill note>
 
-STEP 4 — Author evals/evals.json following the repo shape (study
-private-skills/kite-arch-compass/evals/evals.json and
-system-design/evals/evals.json: top-level skill_name, notes, and evals[] with
-id, name, prompt, expected_output, files, expectations[]). Write 2–3 realistic,
-autonomously-runnable test prompts: <per-skill eval guidance>. Put any fixture
-files under evals/files/. Do NOT execute the benchmark — only author the file.
+STEP 4 — Author private/_evals/<NAME>/suite/evals.json following the repo shape
+(study private/_evals/kite-arch-compass/suite/evals.json and
+personal/_evals/system-design/suite/evals.json: top-level skill_name and evals[]
+with id, optional name, prompt, expected_output, files, expectations[]). Write
+2–3 realistic, autonomously-runnable test prompts: <per-skill eval guidance>.
+Put any fixture files under private/_evals/<NAME>/suite/files/ and reference
+them from evals.json as files/<filename-or-relative-path>. Do NOT execute the
+benchmark — only author the suite.
 
 STEP 5 — Validate: confirm SKILL.md frontmatter parses, `name` matches the
-directory name, and the tree matches convention. Report the final file tree and
-any problems.
+directory name, eval fixture paths resolve relative to private/_evals/<NAME>/suite/,
+and the tree matches convention. Report the final file tree and any problems.
 
 HARD CONSTRAINTS:
 - Do NOT create or modify kite-arch-compass (it already exists).
-- Do NOT touch any directory other than private-skills/<NAME>/.
+- Do NOT touch any path other than private/<NAME>/ and private/_evals/<NAME>/suite/.
+- Do NOT create private/<NAME>/evals/ or put eval artifacts inside the runtime skill folder.
+- Do NOT edit catalog.yaml from the parallel subagent.
 - The SKILL.md body must be byte-for-byte the source block (frontmatter
   included). Leave references to kite-arch-compass and other skills as written.
 `````
@@ -166,9 +238,9 @@ HARD CONSTRAINTS:
 
 **1. kite-planner** — Skill 1, lines 114–239.
 
-- STEP 3: Create `references/plan-file.md` — the canonical plan-file definition,
-  assembled from `Kite-Skill-Prompts.md` Section 0 as exactly three parts, in
-  this order, copied verbatim:
+- STEP 3: Create `private/kite-planner/references/plan-file.md` — the canonical
+  plan-file definition, assembled from `docs/factory/Kite-Skill-Prompts.md`
+  Section 0 as exactly three parts, in this order, copied verbatim:
   1. **State-machine framing** — the paragraph at lines 44–46 ("The plan file is
      a single Markdown document. It doubles as the pipeline's **state
      machine**…").
@@ -186,27 +258,31 @@ HARD CONSTRAINTS:
   orders scenarios for reuse with stated reasoning, (c) writes code-blind
   plans + research questions, (d) sets status `planned`, and **never references
   source code / never asserts what already exists**. Reuse a blueprint+design
-  fixture pair from `blueprint/` or `system-design/evals/files/` if present.
+  fixture pair from `personal/_evals/blueprint/suite/files/` or
+  `personal/_evals/system-design/suite/files/` if present; otherwise author a
+  small pair under `private/_evals/kite-planner/suite/files/`.
 
 **2. kite-research** — Skill 2, lines 245–343.
 
-- STEP 3: Same `references/plan-file.md` as above.
+- STEP 3: Same `private/<NAME>/references/plan-file.md` as above.
 - STEP 4 evals: given a `planned` plan file + a small codebase fixture, answers
   each research question one-to-one as EXISTS (with file:line + reuse note) or
   MISSING (with extension point), records reuse constraints, raises a BLOCKING
   finding + `blocked` status when the codebase contradicts the plan, and puts
   **only names/locations, never copied source** into the plan file. Provide a
-  tiny codebase fixture under `evals/files/`.
+  tiny codebase fixture under `private/_evals/kite-research/suite/files/`.
 
 **3. kite-implementation** — Skill 3, lines 349–431.
 
-- STEP 3: Same `references/plan-file.md` as above.
+- STEP 3: Same `private/<NAME>/references/plan-file.md` as above.
 - STEP 4 evals: given a `researched` plan file, works scenarios in order as
   vertical slices, reuses EXISTS / adds at MISSING extension points, tests
   selectively (not exhaustively), runs the arch check + an independent
   scenario-check before each commit, skips `blocked` scenarios, and records the
-  implementation record + `committed` status. Note in `notes` that a faithful
-  benchmark needs the live appsmith-v2 repo.
+  implementation record + `committed` status. Capture the limitation that a
+  faithful benchmark needs the live appsmith-v2 repo in the eval's
+  `expected_output`/`expectations[]` and in the Stage 2 limitation note — do not
+  add a non-schema `notes` field to `evals.json`.
 
 **4. kite-scenario-check** — Skill 4, lines 437–501.
 
@@ -216,40 +292,76 @@ HARD CONSTRAINTS:
   FAIL; FAIL ties each gap to the violated Gherkin clause; correctly flags
   scenario drift (added things the scenario never asked for); stays a fast gate
   (no full-feature audit). Provide a passing-case and a failing-case fixture
-  pair under `evals/files/`.
+  pair under `private/_evals/kite-scenario-check/suite/files/`.
 
 **5. kite-feature-review** — Skill 5, lines 507–618. NOTE: this block uses a
 **four-backtick** outer fence because it contains nested triple-backtick code
-(the report template). Extract the content between the
-`md line and the   closing ` line, keeping the inner ``` report-template block
-intact.
+(the report template). Extract the content between the opening four-backtick
+`md` fence and the closing four-backtick fence, keeping the inner
+triple-backtick report-template block intact.
 
-- STEP 3: Same `references/plan-file.md` as above.
+- STEP 3: Same `private/<NAME>/references/plan-file.md` as above.
 - STEP 4 evals: given blueprint + design + full code changes + plan file,
   produces the adversarial review report in the prescribed structure — coverage
   check, orphan-change detection, per-scenario "why it's unacceptable" with
   kite-arch-compass principle citations + a concrete failure Gherkin, and Step-9
   missed-corner-cases beyond the blueprint. Provide a feature fixture
-  (blueprint + a deliberately flawed set of code changes) under `evals/files/`.
+  (blueprint + a deliberately flawed set of code changes) under
+  `private/_evals/kite-feature-review/suite/files/`.
 
 ---
 
-## Stage 2 — full eval/iterate loop (after Stage 1 lands)
+## Stage 2 — full eval/iterate loop (after Stage 1 + Stage 1b land)
 
 For each skill in priority order (planner & feature-review → scenario-check →
 research & implementation):
 
-1. Confirm/finish `evals/evals.json` assertions (the `expectations[]` are the
-   graded criteria).
+1. Confirm/finish `private/_evals/<name>/suite/evals.json` assertions (the
+   `expectations[]` are the graded criteria), and confirm every path in
+   `files[]` exists relative to `private/_evals/<name>/suite/`.
 2. For each eval, spawn **with-skill and baseline (without-skill) runs in
-   parallel** into
-   `<name>-workspace/iteration-1/eval-<id>/{with_skill,without_skill}/`.
-3. Grade each run with a grader subagent; aggregate with
-   `python -m scripts.aggregate_benchmark`.
-4. Generate the HTML review with `eval-viewer/generate_review.py` and **pause
-   for the user to review and supply `feedback.json`**.
-5. Improve SKILL.md from feedback (or bundle a helper if every run reinvents the
-   same one), rerun into `iteration-2/`, repeat until the user is satisfied.
+   parallel** into the current results layout:
+
+   ```text
+   private/_evals/<name>/results/iteration-1/
+   └── eval-<id>-<slug>/
+       ├── eval_metadata.json
+       ├── with_skill/run-1/
+       │   ├── outputs/
+       │   ├── grading.json
+       │   └── timing.json
+       └── without_skill/run-1/
+           ├── outputs/
+           ├── grading.json
+           └── timing.json
+   ```
+
+3. Grade each run with a grader subagent.
+4. Aggregate the iteration with the skill-creator script from its current repo
+   path:
+
+   ```sh
+   python personal/skill-creator/scripts/aggregate_benchmark.py \
+     private/_evals/<name>/results/iteration-1 \
+     --skill-name <name> \
+     --skill-path private/<name>
+   ```
+
+5. Generate the HTML review with the current viewer path and **pause for the
+   user to review and supply/save `feedback.json`**:
+
+   ```sh
+   python personal/skill-creator/eval-viewer/generate_review.py \
+     private/_evals/<name>/results/iteration-1 \
+     --skill-name <name>
+   ```
+
+   Feedback saves under `private/_evals/<name>/results/iteration-1/feedback.json`.
+
+6. Improve `private/<name>/SKILL.md` from feedback (or bundle a helper if every
+   run reinvents the same one), rerun into
+   `private/_evals/<name>/results/iteration-2/`, repeat until the user is
+   satisfied.
 
 For **research** and **implementation**, before step 2 confirm the live
 appsmith-v2 repo is available to point fixtures at; if not, deliver their loops
@@ -259,22 +371,44 @@ as authored-but-unrun and record the limitation.
 
 ## Verification
 
-- **Structure:** each of the five `private-skills/<name>/` has `SKILL.md`; the
-  four pipeline skills (all but `scenario-check`) have
-  `references/plan-file.md`; each has `evals/evals.json`. `kite-arch-compass` is
-  untouched.
+- **Runtime structure:** each of the five `private/<name>/` directories has
+  `SKILL.md`; the four pipeline skills (all but `kite-scenario-check`) have
+  `references/plan-file.md`; none has a runtime `evals/` directory.
+- **Eval structure:** each skill has
+  `private/_evals/<name>/suite/evals.json`; any fixture in `files[]` resolves
+  under `private/_evals/<name>/suite/`; each has
+  `private/_evals/<name>/results/` ready for benchmark output.
+- **Catalog:** `catalog.yaml` contains five private entries with `install: true`,
+  `path: private/<name>`, `evals.suite: private/_evals/<name>/suite`, and
+  `evals.results: private/_evals/<name>/results`.
+- **Existing skill safety:** `private/kite-arch-compass/` and
+  `private/_evals/kite-arch-compass/` are untouched.
 - **Verbatim check:** diff each new `SKILL.md` body against its source fenced
-  block in `Kite-Skill-Prompts.md` — must match exactly (frontmatter included).
+  block in `docs/factory/Kite-Skill-Prompts.md` — must match exactly
+  (frontmatter included).
 - **plan-file.md check:** confirm each `references/plan-file.md` contains exactly
   the three parts — state-machine framing, the `### Template` block, and
   `### Ownership and status flow` — preceded only by the `# Plan file` H1, and
   contains **none** of Section 0's "This is **not a skill**…" scaffolding
   paragraph; confirm the four copies are byte-for-byte identical.
 - **Frontmatter/validity:** every `SKILL.md` `name:` matches its directory; YAML
-  parses (run `skill-creator`'s `quick_validate.py` if available).
-- **Triggering:** the skills appear in the available-skills list on the next
-  session and fire on their intended phrases (e.g. "plan this feature" →
-  kite-planner). Spot-check by triggering kite-planner on a sample blueprint.
-- **Eval loop (Stage 2):** `benchmark.json` aggregates per skill; the review
-  viewer renders with-skill vs baseline; with-skill runs measurably satisfy more
+  parses. Run:
+
+  ```sh
+  python personal/skill-creator/scripts/quick_validate.py private/kite-planner
+  python personal/skill-creator/scripts/quick_validate.py private/kite-research
+  python personal/skill-creator/scripts/quick_validate.py private/kite-implementation
+  python personal/skill-creator/scripts/quick_validate.py private/kite-scenario-check
+  python personal/skill-creator/scripts/quick_validate.py private/kite-feature-review
+  ```
+
+- **Sync/report check:** after catalog update, run `./tools/sync-skills.sh
+  --dry-run` and `./tools/report-skills.sh --no-open` to confirm the new private
+  skills are discoverable without linking unexpected paths.
+- **Triggering:** after sync, the skills appear in the available-skills list on
+  the next session and fire on their intended phrases (e.g. "plan this feature"
+  → kite-planner). Spot-check by triggering kite-planner on a sample blueprint.
+- **Eval loop (Stage 2):** `benchmark.json` aggregates under
+  `private/_evals/<name>/results/iteration-N/`; the review viewer renders
+  with-skill vs baseline; with-skill runs measurably satisfy more
   `expectations[]` than baseline for kite-planner and kite-feature-review.
