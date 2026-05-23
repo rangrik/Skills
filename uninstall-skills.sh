@@ -24,6 +24,7 @@ AGENT_SKILL_DIRS=(
 IGNORED_SKILL_PARENT_DIR_NAMES=(
   "by-anthropic"
   "by-openai"
+  "wip"
 )
 
 usage() {
