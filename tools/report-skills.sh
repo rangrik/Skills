@@ -15,14 +15,14 @@
 #   • the link target (for symlinks)
 #   • the one-line description from the skill's SKILL.md frontmatter
 #
-# Outputs two generated (git-ignored) files under generated/:
-#   • generated/installed-skills.json   the data, as plain JSON for any consumer
-#   • generated/installed-skills.js     the same data as `window.INSTALLED_SKILLS = …;`,
-#                                       a shim so tools/installed-skills.html can
-#                                       load it when opened straight off disk
-#                                       (file:// blocks fetch of local JSON, but
-#                                       a <script src> works)
-# then opens tools/installed-skills.html (committed, static) in your browser.
+# Outputs generated (git-ignored) report files:
+#   • generated/installed-skills.json      the data, as plain JSON for any consumer
+#   • generated/installed-skills.js        the same data as `window.INSTALLED_SKILLS = …;`
+#   • tools/installed-skills-data.js       same-directory shim for the local file:// viewer
+#
+# The extra tools/ shim avoids browser local-file restrictions when opening
+# tools/installed-skills.html straight off disk.
+# Then opens tools/installed-skills.html (committed, static) in your browser.
 #
 # Usage:
 #   ./tools/report-skills.sh                Write the data files and open the viewer
@@ -50,12 +50,13 @@ Usage:
   ./tools/report-skills.sh --dry-run      Print the JSON to stdout; write nothing
   ./tools/report-skills.sh --help         Show this message
 
-Writes generated/installed-skills.json (plain data) and
-generated/installed-skills.js (a shim for the file:// viewer), then opens
-tools/installed-skills.html. For each store it lists every installed skill, how
-it is installed (copied folder, symlink into this repo, symlink into the shared
-store, symlink elsewhere, or a broken link), the link target, and the one-line
-description from the skill's SKILL.md.
+Writes generated/installed-skills.json (plain data),
+generated/installed-skills.js (portable shim), and
+tools/installed-skills-data.js (same-directory shim for the file:// viewer),
+then opens tools/installed-skills.html. For each store it lists every installed
+skill, how it is installed (copied folder, symlink into this repo, symlink into
+the shared store, symlink elsewhere, or a broken link), the link target, and the
+one-line description from the skill's SKILL.md.
 EOF
 }
 
@@ -64,6 +65,7 @@ REPO_DIR="$(cd "$TOOL_DIR/.." && pwd)"
 GENERATED_DIR="$REPO_DIR/generated"
 JSON_FILE="$GENERATED_DIR/installed-skills.json"
 JS_FILE="$GENERATED_DIR/installed-skills.js"
+VIEWER_JS_FILE="$TOOL_DIR/installed-skills-data.js"
 HTML_FILE="$TOOL_DIR/installed-skills.html"
 DRY_RUN=false
 OPEN=true
@@ -220,9 +222,10 @@ fi
 mkdir -p "$GENERATED_DIR"
 printf '%s\n' "$JSON" > "$JSON_FILE"
 printf 'window.INSTALLED_SKILLS = %s;\n' "$JSON" > "$JS_FILE"
+printf 'window.INSTALLED_SKILLS = %s;\n' "$JSON" > "$VIEWER_JS_FILE"
 
 echo
-echo "${B}Wrote${X} ${JSON_FILE/#$HOME/~} ${D}and${X} ${JS_FILE/#$HOME/~}"
+echo "${B}Wrote${X} ${JSON_FILE/#$HOME/~}, ${JS_FILE/#$HOME/~} ${D}and${X} ${VIEWER_JS_FILE/#$HOME/~}"
 echo "${D}${total_all} entries · ${total_copied} copied · ${total_repo} → repo · ${total_shared} → shared · ${total_external} → external · ${total_broken} broken${X}"
 
 if [ ! -f "$HTML_FILE" ]; then
@@ -232,8 +235,19 @@ fi
 
 if $OPEN; then
   if command -v open >/dev/null 2>&1; then
-    open "$HTML_FILE"
-    echo "${G}Opened${X} ${HTML_FILE/#$HOME/~}"
+    if command -v python3 >/dev/null 2>&1; then
+      VIEWER_URL="$(python3 - "$HTML_FILE" <<'PY'
+import sys, time
+from pathlib import Path
+print(Path(sys.argv[1]).resolve().as_uri() + '?t=' + str(int(time.time())))
+PY
+)"
+      open "$VIEWER_URL"
+      echo "${G}Opened${X} ${HTML_FILE/#$HOME/~}"
+    else
+      open "$HTML_FILE"
+      echo "${G}Opened${X} ${HTML_FILE/#$HOME/~}"
+    fi
   elif command -v xdg-open >/dev/null 2>&1; then
     xdg-open "$HTML_FILE" >/dev/null 2>&1 &
     echo "${G}Opened${X} ${HTML_FILE/#$HOME/~}"

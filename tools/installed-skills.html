@@ -109,7 +109,8 @@
   <div id="stores"></div>
 </div>
 
-<script src="../generated/installed-skills.js" onerror="window.__shimMissing=true"></script>
+<script src="./installed-skills-data.js" onerror="window.__shimMissing=true"></script>
+<script src="../generated/installed-skills.js" onerror="window.__generatedShimMissing=true"></script>
 <script>
 const TYPES = {
   copied:   { label: "copied folder",   color: "var(--copied)" },
@@ -251,7 +252,7 @@ loadData()
   .catch((err) => {
     document.getElementById("stores").innerHTML =
       '<div class="error">Could not load skill data: ' + String(err) +
-      '. Run <code>./tools/report-skills.sh</code> to generate <code>generated/installed-skills.js</code> / <code>generated/installed-skills.json</code>.</div>';
+      '. Run <code>./tools/report-skills.sh</code> to generate <code>tools/installed-skills-data.js</code> and <code>generated/installed-skills.json</code>.</div>';
   });
 </script>
 </body>
