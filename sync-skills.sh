@@ -36,6 +36,13 @@ AGENT_SKILL_DIRS=(
   "$HOME/.agents/skills"   # shared store — reaches pi, Cursor, Codex, …
   "$HOME/.claude/skills"   # Claude Code's own skills directory
 )
+
+# Directory names that contain skills we intentionally do not install. This is
+# name-based (not path-based), so it keeps working if these directories move.
+IGNORED_SKILL_PARENT_DIR_NAMES=(
+  "by-anthropic"
+  "by-openai"
+)
 # ───────────────────────────────────────────────────────────────────────────
 
 usage() {
@@ -53,8 +60,10 @@ Usage:
   ./sync-skills.sh --help     Show this message
 
 It links both public skills (a folder with a SKILL.md at the repo root) and
-private skills (the same, under private-skills/, kept separate). Stale
-symlinks from renamed or removed skills are cleaned up automatically. Real
+private skills (the same, under private-skills/, kept separate). Skills under
+ignored directory names such as by-anthropic/ and by-openai/ are not installed,
+regardless of where those directories live in this repo. Stale symlinks from
+renamed, removed, or now-ignored skills are cleaned up automatically. Real
 skill folders are never touched unless you pass --force, and even then only
 ones whose name matches a skill in this repo.
 
@@ -79,6 +88,28 @@ done
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PRIVATE_DIR="$REPO_DIR/private-skills"
 
+is_ignored_skill_path() {
+  local path="${1%/}"
+  local rel component ignored
+
+  case "$path" in
+    "$REPO_DIR") rel="" ;;
+    "$REPO_DIR"/*) rel="${path#"$REPO_DIR"/}" ;;
+    *) rel="$path" ;;
+  esac
+
+  local IFS='/'
+  for component in $rel; do
+    for ignored in "${IGNORED_SKILL_PARENT_DIR_NAMES[@]}"; do
+      if [ "$component" = "$ignored" ]; then
+        return 0
+      fi
+    done
+  done
+
+  return 1
+}
+
 if [ -t 1 ]; then
   B=$'\033[1m'; D=$'\033[2m'; G=$'\033[32m'; Y=$'\033[33m'; R=$'\033[31m'; X=$'\033[0m'
 else
@@ -88,10 +119,12 @@ fi
 # ─── Discover skills (any folder containing a SKILL.md) ────────────────────
 skill_dirs=()
 for d in "$REPO_DIR"/*/; do
+  if is_ignored_skill_path "${d%/}"; then continue; fi
   if [ -f "${d}SKILL.md" ]; then skill_dirs+=("${d%/}"); fi
 done
 if [ -d "$PRIVATE_DIR" ]; then
   for d in "$PRIVATE_DIR"/*/; do
+    if is_ignored_skill_path "${d%/}"; then continue; fi
     if [ -f "${d}SKILL.md" ]; then skill_dirs+=("${d%/}"); fi
   done
 fi
@@ -118,9 +151,14 @@ for target in "${AGENT_SKILL_DIRS[@]}"; do
   if [ -d "$target" ]; then
     for entry in "$target"/*; do
       [ -L "$entry" ] || continue
-      case "$(readlink "$entry")" in
+      link_target="$(readlink "$entry")"
+      case "$link_target" in
         "$REPO_DIR"/*)
-          if [ ! -f "$entry/SKILL.md" ]; then
+          if is_ignored_skill_path "$link_target"; then
+            echo "  ${Y}prune${X}    $(basename "$entry") ${D}— ignored source${X}"
+            $DRY_RUN || rm -f "$entry"
+            pruned=$((pruned + 1))
+          elif [ ! -f "$entry/SKILL.md" ]; then
             echo "  ${Y}prune${X}    $(basename "$entry") ${D}— stale link${X}"
             $DRY_RUN || rm -f "$entry"
             pruned=$((pruned + 1))
