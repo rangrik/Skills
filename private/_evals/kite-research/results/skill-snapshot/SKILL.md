@@ -47,15 +47,6 @@ Also record **reuse constraints** — caveats on anything you mark EXISTS (for
 example, "the existing function assumes the caller is already authenticated", or
 "this query is not paginated").
 
-Use the planner's labels in your output (`S1.RQ1`, `S1.RQ2`, etc.) so the
-handoff can be audited against the original questions. A good answer is not just
-"yes" or "no"; it explains why the nearest code either satisfies or fails the
-capability. If the plan asks for username lookup and the repo has
-`getUserById`, say explicitly that the existing function is **id-based, not
-username-based**. If the plan asks for a public route and the repo has an
-authenticated account route, say explicitly that the existing route is
-auth-gated and account-scoped, then name the new public route extension point.
-
 Avoiding duplicated effort is the entire point of this skill. If "get user by
 ID" already exists, the implementer must not rebuild it — find these, and say so
 clearly.
@@ -66,10 +57,6 @@ Put **names and locations** in the plan file, never copied source code. The
 implementer will open the real code when they get there; your job is to point
 precisely, not to transcribe. Copied code goes stale the moment someone edits
 the original, and it bloats the plan.
-
-Prefer repo-logical locations (`src/users/service.ts:42`) over absolute machine
-paths. If you are researching a fixture or throwaway worktree with a mapping
-from fixture files to repo paths, cite the mapped repo path plus line number.
 
 ## When research invalidates the plan — the feedback loop
 
@@ -82,13 +69,6 @@ more expensive to fix.
 Instead, record a **BLOCKING** finding on that scenario explaining exactly what
 is wrong, and set the scenario's status to `blocked`. A blocked scenario is a
 signal that `kite-planner` must re-plan it before implementation can proceed.
-
-Do not mark an ordinary missing implementation surface as blocked. Missing
-service functions, routes, schemas, handlers, or queue jobs are usually normal
-implementation work: answer the research question as **MISSING**, name the
-extension point, and set the scenario to `researched`. Use **BLOCKING** only
-when the current codebase contradicts the plan's assumptions or makes the
-planned behavior impossible without re-planning the design.
 
 ## Use kite-arch-compass lightly
 
@@ -104,10 +84,6 @@ related research questions); each researches its scenario in isolation and
 reports back. Merge their findings into the plan file, which stays the single
 source of truth.
 
-Use fan-out when there are multiple substantial scenarios in a real repo. For a
-focused single-scenario request or a small fixture codebase, inline research is
-often clearer and faster; still preserve the same one-to-one answer format.
-
 ## Staying in your lane
 
 Do not write code. Do not put actual code into the plan file. Do not redesign
@@ -119,6 +95,3 @@ the planner, not a change you make yourself.
 
 Update each scenario's status to `researched`, or `blocked`. The annotated plan
 file goes to `kite-implementation`.
-
-If the user asked for only one scenario, update that scenario and the status
-table entry for that scenario only; leave unrelated scenarios as they were.

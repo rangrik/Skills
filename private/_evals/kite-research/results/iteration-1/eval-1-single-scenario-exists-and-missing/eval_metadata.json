@@ -1,0 +1,13 @@
+{
+  "eval_id": 1,
+  "eval_name": "single-scenario-exists-and-missing",
+  "prompt": "I'm only interested in the 'View someone's public profile' scenario (S2) in files/plan-public-profiles.md right now. Check what we already have in the codebase (the files/*.ts in this folder) for looking up a user by username and for serving a public profile route, and write the findings for that scenario into the plan. Don't paste any of our source into the plan — just tell me where things are.",
+  "expectations": [
+    "Both of S2's research questions are answered one-to-one (S2.RQ1 and S2.RQ2), neither left unanswered",
+    "S2.RQ1 is MISSING — recognizes that the existing getUserById looks up by id, not username, so no username lookup exists — and names a concrete extension point for adding one (e.g. in src/users/service.ts next to getUserById)",
+    "S2.RQ2 is MISSING — recognizes the existing routes (src/routes/account.ts) are authenticated/account-scoped, so no public profile route exists — and names where a new public unauthenticated route should be added to fit the routing structure",
+    "Findings cite file:line locations for the existing code referenced (getUserById, the account routes) rather than vague references",
+    "No verbatim source code from the fixture is copied into the plan — only names and locations",
+    "S2's status is updated to researched"
+  ]
+}

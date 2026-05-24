@@ -1,0 +1,414 @@
+{
+  "metadata": {
+    "skill_name": "kite-research",
+    "skill_path": "private/kite-research",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-05-24T01:51:24Z",
+    "evals_run": [
+      0,
+      1,
+      2
+    ],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 0,
+      "eval_name": "full-plan-research-with-blocking",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 10,
+        "failed": 0,
+        "total": 10,
+        "time_seconds": 106.8,
+        "tokens": 7553,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Every research question in the plan is answered one-to-one: S1.RQ1, S1.RQ2, S2.RQ1, S2.RQ2, S3.RQ1, and S3.RQ2 each have a corresponding finding, with none left unanswered",
+          "passed": true,
+          "evidence": "Found all labels: S1.RQ1, S1.RQ2, S2.RQ1, S2.RQ2, S3.RQ1, S3.RQ2."
+        },
+        {
+          "text": "S1.RQ1 is answered EXISTS, naming requireAuth in the auth middleware (src/middleware/auth.ts) with a file:line location and a note on how to reuse it",
+          "passed": true,
+          "evidence": "S1.RQ1 names requireAuth with auth middleware file:line evidence and describes reuse for authenticated requests."
+        },
+        {
+          "text": "S1.RQ2 is answered EXISTS, naming getUserById in the user service (src/users/service.ts) with a file:line location and a note that it returns the full user record and can be reused directly",
+          "passed": true,
+          "evidence": "S1.RQ2 names getUserById with user service file:line evidence and says it fetches the full user record for reuse."
+        },
+        {
+          "text": "The reuse constraint that getUserById assumes the caller is already authenticated is recorded as a caveat on that EXISTS finding",
+          "passed": true,
+          "evidence": "The output records that getUserById relies on prior authentication / does no auth check itself."
+        },
+        {
+          "text": "S2.RQ1 is answered MISSING (no lookup-by-username exists) and names a concrete extension point — where to add the username lookup (e.g. alongside getUserById in src/users/service.ts)",
+          "passed": true,
+          "evidence": "S2.RQ1 is classified as missing, distinguishes getUserById as id-based, and points to the user service as the extension point."
+        },
+        {
+          "text": "S2.RQ2 is answered MISSING (no public/unauthenticated profile route exists) and names a concrete extension point — where to add a new public route fitting the existing routing structure (e.g. a profile route alongside src/routes/account.ts)",
+          "passed": true,
+          "evidence": "S2.RQ2 is classified as missing, cites the existing account route structure, and names a route extension point for a public profile route."
+        },
+        {
+          "text": "S3 raises a BLOCKING finding: the design requires a synchronous order-confirmation send returning an inline delivery result, but the codebase's notifier is asynchronous/queue-only (queueOrderConfirmation) and the order schema has no email field, so the plan's assumption is contradicted",
+          "passed": true,
+          "evidence": "S3 has a blocking/blocked finding explaining both the queue-only notifier and missing order email contradiction, with re-planning called out."
+        },
+        {
+          "text": "S3's status is set to blocked, and the BLOCKING finding explains exactly what is wrong rather than inventing a workaround",
+          "passed": true,
+          "evidence": "S3 status set to blocked."
+        },
+        {
+          "text": "S1 and S2 statuses are updated to researched (and the scenario order/status table reflects researched/blocked, not still planned)",
+          "passed": true,
+          "evidence": "S1 and S2 status set to researched."
+        },
+        {
+          "text": "Only names and locations appear in the annotated plan — no verbatim source code from the fixture files is copied into the plan",
+          "passed": true,
+          "evidence": "No copied fixture source constructs such as function declarations, router calls, SQL calls, or interface bodies were found."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "single-scenario-exists-and-missing",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 75.6,
+        "tokens": 5275,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Both of S2's research questions are answered one-to-one (S2.RQ1 and S2.RQ2), neither left unanswered",
+          "passed": true,
+          "evidence": "Found all labels: S2.RQ1, S2.RQ2."
+        },
+        {
+          "text": "S2.RQ1 is MISSING — recognizes that the existing getUserById looks up by id, not username, so no username lookup exists — and names a concrete extension point for adding one (e.g. in src/users/service.ts next to getUserById)",
+          "passed": true,
+          "evidence": "S2.RQ1 is classified as missing, distinguishes getUserById as id-based, and points to the user service as the extension point."
+        },
+        {
+          "text": "S2.RQ2 is MISSING — recognizes the existing routes (src/routes/account.ts) are authenticated/account-scoped, so no public profile route exists — and names where a new public unauthenticated route should be added to fit the routing structure",
+          "passed": true,
+          "evidence": "S2.RQ2 is classified as missing, cites the existing account route structure, and names a route extension point for a public profile route."
+        },
+        {
+          "text": "Findings cite file:line locations for the existing code referenced (getUserById, the account routes) rather than vague references",
+          "passed": true,
+          "evidence": "Findings cite file:line locations for getUserById and the account route structure."
+        },
+        {
+          "text": "No verbatim source code from the fixture is copied into the plan — only names and locations",
+          "passed": true,
+          "evidence": "No copied fixture source constructs such as function declarations, router calls, SQL calls, or interface bodies were found."
+        },
+        {
+          "text": "S2's status is updated to researched",
+          "passed": true,
+          "evidence": "S2 status set to researched."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "blocking-contradiction-detection",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 74.8,
+        "tokens": 5916,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Both of S3's research questions (S3.RQ1 and S3.RQ2) are answered one-to-one",
+          "passed": true,
+          "evidence": "Found all labels: S3.RQ1, S3.RQ2."
+        },
+        {
+          "text": "S3.RQ1 establishes there is no synchronous order-confirmation send that returns an inline delivery result — only the asynchronous, queue-only queueOrderConfirmation (src/notifications/notifier.ts) exists — cited with a file:line",
+          "passed": true,
+          "evidence": "S3.RQ1 establishes that only queueOrderConfirmation exists, cites notifier file:line, and explains it cannot return inline delivery results."
+        },
+        {
+          "text": "S3.RQ2 establishes the Order schema (src/orders/schema.ts) has no email field to send to, cited with a file:line",
+          "passed": true,
+          "evidence": "S3.RQ2 cites the Order schema and states it lacks a customer email field."
+        },
+        {
+          "text": "A BLOCKING finding is raised on S3 explaining the contradiction precisely: the design assumes a synchronous send with inline delivery result and an order email field, neither of which the codebase supports",
+          "passed": true,
+          "evidence": "S3 has a blocking/blocked finding explaining both the queue-only notifier and missing order email contradiction, with re-planning called out."
+        },
+        {
+          "text": "The skill does NOT invent a workaround or redesign the solution — it surfaces the contradiction as a blocker for kite-planner to re-plan",
+          "passed": true,
+          "evidence": "The output surfaces a blocker/re-plan need and does not present an implementation workaround as the answer."
+        },
+        {
+          "text": "S3's status is set to blocked",
+          "passed": true,
+          "evidence": "S3 status set to blocked."
+        },
+        {
+          "text": "No verbatim source code from the fixture is copied into the plan — only names and locations",
+          "passed": true,
+          "evidence": "No copied fixture source constructs such as function declarations, router calls, SQL calls, or interface bodies were found."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 0,
+      "eval_name": "full-plan-research-with-blocking",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.8,
+        "passed": 8,
+        "failed": 2,
+        "total": 10,
+        "time_seconds": 100.2,
+        "tokens": 8095,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Every research question in the plan is answered one-to-one: S1.RQ1, S1.RQ2, S2.RQ1, S2.RQ2, S3.RQ1, and S3.RQ2 each have a corresponding finding, with none left unanswered",
+          "passed": true,
+          "evidence": "Found all labels: S1.RQ1, S1.RQ2, S2.RQ1, S2.RQ2, S3.RQ1, S3.RQ2."
+        },
+        {
+          "text": "S1.RQ1 is answered EXISTS, naming requireAuth in the auth middleware (src/middleware/auth.ts) with a file:line location and a note on how to reuse it",
+          "passed": true,
+          "evidence": "S1.RQ1 names requireAuth with auth middleware file:line evidence and describes reuse for authenticated requests."
+        },
+        {
+          "text": "S1.RQ2 is answered EXISTS, naming getUserById in the user service (src/users/service.ts) with a file:line location and a note that it returns the full user record and can be reused directly",
+          "passed": true,
+          "evidence": "S1.RQ2 names getUserById with user service file:line evidence and says it fetches the full user record for reuse."
+        },
+        {
+          "text": "The reuse constraint that getUserById assumes the caller is already authenticated is recorded as a caveat on that EXISTS finding",
+          "passed": false,
+          "evidence": "No clear caveat was found that getUserById assumes prior authentication."
+        },
+        {
+          "text": "S2.RQ1 is answered MISSING (no lookup-by-username exists) and names a concrete extension point — where to add the username lookup (e.g. alongside getUserById in src/users/service.ts)",
+          "passed": false,
+          "evidence": "S2.RQ1 check failed; matched checks: true, true, true, true, false, true, true."
+        },
+        {
+          "text": "S2.RQ2 is answered MISSING (no public/unauthenticated profile route exists) and names a concrete extension point — where to add a new public route fitting the existing routing structure (e.g. a profile route alongside src/routes/account.ts)",
+          "passed": true,
+          "evidence": "S2.RQ2 is classified as missing, cites the existing account route structure, and names a route extension point for a public profile route."
+        },
+        {
+          "text": "S3 raises a BLOCKING finding: the design requires a synchronous order-confirmation send returning an inline delivery result, but the codebase's notifier is asynchronous/queue-only (queueOrderConfirmation) and the order schema has no email field, so the plan's assumption is contradicted",
+          "passed": true,
+          "evidence": "S3 has a blocking/blocked finding explaining both the queue-only notifier and missing order email contradiction, with re-planning called out."
+        },
+        {
+          "text": "S3's status is set to blocked, and the BLOCKING finding explains exactly what is wrong rather than inventing a workaround",
+          "passed": true,
+          "evidence": "S3 status set to blocked."
+        },
+        {
+          "text": "S1 and S2 statuses are updated to researched (and the scenario order/status table reflects researched/blocked, not still planned)",
+          "passed": true,
+          "evidence": "S1 and S2 status set to researched."
+        },
+        {
+          "text": "Only names and locations appear in the annotated plan — no verbatim source code from the fixture files is copied into the plan",
+          "passed": true,
+          "evidence": "No copied fixture source constructs such as function declarations, router calls, SQL calls, or interface bodies were found."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "single-scenario-exists-and-missing",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.8333333333333334,
+        "passed": 5,
+        "failed": 1,
+        "total": 6,
+        "time_seconds": 93.7,
+        "tokens": 5001,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Both of S2's research questions are answered one-to-one (S2.RQ1 and S2.RQ2), neither left unanswered",
+          "passed": true,
+          "evidence": "Found all labels: S2.RQ1, S2.RQ2."
+        },
+        {
+          "text": "S2.RQ1 is MISSING — recognizes that the existing getUserById looks up by id, not username, so no username lookup exists — and names a concrete extension point for adding one (e.g. in src/users/service.ts next to getUserById)",
+          "passed": false,
+          "evidence": "S2.RQ1 check failed; matched checks: true, true, false, true, false, true, true."
+        },
+        {
+          "text": "S2.RQ2 is MISSING — recognizes the existing routes (src/routes/account.ts) are authenticated/account-scoped, so no public profile route exists — and names where a new public unauthenticated route should be added to fit the routing structure",
+          "passed": true,
+          "evidence": "S2.RQ2 is classified as missing, cites the existing account route structure, and names a route extension point for a public profile route."
+        },
+        {
+          "text": "Findings cite file:line locations for the existing code referenced (getUserById, the account routes) rather than vague references",
+          "passed": true,
+          "evidence": "Findings cite file:line locations for getUserById and the account route structure."
+        },
+        {
+          "text": "No verbatim source code from the fixture is copied into the plan — only names and locations",
+          "passed": true,
+          "evidence": "No copied fixture source constructs such as function declarations, router calls, SQL calls, or interface bodies were found."
+        },
+        {
+          "text": "S2's status is updated to researched",
+          "passed": true,
+          "evidence": "S2 status set to researched."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "blocking-contradiction-detection",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.7142857142857143,
+        "passed": 5,
+        "failed": 2,
+        "total": 7,
+        "time_seconds": 72.1,
+        "tokens": 5434,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Both of S3's research questions (S3.RQ1 and S3.RQ2) are answered one-to-one",
+          "passed": true,
+          "evidence": "Found all labels: S3.RQ1, S3.RQ2."
+        },
+        {
+          "text": "S3.RQ1 establishes there is no synchronous order-confirmation send that returns an inline delivery result — only the asynchronous, queue-only queueOrderConfirmation (src/notifications/notifier.ts) exists — cited with a file:line",
+          "passed": false,
+          "evidence": "S3.RQ1 check failed; matched checks: true, false, true, true, true, true."
+        },
+        {
+          "text": "S3.RQ2 establishes the Order schema (src/orders/schema.ts) has no email field to send to, cited with a file:line",
+          "passed": false,
+          "evidence": "S3.RQ2 check failed; matched checks: true, false, true, true."
+        },
+        {
+          "text": "A BLOCKING finding is raised on S3 explaining the contradiction precisely: the design assumes a synchronous send with inline delivery result and an order email field, neither of which the codebase supports",
+          "passed": true,
+          "evidence": "S3 has a blocking/blocked finding explaining both the queue-only notifier and missing order email contradiction, with re-planning called out."
+        },
+        {
+          "text": "The skill does NOT invent a workaround or redesign the solution — it surfaces the contradiction as a blocker for kite-planner to re-plan",
+          "passed": true,
+          "evidence": "The output surfaces a blocker/re-plan need and does not present an implementation workaround as the answer."
+        },
+        {
+          "text": "S3's status is set to blocked",
+          "passed": true,
+          "evidence": "S3 status set to blocked."
+        },
+        {
+          "text": "No verbatim source code from the fixture is copied into the plan — only names and locations",
+          "passed": true,
+          "evidence": "No copied fixture source constructs such as function declarations, router calls, SQL calls, or interface bodies were found."
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1,
+        "stddev": 0,
+        "min": 1,
+        "max": 1
+      },
+      "time_seconds": {
+        "mean": 85.7333,
+        "stddev": 18.2487,
+        "min": 74.8,
+        "max": 106.8
+      },
+      "tokens": {
+        "mean": 6248,
+        "stddev": 1174.7293,
+        "min": 5275,
+        "max": 7553
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.7825,
+        "stddev": 0.0614,
+        "min": 0.7143,
+        "max": 0.8333
+      },
+      "time_seconds": {
+        "mean": 88.6667,
+        "stddev": 14.7107,
+        "min": 72.1,
+        "max": 100.2
+      },
+      "tokens": {
+        "mean": 6176.6667,
+        "stddev": 1675.3729,
+        "min": 5001,
+        "max": 8095
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.22",
+      "time_seconds": "-2.9",
+      "tokens": "+71"
+    }
+  },
+  "notes": [
+    "with_skill reached 100.0% pass-rate across all three evals, improving from 94.4% in iteration 1 and widening the baseline delta from +0.11 to +0.22.",
+    "The S2-only miss from iteration 1 was fixed: the revised skill output explicitly rejected getUserById as id-based, not username-based, and pointed to a username lookup extension point.",
+    "The clarified MISSING-vs-BLOCKING rule held: ordinary missing username/route work stayed researched/MISSING, while the synchronous notification and missing order email contradiction stayed blocked.",
+    "with_skill became slightly faster than without_skill on average in iteration 2 (-2.9s) with roughly equal token usage, so the added specificity did not impose a measurable cost in this run."
+  ]
+}

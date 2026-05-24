@@ -1,0 +1,17 @@
+{
+  "eval_id": 0,
+  "eval_name": "full-plan-research-with-blocking",
+  "prompt": "Here's a kite-planner plan file (files/plan-public-profiles.md) and the codebase it targets (the other files/*.ts in this folder — treat them as the real repo: src/users/service.ts, src/routes/account.ts, src/middleware/auth.ts, src/orders/schema.ts, src/notifications/notifier.ts). Research the codebase and answer every scenario's research questions, then annotate the plan file and update the statuses.",
+  "expectations": [
+    "Every research question in the plan is answered one-to-one: S1.RQ1, S1.RQ2, S2.RQ1, S2.RQ2, S3.RQ1, and S3.RQ2 each have a corresponding finding, with none left unanswered",
+    "S1.RQ1 is answered EXISTS, naming requireAuth in the auth middleware (src/middleware/auth.ts) with a file:line location and a note on how to reuse it",
+    "S1.RQ2 is answered EXISTS, naming getUserById in the user service (src/users/service.ts) with a file:line location and a note that it returns the full user record and can be reused directly",
+    "The reuse constraint that getUserById assumes the caller is already authenticated is recorded as a caveat on that EXISTS finding",
+    "S2.RQ1 is answered MISSING (no lookup-by-username exists) and names a concrete extension point — where to add the username lookup (e.g. alongside getUserById in src/users/service.ts)",
+    "S2.RQ2 is answered MISSING (no public/unauthenticated profile route exists) and names a concrete extension point — where to add a new public route fitting the existing routing structure (e.g. a profile route alongside src/routes/account.ts)",
+    "S3 raises a BLOCKING finding: the design requires a synchronous order-confirmation send returning an inline delivery result, but the codebase's notifier is asynchronous/queue-only (queueOrderConfirmation) and the order schema has no email field, so the plan's assumption is contradicted",
+    "S3's status is set to blocked, and the BLOCKING finding explains exactly what is wrong rather than inventing a workaround",
+    "S1 and S2 statuses are updated to researched (and the scenario order/status table reflects researched/blocked, not still planned)",
+    "Only names and locations appear in the annotated plan — no verbatim source code from the fixture files is copied into the plan"
+  ]
+}

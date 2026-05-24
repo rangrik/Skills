@@ -1,0 +1,14 @@
+{
+  "eval_id": 2,
+  "eval_name": "blocking-contradiction-detection",
+  "prompt": "Focus on the order-confirmation scenario (S3) in files/plan-public-profiles.md. The design says checkout must send the confirmation email synchronously and return the delivery result in the response. Look at how notifications and orders actually work in the codebase (files/notifier.ts and files/order-schema.ts, plus the rest) and tell me whether the plan can be implemented as written. Annotate S3 and set its status.",
+  "expectations": [
+    "Both of S3's research questions (S3.RQ1 and S3.RQ2) are answered one-to-one",
+    "S3.RQ1 establishes there is no synchronous order-confirmation send that returns an inline delivery result — only the asynchronous, queue-only queueOrderConfirmation (src/notifications/notifier.ts) exists — cited with a file:line",
+    "S3.RQ2 establishes the Order schema (src/orders/schema.ts) has no email field to send to, cited with a file:line",
+    "A BLOCKING finding is raised on S3 explaining the contradiction precisely: the design assumes a synchronous send with inline delivery result and an order email field, neither of which the codebase supports",
+    "The skill does NOT invent a workaround or redesign the solution — it surfaces the contradiction as a blocker for kite-planner to re-plan",
+    "S3's status is set to blocked",
+    "No verbatim source code from the fixture is copied into the plan — only names and locations"
+  ]
+}

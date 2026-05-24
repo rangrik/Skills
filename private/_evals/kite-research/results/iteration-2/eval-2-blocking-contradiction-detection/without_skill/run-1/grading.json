@@ -1,0 +1,66 @@
+{
+  "expectations": [
+    {
+      "text": "Both of S3's research questions (S3.RQ1 and S3.RQ2) are answered one-to-one",
+      "passed": true,
+      "evidence": "Found all labels: S3.RQ1, S3.RQ2."
+    },
+    {
+      "text": "S3.RQ1 establishes there is no synchronous order-confirmation send that returns an inline delivery result — only the asynchronous, queue-only queueOrderConfirmation (src/notifications/notifier.ts) exists — cited with a file:line",
+      "passed": false,
+      "evidence": "S3.RQ1 check failed; matched checks: true, false, true, true, true, true."
+    },
+    {
+      "text": "S3.RQ2 establishes the Order schema (src/orders/schema.ts) has no email field to send to, cited with a file:line",
+      "passed": false,
+      "evidence": "S3.RQ2 check failed; matched checks: true, false, true, true."
+    },
+    {
+      "text": "A BLOCKING finding is raised on S3 explaining the contradiction precisely: the design assumes a synchronous send with inline delivery result and an order email field, neither of which the codebase supports",
+      "passed": true,
+      "evidence": "S3 has a blocking/blocked finding explaining both the queue-only notifier and missing order email contradiction, with re-planning called out."
+    },
+    {
+      "text": "The skill does NOT invent a workaround or redesign the solution — it surfaces the contradiction as a blocker for kite-planner to re-plan",
+      "passed": true,
+      "evidence": "The output surfaces a blocker/re-plan need and does not present an implementation workaround as the answer."
+    },
+    {
+      "text": "S3's status is set to blocked",
+      "passed": true,
+      "evidence": "S3 status set to blocked."
+    },
+    {
+      "text": "No verbatim source code from the fixture is copied into the plan — only names and locations",
+      "passed": true,
+      "evidence": "No copied fixture source constructs such as function declarations, router calls, SQL calls, or interface bodies were found."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 2,
+    "total": 7,
+    "pass_rate": 0.7142857142857143
+  },
+  "execution_metrics": {
+    "total_tool_calls": 0,
+    "total_steps": 1,
+    "errors_encountered": 0,
+    "output_chars": 5434,
+    "transcript_chars": 23464
+  },
+  "timing": {
+    "executor_duration_seconds": 72.1,
+    "total_duration_seconds": 72.1
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "Deterministic fixture checks applied."
+  }
+}

@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "kite-research", "runs": [{"id": "eval-0-full-plan-research-with-blocking-with_skill-run-1", "prompt": "Here's a kite-planner plan file (files/plan-public-profiles.md) and the codebase it targets (the other files/*.ts in this folder \u2014 treat them as the real repo: src/users/service.ts, src/routes/account.ts, src/middleware/auth.ts, src/orders/schema.ts, src/notifications/notifier.ts). Research the codebase and answer every scenario's research questions, then annotate the plan file and update the statuses.", "eval_id": 0, "outputs": [{"name": "annotated-plan.md", "type": "text", "content": "# Implementation Plan: Public user profiles & order confirmations\n\n## Feature\n- Blueprint: docs/blueprints/public-profiles.md\n- System design: docs/design/public-profiles.md\n- Summary: Let visitors view a public profile page for any user by username, let\n  the owner edit their own profile, and send an order confirmation when an order\n  is placed.\n\n## Scenario order & status\n| # | ID | Title                          | Status     |\n|---|----|--------------------------------|------------|\n| 1 | S1 | View own account               | researched |\n| 2 | S2 | View someone's public profile  | researched |\n| 3 | S3 | Order confirmation on checkout | blocked    |\n\n## Scenario S1 -- View own account\n- Order: 1\n- Type: happy_path\n- Status: researched\n- Design references: \"Authenticated reads go through the existing session layer.\"\n\n### Gherkin\nGiven I am a signed-in user\nWhen I open my account page\nThen I see my own user record\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: a request can be associated with an authenticated user\n- Required capabilities: a way to reject unauthenticated requests; a way to fetch the full user record by the user's id\n- Postconditions: the authenticated user's record is returned\n- Risks / assumptions: assumes sessions already exist\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing mechanism that rejects unauthenticated requests and identifies the calling user? If so, where?\n- RQ2: Is there an existing function that fetches the full user record by user id? If so, where, and can it be reused as-is?\n\n### Research answers\n- S1.RQ1 -> EXISTS: `requireAuth` in `src/middleware/auth.ts:7` rejects unauthenticated requests and attaches the resolved user id to `req.userId`; it is already used by the account routes in `src/routes/account.ts:9` and `src/routes/account.ts:15`. Reuse it on authenticated account endpoints.\n- Reuse constraints for S1.RQ1: `requireAuth` expects a bearer token in the `Authorization` header and exposes the user id on the request object; handlers that need the caller id must run after this middleware.\n- S1.RQ2 -> EXISTS: `getUserById` in `src/users/service.ts:7` fetches the full user record by primary key. It can be reused as-is for the authenticated caller's own account record, and the existing `GET /account` handler already does this in `src/routes/account.ts:9`.\n- Reuse constraints for S1.RQ2: `getUserById` performs no authorization check itself, so callers must authenticate before invoking it. It returns `User | null`, so any new handler should decide how to handle a missing user record rather than assuming a non-null result.\n\n## Scenario S2 -- View someone's public profile\n- Order: 2\n- Type: happy_path\n- Status: researched\n- Design references: \"Public profiles are addressable by username, not id.\"\n\n### Gherkin\nGiven a user has a public profile\nWhen a visitor opens that user's profile page by username\nThen the visitor sees the public profile fields\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: profiles can be looked up by a public-facing username\n- Required capabilities: a way to look up a user by username (not id); a public, unauthenticated route that serves a profile by username\n- Postconditions: a visitor can view a public profile without signing in\n- Risks / assumptions: usernames are unique and stable\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing function that looks up a user by username? If so, where?\n- RQ2: Is there an existing public (unauthenticated) profile route, and if not, where should a new one be added so it fits the routing structure?\n\n### Research answers\n- S2.RQ1 -> MISSING: no username-based lookup function exists in the provided user service. The nearest existing function is `getUserById` in `src/users/service.ts:7`, but it is id-based, not username-based. Add a new username lookup service function in `src/users/service.ts` alongside `getUserById`.\n- Reuse constraints for S2.RQ1: do not adapt `getUserById` for username lookup; the query and lookup key are different. The public profile response should also avoid returning the full private account record unless a typed public-profile shape is introduced or reused.\n- S2.RQ2 -> MISSING: no public profile route exists. The existing routes in `src/routes/account.ts:9` and `src/routes/account.ts:15` are account-scoped and auth-gated with `requireAuth`. Add a new public profile route under `src/routes/`, preferably a separate profile route module alongside `src/routes/account.ts`, and omit `requireAuth` from the public GET handler.\n- Reuse constraints for S2.RQ2: keep the new route as a thin HTTP adapter: parse the username, delegate to the new user service lookup, and shape only public fields. If the real route registry requires explicit wiring, register the new router the same way the account router is registered.\n\n## Scenario S3 -- Order confirmation on checkout\n- Order: 3\n- Type: happy_path\n- Status: blocked\n- Design references: \"On checkout the customer must receive a confirmation\n  email synchronously, and the checkout response must include the email\n  delivery result so the UI can confirm it was sent before returning.\"\n\n### Gherkin\nGiven I have placed an order\nWhen checkout completes\nThen I receive an order confirmation email and the checkout response reports it was delivered\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: an order exists and has the customer's contact email on it\n- Required capabilities: a synchronous send-order-confirmation function the checkout handler can call inline and read the delivery result from; an email field on the order record to send to\n- Postconditions: the confirmation email is sent and its delivery result is returned in the checkout response\n- Risks / assumptions: assumes email delivery can be awaited inline during checkout\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there a synchronous function to send an order confirmation that returns a delivery result the caller can read inline? If so, where?\n- RQ2: Does the order record carry the customer's email address to send to? If so, where is it defined?\n\n### Research answers\n- S3.RQ1 -> BLOCKING: there is no synchronous order-confirmation sender. The existing notification function is `queueOrderConfirmation` in `src/notifications/notifier.ts:7`, and the notifier explicitly states that notifications are asynchronous-only in `src/notifications/notifier.ts:4`. This contradicts the plan's requirement for checkout to await delivery and include a delivery result inline.\n- Reuse constraints for S3.RQ1: `queueOrderConfirmation` can enqueue work but cannot prove delivery to the checkout handler. The planner must re-plan this scenario before implementation, either around the async queue behavior or around a deliberate notification architecture change.\n- S3.RQ2 -> BLOCKING: the `Order` interface in `src/orders/schema.ts:4` does not carry a customer email address, and `src/orders/schema.ts:2` says the order intentionally has no `email` column because contact details are resolved from the user record. This contradicts the plan's precondition that the order record has the customer's contact email.\n- Reuse constraints for S3.RQ2: implementation cannot read an email from `Order` as currently defined. The planner must decide whether checkout should resolve contact details through `userId` or whether the data model/design must change before this scenario can proceed.\n"}], "grading": {"expectations": [{"text": "Every research question in the plan is answered one-to-one: S1.RQ1, S1.RQ2, S2.RQ1, S2.RQ2, S3.RQ1, and S3.RQ2 each have a corresponding finding, with none left unanswered", "passed": true, "evidence": "Found all labels: S1.RQ1, S1.RQ2, S2.RQ1, S2.RQ2, S3.RQ1, S3.RQ2."}, {"text": "S1.RQ1 is answered EXISTS, naming requireAuth in the auth middleware (src/middleware/auth.ts) with a file:line location and a note on how to reuse it", "passed": true, "evidence": "S1.RQ1 names requireAuth with auth middleware file:line evidence and describes reuse for authenticated requests."}, {"text": "S1.RQ2 is answered EXISTS, naming getUserById in the user service (src/users/service.ts) with a file:line location and a note that it returns the full user record and can be reused directly", "passed": true, "evidence": "S1.RQ2 names getUserById with user service file:line evidence and says it fetches the full user record for reuse."}, {"text": "The reuse constraint that getUserById assumes the caller is already authenticated is recorded as a caveat on that EXISTS finding", "passed": true, "evidence": "The output records that getUserById relies on prior authentication / does no auth check itself."}, {"text": "S2.RQ1 is answered MISSING (no lookup-by-username exists) and names a concrete extension point \u2014 where to add the username lookup (e.g. alongside getUserById in src/users/service.ts)", "passed": true, "evidence": "S2.RQ1 is classified as missing, distinguishes getUserById as id-based, and points to the user service as the extension point."}, {"text": "S2.RQ2 is answered MISSING (no public/unauthenticated profile route exists) and names a concrete extension point \u2014 where to add a new public route fitting the existing routing structure (e.g. a profile route alongside src/routes/account.ts)", "passed": true, "evidence": "S2.RQ2 is classified as missing, cites the existing account route structure, and names a route extension point for a public profile route."}, {"text": "S3 raises a BLOCKING finding: the design requires a synchronous order-confirmation send returning an inline delivery result, but the codebase's notifier is asynchronous/queue-only (queueOrderConfirmation) and the order schema has no email field, so the plan's assumption is contradicted", "passed": true, "evidence": "S3 has a blocking/blocked finding explaining both the queue-only notifier and missing order email contradiction, with re-planning called out."}, {"text": "S3's status is set to blocked, and the BLOCKING finding explains exactly what is wrong rather than inventing a workaround", "passed": true, "evidence": "S3 status set to blocked."}, {"text": "S1 and S2 statuses are updated to researched (and the scenario order/status table reflects researched/blocked, not still planned)", "passed": true, "evidence": "S1 and S2 status set to researched."}, {"text": "Only names and locations appear in the annotated plan \u2014 no verbatim source code from the fixture files is copied into the plan", "passed": true, "evidence": "No copied fixture source constructs such as function declarations, router calls, SQL calls, or interface bodies were found."}], "summary": {"passed": 10, "failed": 0, "total": 10, "pass_rate": 1}, "execution_metrics": {"total_tool_calls": 0, "total_steps": 1, "errors_encountered": 0, "output_chars": 7553, "transcript_chars": 62643}, "timing": {"executor_duration_seconds": 106.8, "total_duration_seconds": 106.8}, "claims": [], "user_notes_summary": {"uncertainties": [], "needs_review": [], "workarounds": []}, "eval_feedback": {"suggestions": [], "overall": "Deterministic fixture checks applied."}}}, {"id": "eval-0-full-plan-research-with-blocking-without_skill-run-1", "prompt": "Here's a kite-planner plan file (files/plan-public-profiles.md) and the codebase it targets (the other files/*.ts in this folder \u2014 treat them as the real repo: src/users/service.ts, src/routes/account.ts, src/middleware/auth.ts, src/orders/schema.ts, src/notifications/notifier.ts). Research the codebase and answer every scenario's research questions, then annotate the plan file and update the statuses.", "eval_id": 0, "outputs": [{"name": "annotated-plan.md", "type": "text", "content": "# Implementation Plan: Public user profiles & order confirmations\n\n## Feature\n- Blueprint: docs/blueprints/public-profiles.md\n- System design: docs/design/public-profiles.md\n- Summary: Let visitors view a public profile page for any user by username, let\n  the owner edit their own profile, and send an order confirmation when an order\n  is placed.\n\n## Research scope\n- Reviewed the provided target repository files:\n  - `src/users/service.ts`\n  - `src/routes/account.ts`\n  - `src/middleware/auth.ts`\n  - `src/orders/schema.ts`\n  - `src/notifications/notifier.ts`\n- No source code from fixtures is copied here; findings cite symbols and file:line locations only.\n\n## Scenario order & status\n| # | ID | Title                          | Status     |\n|---|----|--------------------------------|------------|\n| 1 | S1 | View own account               | researched |\n| 2 | S2 | View someone's public profile  | researched |\n| 3 | S3 | Order confirmation on checkout | blocked    |\n\n## Scenario S1 - View own account\n- Order: 1\n- Type: happy_path\n- Status: researched\n- Design references: \"Authenticated reads go through the existing session layer.\"\n\n### Gherkin\nGiven I am a signed-in user\nWhen I open my account page\nThen I see my own user record\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: a request can be associated with an authenticated user\n- Required capabilities: a way to reject unauthenticated requests; a way to fetch the full user record by the user's id\n- Postconditions: the authenticated user's record is returned\n- Risks / assumptions: assumes sessions already exist\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing mechanism that rejects unauthenticated requests and identifies the calling user? If so, where?\n- RQ2: Is there an existing function that fetches the full user record by user id? If so, where, and can it be reused as-is?\n\n### Research answers\n- S1.RQ1: Yes. `requireAuth` in `src/middleware/auth.ts:7` rejects unauthenticated requests and attaches the authenticated user id to the request at `src/middleware/auth.ts:13`. The existing account route already uses it for authenticated account reads at `src/routes/account.ts:9`.\n- S1.RQ2: Yes. `getUserById` in `src/users/service.ts:7` fetches the full user record by primary key. It is reusable as-is for authenticated own-account reads because the function explicitly assumes authentication happens before the service call, and the account route already composes it with `requireAuth` at `src/routes/account.ts:9` and `src/routes/account.ts:10`.\n\n### Implementation notes\n- The existing `GET /account` route already appears to satisfy this scenario: it is registered in `src/routes/account.ts:9`, uses `requireAuth`, calls `getUserById`, and returns the resulting user record.\n- No new blocker found for S1.\n\n## Scenario S2 - View someone's public profile\n- Order: 2\n- Type: happy_path\n- Status: researched\n- Design references: \"Public profiles are addressable by username, not id.\"\n\n### Gherkin\nGiven a user has a public profile\nWhen a visitor opens that user's profile page by username\nThen the visitor sees the public profile fields\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: profiles can be looked up by a public-facing username\n- Required capabilities: a way to look up a user by username (not id); a public, unauthenticated route that serves a profile by username\n- Postconditions: a visitor can view a public profile without signing in\n- Risks / assumptions: usernames are unique and stable\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing function that looks up a user by username? If so, where?\n- RQ2: Is there an existing public (unauthenticated) profile route, and if not, where should a new one be added so it fits the routing structure?\n\n### Research answers\n- S2.RQ1: No. `src/users/service.ts` currently exposes `getUserById` at `src/users/service.ts:7` and `updateUserProfile` at `src/users/service.ts:13`, but no username-based lookup function is present in the provided user service.\n- S2.RQ2: No existing public profile route is present. The only provided route module is `src/routes/account.ts`, and both existing `/account` routes are authenticated through `requireAuth` at `src/routes/account.ts:9` and `src/routes/account.ts:15`. A new unauthenticated public profile route should be added under `src/routes` as a separate public profile route module, following the same Express `Router` module pattern used by `src/routes/account.ts:6`. It should not use `requireAuth`.\n\n### Implementation notes\n- Add a username-based user service lookup near the existing user service functions in `src/users/service.ts`.\n- Add a public route under `src/routes`, separate from authenticated account routes, that calls the username lookup and returns only public profile fields.\n- The provided files do not include the `User` type definition or route registration/bootstrap file, so the exact list of public fields and the registration point for the new route must be confirmed during implementation.\n- No hard blocker found for S2; required capabilities are missing but can be added in the natural service and route locations.\n\n## Scenario S3 - Order confirmation on checkout\n- Order: 3\n- Type: happy_path\n- Status: blocked\n- Design references: \"On checkout the customer must receive a confirmation\n  email synchronously, and the checkout response must include the email\n  delivery result so the UI can confirm it was sent before returning.\"\n\n### Gherkin\nGiven I have placed an order\nWhen checkout completes\nThen I receive an order confirmation email and the checkout response reports it was delivered\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: an order exists and has the customer's contact email on it\n- Required capabilities: a synchronous send-order-confirmation function the checkout handler can call inline and read the delivery result from; an email field on the order record to send to\n- Postconditions: the confirmation email is sent and its delivery result is returned in the checkout response\n- Risks / assumptions: assumes email delivery can be awaited inline during checkout\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there a synchronous function to send an order confirmation that returns a delivery result the caller can read inline? If so, where?\n- RQ2: Does the order record carry the customer's email address to send to? If so, where is it defined?\n\n### Research answers\n- S3.RQ1: No. The notification implementation is asynchronous-only. `queueOrderConfirmation` in `src/notifications/notifier.ts:7` enqueues an order confirmation job and returns no delivery result to the caller. The file-level notification notes at `src/notifications/notifier.ts:4`, `src/notifications/notifier.ts:5`, and `src/notifications/notifier.ts:6` explicitly state that callers cannot block on or read delivery results inline.\n- S3.RQ2: No. The `Order` interface in `src/orders/schema.ts:4` includes `id`, `userId`, `status`, `totalCents`, and `createdAt`, but it has no customer email field. The schema notes at `src/orders/schema.ts:2` and `src/orders/schema.ts:3` explicitly say contact details are resolved from the user record instead of the user-facing order.\n\n### Blocking notes\n- This scenario is blocked against the current design requirement because both required preconditions are contradicted by the provided codebase:\n  - Notification delivery is queue-based and cannot provide an inline delivery result.\n  - The order record does not carry the customer's email address.\n- To unblock S3, the product/design decision needs to change in one of two directions:\n  - Keep the existing asynchronous notification architecture and change the checkout behavior so it reports enqueue success instead of confirmed email delivery.\n  - Or approve a larger architecture/schema change that introduces synchronous email delivery with a readable delivery result and a defined source for the customer's email during checkout.\n"}], "grading": {"expectations": [{"text": "Every research question in the plan is answered one-to-one: S1.RQ1, S1.RQ2, S2.RQ1, S2.RQ2, S3.RQ1, and S3.RQ2 each have a corresponding finding, with none left unanswered", "passed": true, "evidence": "Found all labels: S1.RQ1, S1.RQ2, S2.RQ1, S2.RQ2, S3.RQ1, S3.RQ2."}, {"text": "S1.RQ1 is answered EXISTS, naming requireAuth in the auth middleware (src/middleware/auth.ts) with a file:line location and a note on how to reuse it", "passed": true, "evidence": "S1.RQ1 names requireAuth with auth middleware file:line evidence and describes reuse for authenticated requests."}, {"text": "S1.RQ2 is answered EXISTS, naming getUserById in the user service (src/users/service.ts) with a file:line location and a note that it returns the full user record and can be reused directly", "passed": true, "evidence": "S1.RQ2 names getUserById with user service file:line evidence and says it fetches the full user record for reuse."}, {"text": "The reuse constraint that getUserById assumes the caller is already authenticated is recorded as a caveat on that EXISTS finding", "passed": false, "evidence": "No clear caveat was found that getUserById assumes prior authentication."}, {"text": "S2.RQ1 is answered MISSING (no lookup-by-username exists) and names a concrete extension point \u2014 where to add the username lookup (e.g. alongside getUserById in src/users/service.ts)", "passed": false, "evidence": "S2.RQ1 check failed; matched checks: true, true, true, true, false, true, true."}, {"text": "S2.RQ2 is answered MISSING (no public/unauthenticated profile route exists) and names a concrete extension point \u2014 where to add a new public route fitting the existing routing structure (e.g. a profile route alongside src/routes/account.ts)", "passed": true, "evidence": "S2.RQ2 is classified as missing, cites the existing account route structure, and names a route extension point for a public profile route."}, {"text": "S3 raises a BLOCKING finding: the design requires a synchronous order-confirmation send returning an inline delivery result, but the codebase's notifier is asynchronous/queue-only (queueOrderConfirmation) and the order schema has no email field, so the plan's assumption is contradicted", "passed": true, "evidence": "S3 has a blocking/blocked finding explaining both the queue-only notifier and missing order email contradiction, with re-planning called out."}, {"text": "S3's status is set to blocked, and the BLOCKING finding explains exactly what is wrong rather than inventing a workaround", "passed": true, "evidence": "S3 status set to blocked."}, {"text": "S1 and S2 statuses are updated to researched (and the scenario order/status table reflects researched/blocked, not still planned)", "passed": true, "evidence": "S1 and S2 status set to researched."}, {"text": "Only names and locations appear in the annotated plan \u2014 no verbatim source code from the fixture files is copied into the plan", "passed": true, "evidence": "No copied fixture source constructs such as function declarations, router calls, SQL calls, or interface bodies were found."}], "summary": {"passed": 8, "failed": 2, "total": 10, "pass_rate": 0.8}, "execution_metrics": {"total_tool_calls": 0, "total_steps": 1, "errors_encountered": 0, "output_chars": 8095, "transcript_chars": 26112}, "timing": {"executor_duration_seconds": 100.2, "total_duration_seconds": 100.2}, "claims": [], "user_notes_summary": {"uncertainties": [], "needs_review": [], "workarounds": []}, "eval_feedback": {"suggestions": [], "overall": "Deterministic fixture checks applied."}}}, {"id": "eval-1-single-scenario-exists-and-missing-with_skill-run-1", "prompt": "I'm only interested in the 'View someone's public profile' scenario (S2) in files/plan-public-profiles.md right now. Check what we already have in the codebase (the files/*.ts in this folder) for looking up a user by username and for serving a public profile route, and write the findings for that scenario into the plan. Don't paste any of our source into the plan \u2014 just tell me where things are.", "eval_id": 1, "outputs": [{"name": "annotated-plan.md", "type": "text", "content": "# Implementation Plan: Public user profiles & order confirmations\n\n## Feature\n- Blueprint: docs/blueprints/public-profiles.md\n- System design: docs/design/public-profiles.md\n- Summary: Let visitors view a public profile page for any user by username, let\n  the owner edit their own profile, and send an order confirmation when an order\n  is placed.\n\n## Scenario order & status\n| # | ID | Title                          | Status     |\n|---|----|--------------------------------|------------|\n| 1 | S1 | View own account               | planned    |\n| 2 | S2 | View someone's public profile  | researched |\n| 3 | S3 | Order confirmation on checkout | planned    |\n\n## Scenario S1 \u2014 View own account\n- Order: 1\n- Type: happy_path\n- Status: planned\n- Design references: \"Authenticated reads go through the existing session layer.\"\n\n### Gherkin\nGiven I am a signed-in user\nWhen I open my account page\nThen I see my own user record\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: a request can be associated with an authenticated user\n- Required capabilities: a way to reject unauthenticated requests; a way to fetch the full user record by the user's id\n- Postconditions: the authenticated user's record is returned\n- Risks / assumptions: assumes sessions already exist\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing mechanism that rejects unauthenticated requests and identifies the calling user? If so, where?\n- RQ2: Is there an existing function that fetches the full user record by user id? If so, where, and can it be reused as-is?\n\n## Scenario S2 \u2014 View someone's public profile\n- Order: 2\n- Type: happy_path\n- Status: researched\n- Design references: \"Public profiles are addressable by username, not id.\"\n\n### Gherkin\nGiven a user has a public profile\nWhen a visitor opens that user's profile page by username\nThen the visitor sees the public profile fields\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: profiles can be looked up by a public-facing username\n- Required capabilities: a way to look up a user by username (not id); a public, unauthenticated route that serves a profile by username\n- Postconditions: a visitor can view a public profile without signing in\n- Risks / assumptions: usernames are unique and stable\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing function that looks up a user by username? If so, where?\n- RQ2: Is there an existing public (unauthenticated) profile route, and if not, where should a new one be added so it fits the routing structure?\n\n### Research findings          (kite-research)\n- S2.RQ1 \u2192 MISSING: no existing username-based user lookup is present in the inspected user service. `src/users/service.ts:7` has `getUserById`, which is primary-key/id based, and `src/users/service.ts:13` has `updateUserProfile`; neither satisfies lookup by public username. ADD a username lookup function in `src/users/service.ts` alongside the existing user service functions.\n- S2.RQ1 reuse constraints: do not reuse `getUserById` for this scenario as-is; it is id-based and its surrounding note says callers are expected to have already handled authentication, while S2 is public and username-addressed.\n- S2.RQ2 \u2192 MISSING: no public profile route exists in the inspected routes. The existing `GET /account` handler in `src/routes/account.ts:9` is account-scoped and uses `requireAuth`, so it is not a public visitor route. ADD a new public profile GET route in a route module alongside the account routes, such as `src/routes/profile.ts`, and do not attach `requireAuth` to that handler.\n- S2.RQ2 reuse constraints: `requireAuth` in `src/middleware/auth.ts:7` rejects unauthenticated requests and attaches the calling user's id; that is appropriate for account routes but must not gate the public profile route. The existing Express `Router` structure in `src/routes/account.ts:6` is the routing pattern to follow.\n\n## Scenario S3 \u2014 Order confirmation on checkout\n- Order: 3\n- Type: happy_path\n- Status: planned\n- Design references: \"On checkout the customer must receive a confirmation\n  email synchronously, and the checkout response must include the email\n  delivery result so the UI can confirm it was sent before returning.\"\n\n### Gherkin\nGiven I have placed an order\nWhen checkout completes\nThen I receive an order confirmation email and the checkout response reports it was delivered\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: an order exists and has the customer's contact email on it\n- Required capabilities: a synchronous send-order-confirmation function the checkout handler can call inline and read the delivery result from; an email field on the order record to send to\n- Postconditions: the confirmation email is sent and its delivery result is returned in the checkout response\n- Risks / assumptions: assumes email delivery can be awaited inline during checkout\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there a synchronous function to send an order confirmation that returns a delivery result the caller can read inline? If so, where?\n- RQ2: Does the order record carry the customer's email address to send to? If so, where is it defined?\n"}], "grading": {"expectations": [{"text": "Both of S2's research questions are answered one-to-one (S2.RQ1 and S2.RQ2), neither left unanswered", "passed": true, "evidence": "Found all labels: S2.RQ1, S2.RQ2."}, {"text": "S2.RQ1 is MISSING \u2014 recognizes that the existing getUserById looks up by id, not username, so no username lookup exists \u2014 and names a concrete extension point for adding one (e.g. in src/users/service.ts next to getUserById)", "passed": true, "evidence": "S2.RQ1 is classified as missing, distinguishes getUserById as id-based, and points to the user service as the extension point."}, {"text": "S2.RQ2 is MISSING \u2014 recognizes the existing routes (src/routes/account.ts) are authenticated/account-scoped, so no public profile route exists \u2014 and names where a new public unauthenticated route should be added to fit the routing structure", "passed": true, "evidence": "S2.RQ2 is classified as missing, cites the existing account route structure, and names a route extension point for a public profile route."}, {"text": "Findings cite file:line locations for the existing code referenced (getUserById, the account routes) rather than vague references", "passed": true, "evidence": "Findings cite file:line locations for getUserById and the account route structure."}, {"text": "No verbatim source code from the fixture is copied into the plan \u2014 only names and locations", "passed": true, "evidence": "No copied fixture source constructs such as function declarations, router calls, SQL calls, or interface bodies were found."}, {"text": "S2's status is updated to researched", "passed": true, "evidence": "S2 status set to researched."}], "summary": {"passed": 6, "failed": 0, "total": 6, "pass_rate": 1}, "execution_metrics": {"total_tool_calls": 0, "total_steps": 1, "errors_encountered": 0, "output_chars": 5275, "transcript_chars": 44532}, "timing": {"executor_duration_seconds": 75.6, "total_duration_seconds": 75.6}, "claims": [], "user_notes_summary": {"uncertainties": [], "needs_review": [], "workarounds": []}, "eval_feedback": {"suggestions": [], "overall": "Deterministic fixture checks applied."}}}, {"id": "eval-1-single-scenario-exists-and-missing-without_skill-run-1", "prompt": "I'm only interested in the 'View someone's public profile' scenario (S2) in files/plan-public-profiles.md right now. Check what we already have in the codebase (the files/*.ts in this folder) for looking up a user by username and for serving a public profile route, and write the findings for that scenario into the plan. Don't paste any of our source into the plan \u2014 just tell me where things are.", "eval_id": 1, "outputs": [{"name": "annotated-plan.md", "type": "text", "content": "# Implementation Plan: Public user profiles & order confirmations\n\n## Feature\n- Blueprint: docs/blueprints/public-profiles.md\n- System design: docs/design/public-profiles.md\n- Summary: Let visitors view a public profile page for any user by username, let\n  the owner edit their own profile, and send an order confirmation when an order\n  is placed.\n\n## Scenario order & status\n| # | ID | Title                          | Status     |\n|---|----|--------------------------------|------------|\n| 1 | S1 | View own account               | planned    |\n| 2 | S2 | View someone's public profile  | researched |\n| 3 | S3 | Order confirmation on checkout | planned    |\n\n## Scenario S1 \u2014 View own account\n- Order: 1\n- Type: happy_path\n- Status: planned\n- Design references: \"Authenticated reads go through the existing session layer.\"\n\n### Gherkin\nGiven I am a signed-in user\nWhen I open my account page\nThen I see my own user record\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: a request can be associated with an authenticated user\n- Required capabilities: a way to reject unauthenticated requests; a way to fetch the full user record by the user's id\n- Postconditions: the authenticated user's record is returned\n- Risks / assumptions: assumes sessions already exist\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing mechanism that rejects unauthenticated requests and identifies the calling user? If so, where?\n- RQ2: Is there an existing function that fetches the full user record by user id? If so, where, and can it be reused as-is?\n\n## Scenario S2 \u2014 View someone's public profile\n- Order: 2\n- Type: happy_path\n- Status: researched\n- Design references: \"Public profiles are addressable by username, not id.\"\n\n### Gherkin\nGiven a user has a public profile\nWhen a visitor opens that user's profile page by username\nThen the visitor sees the public profile fields\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: profiles can be looked up by a public-facing username\n- Required capabilities: a way to look up a user by username (not id); a public, unauthenticated route that serves a profile by username\n- Postconditions: a visitor can view a public profile without signing in\n- Risks / assumptions: usernames are unique and stable\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing function that looks up a user by username? If so, where?\n- RQ2: Is there an existing public (unauthenticated) profile route, and if not, where should a new one be added so it fits the routing structure?\n\n### Research findings\n- S2.RQ1 - Status: researched; capability is blocked/missing. There is no existing function that looks up a user by username in the provided `files/*.ts`. The only user lookup found is `getUserById` in `src/users/service.ts:7`; the other user service export is `updateUserProfile` in `src/users/service.ts:13`. Add the username lookup alongside those user data access functions in `src/users/service.ts`.\n- S2.RQ2 - Status: researched; capability is blocked/missing. There is no existing public, unauthenticated profile route in the provided `files/*.ts`. The current user/account route surface is `src/routes/account.ts`: it defines authenticated account handlers at `src/routes/account.ts:9` and `src/routes/account.ts:15`, both using `requireAuth`. `requireAuth` is defined at `src/middleware/auth.ts:7` and rejects unauthenticated requests, so the public profile route should not use it. Add the public username-based profile GET route to `src/routes/account.ts` next to the existing user/account routes, importing the new username lookup from `src/users/service.ts`.\n\n## Scenario S3 \u2014 Order confirmation on checkout\n- Order: 3\n- Type: happy_path\n- Status: planned\n- Design references: \"On checkout the customer must receive a confirmation\n  email synchronously, and the checkout response must include the email\n  delivery result so the UI can confirm it was sent before returning.\"\n\n### Gherkin\nGiven I have placed an order\nWhen checkout completes\nThen I receive an order confirmation email and the checkout response reports it was delivered\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: an order exists and has the customer's contact email on it\n- Required capabilities: a synchronous send-order-confirmation function the checkout handler can call inline and read the delivery result from; an email field on the order record to send to\n- Postconditions: the confirmation email is sent and its delivery result is returned in the checkout response\n- Risks / assumptions: assumes email delivery can be awaited inline during checkout\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there a synchronous function to send an order confirmation that returns a delivery result the caller can read inline? If so, where?\n- RQ2: Does the order record carry the customer's email address to send to? If so, where is it defined?\n"}], "grading": {"expectations": [{"text": "Both of S2's research questions are answered one-to-one (S2.RQ1 and S2.RQ2), neither left unanswered", "passed": true, "evidence": "Found all labels: S2.RQ1, S2.RQ2."}, {"text": "S2.RQ1 is MISSING \u2014 recognizes that the existing getUserById looks up by id, not username, so no username lookup exists \u2014 and names a concrete extension point for adding one (e.g. in src/users/service.ts next to getUserById)", "passed": false, "evidence": "S2.RQ1 check failed; matched checks: true, true, false, true, false, true, true."}, {"text": "S2.RQ2 is MISSING \u2014 recognizes the existing routes (src/routes/account.ts) are authenticated/account-scoped, so no public profile route exists \u2014 and names where a new public unauthenticated route should be added to fit the routing structure", "passed": true, "evidence": "S2.RQ2 is classified as missing, cites the existing account route structure, and names a route extension point for a public profile route."}, {"text": "Findings cite file:line locations for the existing code referenced (getUserById, the account routes) rather than vague references", "passed": true, "evidence": "Findings cite file:line locations for getUserById and the account route structure."}, {"text": "No verbatim source code from the fixture is copied into the plan \u2014 only names and locations", "passed": true, "evidence": "No copied fixture source constructs such as function declarations, router calls, SQL calls, or interface bodies were found."}, {"text": "S2's status is updated to researched", "passed": true, "evidence": "S2 status set to researched."}], "summary": {"passed": 5, "failed": 1, "total": 6, "pass_rate": 0.8333333333333334}, "execution_metrics": {"total_tool_calls": 0, "total_steps": 1, "errors_encountered": 0, "output_chars": 5001, "transcript_chars": 27934}, "timing": {"executor_duration_seconds": 93.7, "total_duration_seconds": 93.7}, "claims": [], "user_notes_summary": {"uncertainties": [], "needs_review": [], "workarounds": []}, "eval_feedback": {"suggestions": [], "overall": "Deterministic fixture checks applied."}}}, {"id": "eval-2-blocking-contradiction-detection-with_skill-run-1", "prompt": "Focus on the order-confirmation scenario (S3) in files/plan-public-profiles.md. The design says checkout must send the confirmation email synchronously and return the delivery result in the response. Look at how notifications and orders actually work in the codebase (files/notifier.ts and files/order-schema.ts, plus the rest) and tell me whether the plan can be implemented as written. Annotate S3 and set its status.", "eval_id": 2, "outputs": [{"name": "annotated-plan.md", "type": "text", "content": "# Implementation Plan: Public user profiles & order confirmations\n\n## Feature\n- Blueprint: docs/blueprints/public-profiles.md\n- System design: docs/design/public-profiles.md\n- Summary: Let visitors view a public profile page for any user by username, let\n  the owner edit their own profile, and send an order confirmation when an order\n  is placed.\n\n## Scenario order & status\n| # | ID | Title                          | Status  |\n|---|----|--------------------------------|---------|\n| 1 | S1 | View own account               | planned |\n| 2 | S2 | View someone's public profile  | planned |\n| 3 | S3 | Order confirmation on checkout | blocked |\n\n## Scenario S1 \u2014 View own account\n- Order: 1\n- Type: happy_path\n- Status: planned\n- Design references: \"Authenticated reads go through the existing session layer.\"\n\n### Gherkin\nGiven I am a signed-in user\nWhen I open my account page\nThen I see my own user record\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: a request can be associated with an authenticated user\n- Required capabilities: a way to reject unauthenticated requests; a way to fetch the full user record by the user's id\n- Postconditions: the authenticated user's record is returned\n- Risks / assumptions: assumes sessions already exist\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing mechanism that rejects unauthenticated requests and identifies the calling user? If so, where?\n- RQ2: Is there an existing function that fetches the full user record by user id? If so, where, and can it be reused as-is?\n\n## Scenario S2 \u2014 View someone's public profile\n- Order: 2\n- Type: happy_path\n- Status: planned\n- Design references: \"Public profiles are addressable by username, not id.\"\n\n### Gherkin\nGiven a user has a public profile\nWhen a visitor opens that user's profile page by username\nThen the visitor sees the public profile fields\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: profiles can be looked up by a public-facing username\n- Required capabilities: a way to look up a user by username (not id); a public, unauthenticated route that serves a profile by username\n- Postconditions: a visitor can view a public profile without signing in\n- Risks / assumptions: usernames are unique and stable\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing function that looks up a user by username? If so, where?\n- RQ2: Is there an existing public (unauthenticated) profile route, and if not, where should a new one be added so it fits the routing structure?\n\n## Scenario S3 \u2014 Order confirmation on checkout\n- Order: 3\n- Type: happy_path\n- Status: blocked\n- Design references: \"On checkout the customer must receive a confirmation\n  email synchronously, and the checkout response must include the email\n  delivery result so the UI can confirm it was sent before returning.\"\n\n### Gherkin\nGiven I have placed an order\nWhen checkout completes\nThen I receive an order confirmation email and the checkout response reports it was delivered\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: an order exists and has the customer's contact email on it\n- Required capabilities: a synchronous send-order-confirmation function the checkout handler can call inline and read the delivery result from; an email field on the order record to send to\n- Postconditions: the confirmation email is sent and its delivery result is returned in the checkout response\n- Risks / assumptions: assumes email delivery can be awaited inline during checkout\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there a synchronous function to send an order confirmation that returns a delivery result the caller can read inline? If so, where?\n- RQ2: Does the order record carry the customer's email address to send to? If so, where is it defined?\n\n### Research answers\n- S3.RQ1 \u2192 BLOCKING: No. The only order-confirmation notification entry point found is `queueOrderConfirmation` in `src/notifications/notifier.ts:7`. It enqueues an `order-confirmation` job via the queue client at `src/notifications/notifier.ts:2` and `src/notifications/notifier.ts:8`, and the notifier contract states that notification delivery is asynchronous only at `src/notifications/notifier.ts:4`. The caller cannot wait for provider delivery or read an inline delivery result, which directly contradicts the S3 design requirement.\n- S3.RQ2 \u2192 BLOCKING: No. The persisted `Order` contract is defined in `src/orders/schema.ts:4`, and its fields are `id`, `userId`, `status`, `totalCents`, and `createdAt` at `src/orders/schema.ts:5`. The schema explicitly keeps customer contact details off the order record at `src/orders/schema.ts:2`, so the S3 precondition that the order carries the customer email is false. The nearest available link is `userId`, meaning email resolution would have to be planned through the user record rather than through an order email field.\n\n### Blocking finding\nS3 cannot be implemented as written. The plan requires checkout to synchronously send email and return the delivery result, but the codebase's notification surface is enqueue-only and exposes no inline delivery result. The plan also requires an email address on the order record, but the order schema intentionally omits it. This is a design/codebase contradiction, not ordinary missing implementation work; `kite-planner` must re-plan S3 around the existing asynchronous notification model and user-based contact resolution before implementation.\n\n### Reuse constraints\n- `queueOrderConfirmation` in `src/notifications/notifier.ts:7` can only be reused for asynchronous enqueueing. It is not a synchronous sender and does not provide delivery status to checkout.\n- `Order` in `src/orders/schema.ts:4` can identify the owning user via `userId`, but it cannot be used as the source of a customer email address.\n"}], "grading": {"expectations": [{"text": "Both of S3's research questions (S3.RQ1 and S3.RQ2) are answered one-to-one", "passed": true, "evidence": "Found all labels: S3.RQ1, S3.RQ2."}, {"text": "S3.RQ1 establishes there is no synchronous order-confirmation send that returns an inline delivery result \u2014 only the asynchronous, queue-only queueOrderConfirmation (src/notifications/notifier.ts) exists \u2014 cited with a file:line", "passed": true, "evidence": "S3.RQ1 establishes that only queueOrderConfirmation exists, cites notifier file:line, and explains it cannot return inline delivery results."}, {"text": "S3.RQ2 establishes the Order schema (src/orders/schema.ts) has no email field to send to, cited with a file:line", "passed": true, "evidence": "S3.RQ2 cites the Order schema and states it lacks a customer email field."}, {"text": "A BLOCKING finding is raised on S3 explaining the contradiction precisely: the design assumes a synchronous send with inline delivery result and an order email field, neither of which the codebase supports", "passed": true, "evidence": "S3 has a blocking/blocked finding explaining both the queue-only notifier and missing order email contradiction, with re-planning called out."}, {"text": "The skill does NOT invent a workaround or redesign the solution \u2014 it surfaces the contradiction as a blocker for kite-planner to re-plan", "passed": true, "evidence": "The output surfaces a blocker/re-plan need and does not present an implementation workaround as the answer."}, {"text": "S3's status is set to blocked", "passed": true, "evidence": "S3 status set to blocked."}, {"text": "No verbatim source code from the fixture is copied into the plan \u2014 only names and locations", "passed": true, "evidence": "No copied fixture source constructs such as function declarations, router calls, SQL calls, or interface bodies were found."}], "summary": {"passed": 7, "failed": 0, "total": 7, "pass_rate": 1}, "execution_metrics": {"total_tool_calls": 0, "total_steps": 1, "errors_encountered": 0, "output_chars": 5916, "transcript_chars": 524759}, "timing": {"executor_duration_seconds": 74.8, "total_duration_seconds": 74.8}, "claims": [], "user_notes_summary": {"uncertainties": [], "needs_review": [], "workarounds": []}, "eval_feedback": {"suggestions": [], "overall": "Deterministic fixture checks applied."}}}, {"id": "eval-2-blocking-contradiction-detection-without_skill-run-1", "prompt": "Focus on the order-confirmation scenario (S3) in files/plan-public-profiles.md. The design says checkout must send the confirmation email synchronously and return the delivery result in the response. Look at how notifications and orders actually work in the codebase (files/notifier.ts and files/order-schema.ts, plus the rest) and tell me whether the plan can be implemented as written. Annotate S3 and set its status.", "eval_id": 2, "outputs": [{"name": "annotated-plan.md", "type": "text", "content": "# Implementation Plan: Public user profiles & order confirmations\n\n## Feature\n- Blueprint: docs/blueprints/public-profiles.md\n- System design: docs/design/public-profiles.md\n- Summary: Let visitors view a public profile page for any user by username, let\n  the owner edit their own profile, and send an order confirmation when an order\n  is placed.\n\n## Scenario order & status\n| # | ID | Title                          | Status  |\n|---|----|--------------------------------|---------|\n| 1 | S1 | View own account               | planned |\n| 2 | S2 | View someone's public profile  | planned |\n| 3 | S3 | Order confirmation on checkout | blocked |\n\n## Scenario S1 \u2014 View own account\n- Order: 1\n- Type: happy_path\n- Status: planned\n- Design references: \"Authenticated reads go through the existing session layer.\"\n\n### Gherkin\nGiven I am a signed-in user\nWhen I open my account page\nThen I see my own user record\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: a request can be associated with an authenticated user\n- Required capabilities: a way to reject unauthenticated requests; a way to fetch the full user record by the user's id\n- Postconditions: the authenticated user's record is returned\n- Risks / assumptions: assumes sessions already exist\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing mechanism that rejects unauthenticated requests and identifies the calling user? If so, where?\n- RQ2: Is there an existing function that fetches the full user record by user id? If so, where, and can it be reused as-is?\n\n## Scenario S2 \u2014 View someone's public profile\n- Order: 2\n- Type: happy_path\n- Status: planned\n- Design references: \"Public profiles are addressable by username, not id.\"\n\n### Gherkin\nGiven a user has a public profile\nWhen a visitor opens that user's profile page by username\nThen the visitor sees the public profile fields\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: profiles can be looked up by a public-facing username\n- Required capabilities: a way to look up a user by username (not id); a public, unauthenticated route that serves a profile by username\n- Postconditions: a visitor can view a public profile without signing in\n- Risks / assumptions: usernames are unique and stable\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing function that looks up a user by username? If so, where?\n- RQ2: Is there an existing public (unauthenticated) profile route, and if not, where should a new one be added so it fits the routing structure?\n\n## Scenario S3 \u2014 Order confirmation on checkout\n- Order: 3\n- Type: happy_path\n- Status: blocked\n- Design references: \"On checkout the customer must receive a confirmation\n  email synchronously, and the checkout response must include the email\n  delivery result so the UI can confirm it was sent before returning.\"\n\n### Gherkin\nGiven I have placed an order\nWhen checkout completes\nThen I receive an order confirmation email and the checkout response reports it was delivered\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: an order exists and has the customer's contact email on it\n- Required capabilities: a synchronous send-order-confirmation function the checkout handler can call inline and read the delivery result from; an email field on the order record to send to\n- Postconditions: the confirmation email is sent and its delivery result is returned in the checkout response\n- Risks / assumptions: assumes email delivery can be awaited inline during checkout\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there a synchronous function to send an order confirmation that returns a delivery result the caller can read inline? If so, where?\n- RQ2: Does the order record carry the customer's email address to send to? If so, where is it defined?\n\n### Research answers\n- S3.RQ1: No. The only order-confirmation notification entry point found is `queueOrderConfirmation` in `src/notifications/notifier.ts:7`. That module documents notifications as asynchronous-only at `src/notifications/notifier.ts:4` and says callers cannot block on or read delivery results inline at `src/notifications/notifier.ts:6`. The function enqueues an order-confirmation job at `src/notifications/notifier.ts:8` and exposes no delivery-result value to checkout.\n- S3.RQ2: No. The persisted `Order` shape is defined in `src/orders/schema.ts:4`, and its stored fields at `src/orders/schema.ts:5` through `src/orders/schema.ts:9` do not include a customer contact email. The schema note at `src/orders/schema.ts:2` says the order intentionally does not store an email column, with contact details resolved from the user record at `src/orders/schema.ts:3`.\n\n### Implementation verdict\nS3 cannot be implemented as written. The design requires synchronous email delivery and an inline delivery result in the checkout response, but the codebase only exposes an asynchronous queue path for order confirmations. The plan also assumes the order record carries the destination email, while the order schema intentionally omits that data. Implementing S3 would require changing the design or introducing new product and architecture decisions, such as accepting queued confirmation semantics, adding a synchronous notification provider contract, or deriving recipient contact details from the user record instead of the order.\n"}], "grading": {"expectations": [{"text": "Both of S3's research questions (S3.RQ1 and S3.RQ2) are answered one-to-one", "passed": true, "evidence": "Found all labels: S3.RQ1, S3.RQ2."}, {"text": "S3.RQ1 establishes there is no synchronous order-confirmation send that returns an inline delivery result \u2014 only the asynchronous, queue-only queueOrderConfirmation (src/notifications/notifier.ts) exists \u2014 cited with a file:line", "passed": false, "evidence": "S3.RQ1 check failed; matched checks: true, false, true, true, true, true."}, {"text": "S3.RQ2 establishes the Order schema (src/orders/schema.ts) has no email field to send to, cited with a file:line", "passed": false, "evidence": "S3.RQ2 check failed; matched checks: true, false, true, true."}, {"text": "A BLOCKING finding is raised on S3 explaining the contradiction precisely: the design assumes a synchronous send with inline delivery result and an order email field, neither of which the codebase supports", "passed": true, "evidence": "S3 has a blocking/blocked finding explaining both the queue-only notifier and missing order email contradiction, with re-planning called out."}, {"text": "The skill does NOT invent a workaround or redesign the solution \u2014 it surfaces the contradiction as a blocker for kite-planner to re-plan", "passed": true, "evidence": "The output surfaces a blocker/re-plan need and does not present an implementation workaround as the answer."}, {"text": "S3's status is set to blocked", "passed": true, "evidence": "S3 status set to blocked."}, {"text": "No verbatim source code from the fixture is copied into the plan \u2014 only names and locations", "passed": true, "evidence": "No copied fixture source constructs such as function declarations, router calls, SQL calls, or interface bodies were found."}], "summary": {"passed": 5, "failed": 2, "total": 7, "pass_rate": 0.7142857142857143}, "execution_metrics": {"total_tool_calls": 0, "total_steps": 1, "errors_encountered": 0, "output_chars": 5434, "transcript_chars": 23464}, "timing": {"executor_duration_seconds": 72.1, "total_duration_seconds": 72.1}, "claims": [], "user_notes_summary": {"uncertainties": [], "needs_review": [], "workarounds": []}, "eval_feedback": {"suggestions": [], "overall": "Deterministic fixture checks applied."}}}], "previous_feedback": {}, "previous_outputs": {"eval-0-full-plan-research-with-blocking-with_skill-run-1": [{"name": "annotated-plan.md", "type": "text", "content": "# Implementation Plan: Public user profiles & order confirmations\n\n## Feature\n- Blueprint: docs/blueprints/public-profiles.md\n- System design: docs/design/public-profiles.md\n- Summary: Let visitors view a public profile page for any user by username, let\n  the owner edit their own profile, and send an order confirmation when an order\n  is placed.\n\n## Scenario order & status\n| # | ID | Title                          | Status     |\n|---|----|--------------------------------|------------|\n| 1 | S1 | View own account               | researched |\n| 2 | S2 | View someone's public profile  | researched |\n| 3 | S3 | Order confirmation on checkout | blocked    |\n\n## Scenario S1 \u2014 View own account\n- Order: 1\n- Type: happy_path\n- Status: researched\n- Design references: \"Authenticated reads go through the existing session layer.\"\n\n### Gherkin\nGiven I am a signed-in user\nWhen I open my account page\nThen I see my own user record\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: a request can be associated with an authenticated user\n- Required capabilities: a way to reject unauthenticated requests; a way to fetch the full user record by the user's id\n- Postconditions: the authenticated user's record is returned\n- Risks / assumptions: assumes sessions already exist\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing mechanism that rejects unauthenticated requests and identifies the calling user? If so, where?\n- RQ2: Is there an existing function that fetches the full user record by user id? If so, where, and can it be reused as-is?\n\n### Research answers\n- S1.RQ1 -> EXISTS: `requireAuth` in `src/middleware/auth.ts:7` rejects unauthenticated requests and attaches the resolved user id for downstream handlers. It is already reused by the account routes at `src/routes/account.ts:9` and `src/routes/account.ts:15`.\n- S1.RQ2 -> EXISTS: `getUserById` in `src/users/service.ts:7` fetches the full user record by primary key. Reuse it for authenticated account reads; constraint: it performs no auth check itself and expects the caller to have already run the session/auth layer. The existing `GET /account` handler already combines `requireAuth` and `getUserById` at `src/routes/account.ts:9` and `src/routes/account.ts:10`.\n\n## Scenario S2 \u2014 View someone's public profile\n- Order: 2\n- Type: happy_path\n- Status: researched\n- Design references: \"Public profiles are addressable by username, not id.\"\n\n### Gherkin\nGiven a user has a public profile\nWhen a visitor opens that user's profile page by username\nThen the visitor sees the public profile fields\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: profiles can be looked up by a public-facing username\n- Required capabilities: a way to look up a user by username (not id); a public, unauthenticated route that serves a profile by username\n- Postconditions: a visitor can view a public profile without signing in\n- Risks / assumptions: usernames are unique and stable\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing function that looks up a user by username? If so, where?\n- RQ2: Is there an existing public (unauthenticated) profile route, and if not, where should a new one be added so it fits the routing structure?\n\n### Research answers\n- S2.RQ1 -> MISSING: no user lookup by username exists in `src/users/service.ts`; the existing user service only exposes `getUserById` at `src/users/service.ts:7` and `updateUserProfile` at `src/users/service.ts:13`. Add the username lookup in `src/users/service.ts` alongside those user data access functions. Reuse constraint: do not reuse `getUserById` for this public path, because it is id-based and returns the full user record.\n- S2.RQ2 -> MISSING: no public profile route exists in the route files provided. Add a new Express router module under `src/routes/` alongside `src/routes/account.ts`, following the existing `Router` module shape from `src/routes/account.ts:6`, with a public username-based GET handler that does not use `requireAuth`. Reuse constraint: keep authenticated account behavior in `src/routes/account.ts` unchanged; it is explicitly protected by `requireAuth`.\n\n## Scenario S3 \u2014 Order confirmation on checkout\n- Order: 3\n- Type: happy_path\n- Status: blocked\n- Design references: \"On checkout the customer must receive a confirmation\n  email synchronously, and the checkout response must include the email\n  delivery result so the UI can confirm it was sent before returning.\"\n\n### Gherkin\nGiven I have placed an order\nWhen checkout completes\nThen I receive an order confirmation email and the checkout response reports it was delivered\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: an order exists and has the customer's contact email on it\n- Required capabilities: a synchronous send-order-confirmation function the checkout handler can call inline and read the delivery result from; an email field on the order record to send to\n- Postconditions: the confirmation email is sent and its delivery result is returned in the checkout response\n- Risks / assumptions: assumes email delivery can be awaited inline during checkout\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there a synchronous function to send an order confirmation that returns a delivery result the caller can read inline? If so, where?\n- RQ2: Does the order record carry the customer's email address to send to? If so, where is it defined?\n\n### Research answers\n- S3.RQ1 -> MISSING: there is no synchronous order-confirmation send function that returns a delivery result. The only order-confirmation notification entry point is `queueOrderConfirmation` in `src/notifications/notifier.ts:7`, and the notifier module documents the notification path as enqueue-only at `src/notifications/notifier.ts:4`. Reuse constraint: `queueOrderConfirmation` can enqueue background delivery, but it cannot satisfy an inline checkout response delivery result.\n- S3.RQ2 -> MISSING: the `Order` interface in `src/orders/schema.ts:4` does not carry a customer email address. The schema notes that contact details are resolved from the user record rather than stored on the user-facing order at `src/orders/schema.ts:2`.\n\n### Blocking finding\n- S3.BLOCKING: the codebase contradicts the scenario design in both required capabilities. Notifications are asynchronous queue-only, and orders intentionally do not carry the customer's email address. The planner must re-plan this scenario before implementation, either changing the required product behavior or adding a designed synchronous delivery/contact-resolution path.\n"}], "eval-0-full-plan-research-with-blocking-without_skill-run-1": [{"name": "annotated-plan.md", "type": "text", "content": "# Implementation Plan: Public user profiles & order confirmations\n\n## Feature\n- Blueprint: docs/blueprints/public-profiles.md\n- System design: docs/design/public-profiles.md\n- Summary: Let visitors view a public profile page for any user by username, let\n  the owner edit their own profile, and send an order confirmation when an order\n  is placed.\n\n## Scenario order & status\n| # | ID | Title                          | Status     |\n|---|----|--------------------------------|------------|\n| 1 | S1 | View own account               | researched |\n| 2 | S2 | View someone's public profile  | blocked    |\n| 3 | S3 | Order confirmation on checkout | blocked    |\n\n## Scenario S1 - View own account\n- Order: 1\n- Type: happy_path\n- Status: researched\n- Design references: \"Authenticated reads go through the existing session layer.\"\n\n### Gherkin\nGiven I am a signed-in user\nWhen I open my account page\nThen I see my own user record\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: a request can be associated with an authenticated user\n- Required capabilities: a way to reject unauthenticated requests; a way to fetch the full user record by the user's id\n- Postconditions: the authenticated user's record is returned\n- Risks / assumptions: assumes sessions already exist\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing mechanism that rejects unauthenticated requests and identifies the calling user? If so, where?\n- RQ2: Is there an existing function that fetches the full user record by user id? If so, where, and can it be reused as-is?\n\n### Research answers\n- S1.RQ1: Yes. `requireAuth` rejects unauthenticated requests and attaches the resolved user id to the request in `src/middleware/auth.ts:7` and `src/middleware/auth.ts:13`. The account route applies this middleware to the own-account read in `src/routes/account.ts:9`.\n- S1.RQ2: Yes. `getUserById` fetches the full user record by id in `src/users/service.ts:7`. It can be reused as-is for this scenario because authentication is handled before it is called; the existing `GET /account` handler already uses `getUserById` with the authenticated request user id in `src/routes/account.ts:10`.\n\n### Implementation notes\n- Existing code already satisfies this scenario's core route, auth, and user-fetch capabilities.\n- No blocker found for S1.\n\n## Scenario S2 - View someone's public profile\n- Order: 2\n- Type: happy_path\n- Status: blocked\n- Design references: \"Public profiles are addressable by username, not id.\"\n\n### Gherkin\nGiven a user has a public profile\nWhen a visitor opens that user's profile page by username\nThen the visitor sees the public profile fields\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: profiles can be looked up by a public-facing username\n- Required capabilities: a way to look up a user by username (not id); a public, unauthenticated route that serves a profile by username\n- Postconditions: a visitor can view a public profile without signing in\n- Risks / assumptions: usernames are unique and stable\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing function that looks up a user by username? If so, where?\n- RQ2: Is there an existing public (unauthenticated) profile route, and if not, where should a new one be added so it fits the routing structure?\n\n### Research answers\n- S2.RQ1: No. `src/users/service.ts` currently exposes `getUserById` at `src/users/service.ts:7` and `updateUserProfile` at `src/users/service.ts:13`; there is no username-based lookup function in the supplied user service.\n- S2.RQ2: No. The only supplied route module is `src/routes/account.ts`, and its existing account routes are authenticated with `requireAuth` at `src/routes/account.ts:9` and `src/routes/account.ts:15`. A new public profile route should fit the existing Express Router module pattern shown in `src/routes/account.ts:6`; the clean placement is a new route module under `src/routes` for public profiles, mounted with the rest of the route modules. If the implementation is constrained to the supplied route file only, keep the public profile handler separate from the authenticated `/account` handlers and do not attach `requireAuth`.\n\n### Implementation notes\n- S2 is blocked on a missing username lookup capability in the user service.\n- S2 is also blocked on a missing unauthenticated public profile route.\n- The eventual implementation should return only public profile fields, not the full user record, because the existing full-record fetch is id-based and designed for authenticated own-account access.\n\n## Scenario S3 - Order confirmation on checkout\n- Order: 3\n- Type: happy_path\n- Status: blocked\n- Design references: \"On checkout the customer must receive a confirmation\n  email synchronously, and the checkout response must include the email\n  delivery result so the UI can confirm it was sent before returning.\"\n\n### Gherkin\nGiven I have placed an order\nWhen checkout completes\nThen I receive an order confirmation email and the checkout response reports it was delivered\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: an order exists and has the customer's contact email on it\n- Required capabilities: a synchronous send-order-confirmation function the checkout handler can call inline and read the delivery result from; an email field on the order record to send to\n- Postconditions: the confirmation email is sent and its delivery result is returned in the checkout response\n- Risks / assumptions: assumes email delivery can be awaited inline during checkout\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there a synchronous function to send an order confirmation that returns a delivery result the caller can read inline? If so, where?\n- RQ2: Does the order record carry the customer's email address to send to? If so, where is it defined?\n\n### Research answers\n- S3.RQ1: No. `queueOrderConfirmation` in `src/notifications/notifier.ts:7` only queues an order confirmation and returns no delivery result to the caller. The surrounding notifier notes at `src/notifications/notifier.ts:4` through `src/notifications/notifier.ts:6` indicate notifications are asynchronous and callers cannot read delivery results inline.\n- S3.RQ2: No. The `Order` interface in `src/orders/schema.ts:4` contains order id, user id, status, total, and creation timestamp fields, but no customer email field. The schema note at `src/orders/schema.ts:2` through `src/orders/schema.ts:3` says contact details are resolved from the user record rather than stored on the user-facing order.\n\n### Implementation notes\n- S3 is blocked by a design/code mismatch: the current notification path is asynchronous-only, while the scenario requires synchronous delivery feedback during checkout.\n- S3 is also blocked because the order record does not carry the customer email required by the code-blind plan.\n- Before implementation, choose whether to change the product requirement to match the existing async queue model or introduce a new synchronous notification capability and a reliable source for the customer's email.\n"}], "eval-1-single-scenario-exists-and-missing-with_skill-run-1": [{"name": "annotated-plan.md", "type": "text", "content": "# Implementation Plan: Public user profiles & order confirmations\n\n## Feature\n- Blueprint: docs/blueprints/public-profiles.md\n- System design: docs/design/public-profiles.md\n- Summary: Let visitors view a public profile page for any user by username, let\n  the owner edit their own profile, and send an order confirmation when an order\n  is placed.\n\n## Scenario order & status\n| # | ID | Title                          | Status     |\n|---|----|--------------------------------|------------|\n| 1 | S1 | View own account               | planned    |\n| 2 | S2 | View someone's public profile  | researched |\n| 3 | S3 | Order confirmation on checkout | planned    |\n\n## Scenario S1 \u2014 View own account\n- Order: 1\n- Type: happy_path\n- Status: planned\n- Design references: \"Authenticated reads go through the existing session layer.\"\n\n### Gherkin\nGiven I am a signed-in user\nWhen I open my account page\nThen I see my own user record\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: a request can be associated with an authenticated user\n- Required capabilities: a way to reject unauthenticated requests; a way to fetch the full user record by the user's id\n- Postconditions: the authenticated user's record is returned\n- Risks / assumptions: assumes sessions already exist\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing mechanism that rejects unauthenticated requests and identifies the calling user? If so, where?\n- RQ2: Is there an existing function that fetches the full user record by user id? If so, where, and can it be reused as-is?\n\n## Scenario S2 \u2014 View someone's public profile\n- Order: 2\n- Type: happy_path\n- Status: researched\n- Design references: \"Public profiles are addressable by username, not id.\"\n\n### Gherkin\nGiven a user has a public profile\nWhen a visitor opens that user's profile page by username\nThen the visitor sees the public profile fields\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: profiles can be looked up by a public-facing username\n- Required capabilities: a way to look up a user by username (not id); a public, unauthenticated route that serves a profile by username\n- Postconditions: a visitor can view a public profile without signing in\n- Risks / assumptions: usernames are unique and stable\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing function that looks up a user by username? If so, where?\n- RQ2: Is there an existing public (unauthenticated) profile route, and if not, where should a new one be added so it fits the routing structure?\n\n### Research findings          (kite-research)\n- S2.RQ1 \u2192 MISSING: no existing username lookup was found in the supplied TypeScript fixtures. `src/users/service.ts` currently exposes `getUserById` at `/Users/pranavkanade/Skills/private/_evals/kite-research/suite/files/user-service.ts:7` and `updateUserProfile` at `/Users/pranavkanade/Skills/private/_evals/kite-research/suite/files/user-service.ts:13`; add the username lookup in `src/users/service.ts` alongside those user service functions.\n- S2.RQ2 \u2192 MISSING: no existing public, unauthenticated profile route was found in the supplied TypeScript fixtures. The existing route module is the Express router in `src/routes/account.ts` at `/Users/pranavkanade/Skills/private/_evals/kite-research/suite/files/account-routes.ts:6`, and its current handlers are authenticated account routes at `/Users/pranavkanade/Skills/private/_evals/kite-research/suite/files/account-routes.ts:9` and `/Users/pranavkanade/Skills/private/_evals/kite-research/suite/files/account-routes.ts:15`. Add the public profile-by-username GET handler in `src/routes/account.ts` alongside those router handlers, but leave `requireAuth` off that route.\n- Reuse constraints: `getUserById` is not a username lookup and assumes the caller has already authenticated; `requireAuth` at `/Users/pranavkanade/Skills/private/_evals/kite-research/suite/files/auth-middleware.ts:7` rejects unauthenticated requests, so it must not be attached to the S2 public profile route.\n\n## Scenario S3 \u2014 Order confirmation on checkout\n- Order: 3\n- Type: happy_path\n- Status: planned\n- Design references: \"On checkout the customer must receive a confirmation\n  email synchronously, and the checkout response must include the email\n  delivery result so the UI can confirm it was sent before returning.\"\n\n### Gherkin\nGiven I have placed an order\nWhen checkout completes\nThen I receive an order confirmation email and the checkout response reports it was delivered\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: an order exists and has the customer's contact email on it\n- Required capabilities: a synchronous send-order-confirmation function the checkout handler can call inline and read the delivery result from; an email field on the order record to send to\n- Postconditions: the confirmation email is sent and its delivery result is returned in the checkout response\n- Risks / assumptions: assumes email delivery can be awaited inline during checkout\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there a synchronous function to send an order confirmation that returns a delivery result the caller can read inline? If so, where?\n- RQ2: Does the order record carry the customer's email address to send to? If so, where is it defined?\n"}], "eval-1-single-scenario-exists-and-missing-without_skill-run-1": [{"name": "annotated-plan.md", "type": "text", "content": "# Implementation Plan: Public user profiles & order confirmations\n\n## Feature\n- Blueprint: docs/blueprints/public-profiles.md\n- System design: docs/design/public-profiles.md\n- Summary: Let visitors view a public profile page for any user by username, let\n  the owner edit their own profile, and send an order confirmation when an order\n  is placed.\n\n## Scenario order & status\n| # | ID | Title                          | Status     |\n|---|----|--------------------------------|------------|\n| 1 | S1 | View own account               | planned    |\n| 2 | S2 | View someone's public profile  | researched |\n| 3 | S3 | Order confirmation on checkout | planned    |\n\n## Scenario S1 \u2014 View own account\n- Order: 1\n- Type: happy_path\n- Status: planned\n- Design references: \"Authenticated reads go through the existing session layer.\"\n\n### Gherkin\nGiven I am a signed-in user\nWhen I open my account page\nThen I see my own user record\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: a request can be associated with an authenticated user\n- Required capabilities: a way to reject unauthenticated requests; a way to fetch the full user record by the user's id\n- Postconditions: the authenticated user's record is returned\n- Risks / assumptions: assumes sessions already exist\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing mechanism that rejects unauthenticated requests and identifies the calling user? If so, where?\n- RQ2: Is there an existing function that fetches the full user record by user id? If so, where, and can it be reused as-is?\n\n## Scenario S2 \u2014 View someone's public profile\n- Order: 2\n- Type: happy_path\n- Status: researched\n- Design references: \"Public profiles are addressable by username, not id.\"\n\n### Gherkin\nGiven a user has a public profile\nWhen a visitor opens that user's profile page by username\nThen the visitor sees the public profile fields\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: profiles can be looked up by a public-facing username\n- Required capabilities: a way to look up a user by username (not id); a public, unauthenticated route that serves a profile by username\n- Postconditions: a visitor can view a public profile without signing in\n- Risks / assumptions: usernames are unique and stable\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing function that looks up a user by username? If so, where?\n- RQ2: Is there an existing public (unauthenticated) profile route, and if not, where should a new one be added so it fits the routing structure?\n\n### Research findings\n- S2.RQ1 \u2014 Status: researched. No existing username lookup function is present in the provided user service. `src/users/service.ts:7` has the existing id-based user lookup, and `src/users/service.ts:13` has the existing mutable profile update path; neither is a username lookup. Implementation needs a new user-service function for lookup by public username.\n- S2.RQ2 \u2014 Status: researched. No existing public profile route is present in the provided route file. `src/routes/account.ts:9` and `src/routes/account.ts:15` are account routes that use the auth middleware from `src/middleware/auth.ts:7`, so they are not the unauthenticated visitor route required for S2. Add the new public profile route in the routing layer next to `src/routes/account.ts` or in a new sibling profile/user route module, depending on local route registration conventions; the S2 route should omit `requireAuth` and call the new username lookup.\n\n### Implementation note\n- Research is complete for S2, but implementation is blocked on adding both missing capabilities: a user-by-username service lookup and a public unauthenticated route that serves only public profile fields.\n\n## Scenario S3 \u2014 Order confirmation on checkout\n- Order: 3\n- Type: happy_path\n- Status: planned\n- Design references: \"On checkout the customer must receive a confirmation\n  email synchronously, and the checkout response must include the email\n  delivery result so the UI can confirm it was sent before returning.\"\n\n### Gherkin\nGiven I have placed an order\nWhen checkout completes\nThen I receive an order confirmation email and the checkout response reports it was delivered\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: an order exists and has the customer's contact email on it\n- Required capabilities: a synchronous send-order-confirmation function the checkout handler can call inline and read the delivery result from; an email field on the order record to send to\n- Postconditions: the confirmation email is sent and its delivery result is returned in the checkout response\n- Risks / assumptions: assumes email delivery can be awaited inline during checkout\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there a synchronous function to send an order confirmation that returns a delivery result the caller can read inline? If so, where?\n- RQ2: Does the order record carry the customer's email address to send to? If so, where is it defined?\n"}], "eval-2-blocking-contradiction-detection-with_skill-run-1": [{"name": "annotated-plan.md", "type": "text", "content": "# Implementation Plan: Public user profiles & order confirmations\n\n## Feature\n- Blueprint: docs/blueprints/public-profiles.md\n- System design: docs/design/public-profiles.md\n- Summary: Let visitors view a public profile page for any user by username, let\n  the owner edit their own profile, and send an order confirmation when an order\n  is placed.\n\n## Scenario order & status\n| # | ID | Title                          | Status  |\n|---|----|--------------------------------|---------|\n| 1 | S1 | View own account               | planned |\n| 2 | S2 | View someone's public profile  | planned |\n| 3 | S3 | Order confirmation on checkout | blocked |\n\n## Scenario S1 -- View own account\n- Order: 1\n- Type: happy_path\n- Status: planned\n- Design references: \"Authenticated reads go through the existing session layer.\"\n\n### Gherkin\nGiven I am a signed-in user\nWhen I open my account page\nThen I see my own user record\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: a request can be associated with an authenticated user\n- Required capabilities: a way to reject unauthenticated requests; a way to fetch the full user record by the user's id\n- Postconditions: the authenticated user's record is returned\n- Risks / assumptions: assumes sessions already exist\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing mechanism that rejects unauthenticated requests and identifies the calling user? If so, where?\n- RQ2: Is there an existing function that fetches the full user record by user id? If so, where, and can it be reused as-is?\n\n## Scenario S2 -- View someone's public profile\n- Order: 2\n- Type: happy_path\n- Status: planned\n- Design references: \"Public profiles are addressable by username, not id.\"\n\n### Gherkin\nGiven a user has a public profile\nWhen a visitor opens that user's profile page by username\nThen the visitor sees the public profile fields\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: profiles can be looked up by a public-facing username\n- Required capabilities: a way to look up a user by username (not id); a public, unauthenticated route that serves a profile by username\n- Postconditions: a visitor can view a public profile without signing in\n- Risks / assumptions: usernames are unique and stable\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing function that looks up a user by username? If so, where?\n- RQ2: Is there an existing public (unauthenticated) profile route, and if not, where should a new one be added so it fits the routing structure?\n\n## Scenario S3 -- Order confirmation on checkout\n- Order: 3\n- Type: happy_path\n- Status: blocked\n- Design references: \"On checkout the customer must receive a confirmation\n  email synchronously, and the checkout response must include the email\n  delivery result so the UI can confirm it was sent before returning.\"\n\n### Gherkin\nGiven I have placed an order\nWhen checkout completes\nThen I receive an order confirmation email and the checkout response reports it was delivered\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: an order exists and has the customer's contact email on it\n- Required capabilities: a synchronous send-order-confirmation function the checkout handler can call inline and read the delivery result from; an email field on the order record to send to\n- Postconditions: the confirmation email is sent and its delivery result is returned in the checkout response\n- Risks / assumptions: assumes email delivery can be awaited inline during checkout\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there a synchronous function to send an order confirmation that returns a delivery result the caller can read inline? If so, where?\n- RQ2: Does the order record carry the customer's email address to send to? If so, where is it defined?\n\n### Research answers\n- S3.RQ1 -> BLOCKING: no synchronous order-confirmation send function exists. The available `queueOrderConfirmation` function in `src/notifications/notifier.ts:7` enqueues an `order-confirmation` job and returns no delivery result to the caller. The notification module explicitly establishes the async-only constraint at `src/notifications/notifier.ts:4`, so checkout cannot await delivery or include an inline delivery result using the current notification path.\n- S3.RQ2 -> BLOCKING: the persisted `Order` shape does not carry the customer's email address. `Order` is defined in `src/orders/schema.ts:4`, and its fields only provide order identity, `userId`, status, total, and creation time. The schema notes that contact details are resolved from the user record at `src/orders/schema.ts:2`; `getUserById` exists in `src/users/service.ts:7`, but using it would not satisfy the plan's assumption that the order record itself has an email field.\n\n### Blocking finding\nS3 cannot be implemented as written. The design requires checkout to synchronously send an email and return the delivery result, but the codebase's notification path is queue-only and cannot expose delivery status inline. The design also assumes the order record contains the customer contact email, while the order schema intentionally omits it and points contact resolution at the user record. This scenario needs to be replanned before implementation.\n"}], "eval-2-blocking-contradiction-detection-without_skill-run-1": [{"name": "annotated-plan.md", "type": "text", "content": "# Implementation Plan: Public user profiles & order confirmations\n\n## Feature\n- Blueprint: docs/blueprints/public-profiles.md\n- System design: docs/design/public-profiles.md\n- Summary: Let visitors view a public profile page for any user by username, let\n  the owner edit their own profile, and send an order confirmation when an order\n  is placed.\n\n## Scenario order & status\n| # | ID | Title                          | Status  |\n|---|----|--------------------------------|---------|\n| 1 | S1 | View own account               | planned |\n| 2 | S2 | View someone's public profile  | planned |\n| 3 | S3 | Order confirmation on checkout | blocked |\n\n## Scenario S1 \u2014 View own account\n- Order: 1\n- Type: happy_path\n- Status: planned\n- Design references: \"Authenticated reads go through the existing session layer.\"\n\n### Gherkin\nGiven I am a signed-in user\nWhen I open my account page\nThen I see my own user record\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: a request can be associated with an authenticated user\n- Required capabilities: a way to reject unauthenticated requests; a way to fetch the full user record by the user's id\n- Postconditions: the authenticated user's record is returned\n- Risks / assumptions: assumes sessions already exist\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing mechanism that rejects unauthenticated requests and identifies the calling user? If so, where?\n- RQ2: Is there an existing function that fetches the full user record by user id? If so, where, and can it be reused as-is?\n\n## Scenario S2 \u2014 View someone's public profile\n- Order: 2\n- Type: happy_path\n- Status: planned\n- Design references: \"Public profiles are addressable by username, not id.\"\n\n### Gherkin\nGiven a user has a public profile\nWhen a visitor opens that user's profile page by username\nThen the visitor sees the public profile fields\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: profiles can be looked up by a public-facing username\n- Required capabilities: a way to look up a user by username (not id); a public, unauthenticated route that serves a profile by username\n- Postconditions: a visitor can view a public profile without signing in\n- Risks / assumptions: usernames are unique and stable\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there an existing function that looks up a user by username? If so, where?\n- RQ2: Is there an existing public (unauthenticated) profile route, and if not, where should a new one be added so it fits the routing structure?\n\n## Scenario S3 \u2014 Order confirmation on checkout\n- Order: 3\n- Type: happy_path\n- Status: blocked\n- Design references: \"On checkout the customer must receive a confirmation\n  email synchronously, and the checkout response must include the email\n  delivery result so the UI can confirm it was sent before returning.\"\n\n### Gherkin\nGiven I have placed an order\nWhen checkout completes\nThen I receive an order confirmation email and the checkout response reports it was delivered\n\n### Code-blind plan            (written by kite-planner)\n- Preconditions: an order exists and has the customer's contact email on it\n- Required capabilities: a synchronous send-order-confirmation function the checkout handler can call inline and read the delivery result from; an email field on the order record to send to\n- Postconditions: the confirmation email is sent and its delivery result is returned in the checkout response\n- Risks / assumptions: assumes email delivery can be awaited inline during checkout\n\n### Research questions         (written by kite-planner)\n- RQ1: Is there a synchronous function to send an order confirmation that returns a delivery result the caller can read inline? If so, where?\n- RQ2: Does the order record carry the customer's email address to send to? If so, where is it defined?\n\n### Research answers\n- S3.RQ1: No. The only order-confirmation notification capability found in the fixture is `queueOrderConfirmation(orderId)` at `src/notifications/notifier.ts:7`. It enqueues an `order-confirmation` job at `src/notifications/notifier.ts:8` and returns `Promise<void>`, not a delivery result. The notifier explicitly documents that notifications are asynchronous-only and that callers cannot block on or read delivery results inline at `src/notifications/notifier.ts:4` through `src/notifications/notifier.ts:6`. This directly contradicts the design requirement for checkout to synchronously send the email and include the delivery result in the response.\n- S3.RQ2: No. The persisted order shape is defined by `Order` at `src/orders/schema.ts:4`, and its fields are `id`, `userId`, `status`, `totalCents`, and `createdAt` at `src/orders/schema.ts:5` through `src/orders/schema.ts:9`. The schema notes that the order intentionally has no email column and that contact details are resolved from the user record at `src/orders/schema.ts:2` through `src/orders/schema.ts:3`. `getUserById(id)` exists at `src/users/service.ts:7`, but that only means an implementation would need to resolve contact details through the user path; it does not satisfy the plan's precondition that the order itself carries the customer's email address.\n\n### Implementation note\nS3 cannot be implemented as written. The written design depends on two capabilities that the current codebase deliberately does not provide: synchronous email delivery with an inline delivery result, and a customer email field on the order record. Implementing the scenario requires changing the design to match the existing asynchronous notification model, or changing the notification/order architecture first. A straightforward implementation of the current plan would either return before delivery is known or invent a new synchronous delivery path that conflicts with `src/notifications/notifier.ts`.\n"}]}, "benchmark": {"metadata": {"skill_name": "kite-research", "skill_path": "private/kite-research", "executor_model": "<model-name>", "analyzer_model": "<model-name>", "timestamp": "2026-05-24T01:51:24Z", "evals_run": [0, 1, 2], "runs_per_configuration": 1}, "runs": [{"eval_id": 0, "eval_name": "full-plan-research-with-blocking", "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1, "passed": 10, "failed": 0, "total": 10, "time_seconds": 106.8, "tokens": 7553, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Every research question in the plan is answered one-to-one: S1.RQ1, S1.RQ2, S2.RQ1, S2.RQ2, S3.RQ1, and S3.RQ2 each have a corresponding finding, with none left unanswered", "passed": true, "evidence": "Found all labels: S1.RQ1, S1.RQ2, S2.RQ1, S2.RQ2, S3.RQ1, S3.RQ2."}, {"text": "S1.RQ1 is answered EXISTS, naming requireAuth in the auth middleware (src/middleware/auth.ts) with a file:line location and a note on how to reuse it", "passed": true, "evidence": "S1.RQ1 names requireAuth with auth middleware file:line evidence and describes reuse for authenticated requests."}, {"text": "S1.RQ2 is answered EXISTS, naming getUserById in the user service (src/users/service.ts) with a file:line location and a note that it returns the full user record and can be reused directly", "passed": true, "evidence": "S1.RQ2 names getUserById with user service file:line evidence and says it fetches the full user record for reuse."}, {"text": "The reuse constraint that getUserById assumes the caller is already authenticated is recorded as a caveat on that EXISTS finding", "passed": true, "evidence": "The output records that getUserById relies on prior authentication / does no auth check itself."}, {"text": "S2.RQ1 is answered MISSING (no lookup-by-username exists) and names a concrete extension point \u2014 where to add the username lookup (e.g. alongside getUserById in src/users/service.ts)", "passed": true, "evidence": "S2.RQ1 is classified as missing, distinguishes getUserById as id-based, and points to the user service as the extension point."}, {"text": "S2.RQ2 is answered MISSING (no public/unauthenticated profile route exists) and names a concrete extension point \u2014 where to add a new public route fitting the existing routing structure (e.g. a profile route alongside src/routes/account.ts)", "passed": true, "evidence": "S2.RQ2 is classified as missing, cites the existing account route structure, and names a route extension point for a public profile route."}, {"text": "S3 raises a BLOCKING finding: the design requires a synchronous order-confirmation send returning an inline delivery result, but the codebase's notifier is asynchronous/queue-only (queueOrderConfirmation) and the order schema has no email field, so the plan's assumption is contradicted", "passed": true, "evidence": "S3 has a blocking/blocked finding explaining both the queue-only notifier and missing order email contradiction, with re-planning called out."}, {"text": "S3's status is set to blocked, and the BLOCKING finding explains exactly what is wrong rather than inventing a workaround", "passed": true, "evidence": "S3 status set to blocked."}, {"text": "S1 and S2 statuses are updated to researched (and the scenario order/status table reflects researched/blocked, not still planned)", "passed": true, "evidence": "S1 and S2 status set to researched."}, {"text": "Only names and locations appear in the annotated plan \u2014 no verbatim source code from the fixture files is copied into the plan", "passed": true, "evidence": "No copied fixture source constructs such as function declarations, router calls, SQL calls, or interface bodies were found."}], "notes": []}, {"eval_id": 1, "eval_name": "single-scenario-exists-and-missing", "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1, "passed": 6, "failed": 0, "total": 6, "time_seconds": 75.6, "tokens": 5275, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Both of S2's research questions are answered one-to-one (S2.RQ1 and S2.RQ2), neither left unanswered", "passed": true, "evidence": "Found all labels: S2.RQ1, S2.RQ2."}, {"text": "S2.RQ1 is MISSING \u2014 recognizes that the existing getUserById looks up by id, not username, so no username lookup exists \u2014 and names a concrete extension point for adding one (e.g. in src/users/service.ts next to getUserById)", "passed": true, "evidence": "S2.RQ1 is classified as missing, distinguishes getUserById as id-based, and points to the user service as the extension point."}, {"text": "S2.RQ2 is MISSING \u2014 recognizes the existing routes (src/routes/account.ts) are authenticated/account-scoped, so no public profile route exists \u2014 and names where a new public unauthenticated route should be added to fit the routing structure", "passed": true, "evidence": "S2.RQ2 is classified as missing, cites the existing account route structure, and names a route extension point for a public profile route."}, {"text": "Findings cite file:line locations for the existing code referenced (getUserById, the account routes) rather than vague references", "passed": true, "evidence": "Findings cite file:line locations for getUserById and the account route structure."}, {"text": "No verbatim source code from the fixture is copied into the plan \u2014 only names and locations", "passed": true, "evidence": "No copied fixture source constructs such as function declarations, router calls, SQL calls, or interface bodies were found."}, {"text": "S2's status is updated to researched", "passed": true, "evidence": "S2 status set to researched."}], "notes": []}, {"eval_id": 2, "eval_name": "blocking-contradiction-detection", "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1, "passed": 7, "failed": 0, "total": 7, "time_seconds": 74.8, "tokens": 5916, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Both of S3's research questions (S3.RQ1 and S3.RQ2) are answered one-to-one", "passed": true, "evidence": "Found all labels: S3.RQ1, S3.RQ2."}, {"text": "S3.RQ1 establishes there is no synchronous order-confirmation send that returns an inline delivery result \u2014 only the asynchronous, queue-only queueOrderConfirmation (src/notifications/notifier.ts) exists \u2014 cited with a file:line", "passed": true, "evidence": "S3.RQ1 establishes that only queueOrderConfirmation exists, cites notifier file:line, and explains it cannot return inline delivery results."}, {"text": "S3.RQ2 establishes the Order schema (src/orders/schema.ts) has no email field to send to, cited with a file:line", "passed": true, "evidence": "S3.RQ2 cites the Order schema and states it lacks a customer email field."}, {"text": "A BLOCKING finding is raised on S3 explaining the contradiction precisely: the design assumes a synchronous send with inline delivery result and an order email field, neither of which the codebase supports", "passed": true, "evidence": "S3 has a blocking/blocked finding explaining both the queue-only notifier and missing order email contradiction, with re-planning called out."}, {"text": "The skill does NOT invent a workaround or redesign the solution \u2014 it surfaces the contradiction as a blocker for kite-planner to re-plan", "passed": true, "evidence": "The output surfaces a blocker/re-plan need and does not present an implementation workaround as the answer."}, {"text": "S3's status is set to blocked", "passed": true, "evidence": "S3 status set to blocked."}, {"text": "No verbatim source code from the fixture is copied into the plan \u2014 only names and locations", "passed": true, "evidence": "No copied fixture source constructs such as function declarations, router calls, SQL calls, or interface bodies were found."}], "notes": []}, {"eval_id": 0, "eval_name": "full-plan-research-with-blocking", "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.8, "passed": 8, "failed": 2, "total": 10, "time_seconds": 100.2, "tokens": 8095, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Every research question in the plan is answered one-to-one: S1.RQ1, S1.RQ2, S2.RQ1, S2.RQ2, S3.RQ1, and S3.RQ2 each have a corresponding finding, with none left unanswered", "passed": true, "evidence": "Found all labels: S1.RQ1, S1.RQ2, S2.RQ1, S2.RQ2, S3.RQ1, S3.RQ2."}, {"text": "S1.RQ1 is answered EXISTS, naming requireAuth in the auth middleware (src/middleware/auth.ts) with a file:line location and a note on how to reuse it", "passed": true, "evidence": "S1.RQ1 names requireAuth with auth middleware file:line evidence and describes reuse for authenticated requests."}, {"text": "S1.RQ2 is answered EXISTS, naming getUserById in the user service (src/users/service.ts) with a file:line location and a note that it returns the full user record and can be reused directly", "passed": true, "evidence": "S1.RQ2 names getUserById with user service file:line evidence and says it fetches the full user record for reuse."}, {"text": "The reuse constraint that getUserById assumes the caller is already authenticated is recorded as a caveat on that EXISTS finding", "passed": false, "evidence": "No clear caveat was found that getUserById assumes prior authentication."}, {"text": "S2.RQ1 is answered MISSING (no lookup-by-username exists) and names a concrete extension point \u2014 where to add the username lookup (e.g. alongside getUserById in src/users/service.ts)", "passed": false, "evidence": "S2.RQ1 check failed; matched checks: true, true, true, true, false, true, true."}, {"text": "S2.RQ2 is answered MISSING (no public/unauthenticated profile route exists) and names a concrete extension point \u2014 where to add a new public route fitting the existing routing structure (e.g. a profile route alongside src/routes/account.ts)", "passed": true, "evidence": "S2.RQ2 is classified as missing, cites the existing account route structure, and names a route extension point for a public profile route."}, {"text": "S3 raises a BLOCKING finding: the design requires a synchronous order-confirmation send returning an inline delivery result, but the codebase's notifier is asynchronous/queue-only (queueOrderConfirmation) and the order schema has no email field, so the plan's assumption is contradicted", "passed": true, "evidence": "S3 has a blocking/blocked finding explaining both the queue-only notifier and missing order email contradiction, with re-planning called out."}, {"text": "S3's status is set to blocked, and the BLOCKING finding explains exactly what is wrong rather than inventing a workaround", "passed": true, "evidence": "S3 status set to blocked."}, {"text": "S1 and S2 statuses are updated to researched (and the scenario order/status table reflects researched/blocked, not still planned)", "passed": true, "evidence": "S1 and S2 status set to researched."}, {"text": "Only names and locations appear in the annotated plan \u2014 no verbatim source code from the fixture files is copied into the plan", "passed": true, "evidence": "No copied fixture source constructs such as function declarations, router calls, SQL calls, or interface bodies were found."}], "notes": []}, {"eval_id": 1, "eval_name": "single-scenario-exists-and-missing", "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.8333333333333334, "passed": 5, "failed": 1, "total": 6, "time_seconds": 93.7, "tokens": 5001, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Both of S2's research questions are answered one-to-one (S2.RQ1 and S2.RQ2), neither left unanswered", "passed": true, "evidence": "Found all labels: S2.RQ1, S2.RQ2."}, {"text": "S2.RQ1 is MISSING \u2014 recognizes that the existing getUserById looks up by id, not username, so no username lookup exists \u2014 and names a concrete extension point for adding one (e.g. in src/users/service.ts next to getUserById)", "passed": false, "evidence": "S2.RQ1 check failed; matched checks: true, true, false, true, false, true, true."}, {"text": "S2.RQ2 is MISSING \u2014 recognizes the existing routes (src/routes/account.ts) are authenticated/account-scoped, so no public profile route exists \u2014 and names where a new public unauthenticated route should be added to fit the routing structure", "passed": true, "evidence": "S2.RQ2 is classified as missing, cites the existing account route structure, and names a route extension point for a public profile route."}, {"text": "Findings cite file:line locations for the existing code referenced (getUserById, the account routes) rather than vague references", "passed": true, "evidence": "Findings cite file:line locations for getUserById and the account route structure."}, {"text": "No verbatim source code from the fixture is copied into the plan \u2014 only names and locations", "passed": true, "evidence": "No copied fixture source constructs such as function declarations, router calls, SQL calls, or interface bodies were found."}, {"text": "S2's status is updated to researched", "passed": true, "evidence": "S2 status set to researched."}], "notes": []}, {"eval_id": 2, "eval_name": "blocking-contradiction-detection", "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.7142857142857143, "passed": 5, "failed": 2, "total": 7, "time_seconds": 72.1, "tokens": 5434, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Both of S3's research questions (S3.RQ1 and S3.RQ2) are answered one-to-one", "passed": true, "evidence": "Found all labels: S3.RQ1, S3.RQ2."}, {"text": "S3.RQ1 establishes there is no synchronous order-confirmation send that returns an inline delivery result \u2014 only the asynchronous, queue-only queueOrderConfirmation (src/notifications/notifier.ts) exists \u2014 cited with a file:line", "passed": false, "evidence": "S3.RQ1 check failed; matched checks: true, false, true, true, true, true."}, {"text": "S3.RQ2 establishes the Order schema (src/orders/schema.ts) has no email field to send to, cited with a file:line", "passed": false, "evidence": "S3.RQ2 check failed; matched checks: true, false, true, true."}, {"text": "A BLOCKING finding is raised on S3 explaining the contradiction precisely: the design assumes a synchronous send with inline delivery result and an order email field, neither of which the codebase supports", "passed": true, "evidence": "S3 has a blocking/blocked finding explaining both the queue-only notifier and missing order email contradiction, with re-planning called out."}, {"text": "The skill does NOT invent a workaround or redesign the solution \u2014 it surfaces the contradiction as a blocker for kite-planner to re-plan", "passed": true, "evidence": "The output surfaces a blocker/re-plan need and does not present an implementation workaround as the answer."}, {"text": "S3's status is set to blocked", "passed": true, "evidence": "S3 status set to blocked."}, {"text": "No verbatim source code from the fixture is copied into the plan \u2014 only names and locations", "passed": true, "evidence": "No copied fixture source constructs such as function declarations, router calls, SQL calls, or interface bodies were found."}], "notes": []}], "run_summary": {"with_skill": {"pass_rate": {"mean": 1, "stddev": 0, "min": 1, "max": 1}, "time_seconds": {"mean": 85.7333, "stddev": 18.2487, "min": 74.8, "max": 106.8}, "tokens": {"mean": 6248, "stddev": 1174.7293, "min": 5275, "max": 7553}}, "without_skill": {"pass_rate": {"mean": 0.7825, "stddev": 0.0614, "min": 0.7143, "max": 0.8333}, "time_seconds": {"mean": 88.6667, "stddev": 14.7107, "min": 72.1, "max": 100.2}, "tokens": {"mean": 6176.6667, "stddev": 1675.3729, "min": 5001, "max": 8095}}, "delta": {"pass_rate": "+0.22", "time_seconds": "-2.9", "tokens": "+71"}}, "notes": ["with_skill reached 100.0% pass-rate across all three evals, improving from 94.4% in iteration 1 and widening the baseline delta from +0.11 to +0.22.", "The S2-only miss from iteration 1 was fixed: the revised skill output explicitly rejected getUserById as id-based, not username-based, and pointed to a username lookup extension point.", "The clarified MISSING-vs-BLOCKING rule held: ordinary missing username/route work stayed researched/MISSING, while the synchronous notification and missing order email contradiction stayed blocked.", "with_skill became slightly faster than without_skill on average in iteration 2 (-2.9s) with roughly equal token usage, so the added specificity did not impose a measurable cost in this run."]}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>
