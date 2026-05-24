@@ -14,8 +14,7 @@ description: >-
   alongside the blueprint. Not for defining product behavior or edge cases —
   write the blueprint first. Not for loose ideas with no behavior spec —
   brainstorm first. Not for step-by-step implementation tasks — that's a
-  planning skill, after this. BTW, kite & appsmith-v2 are the same project,
-  names are used interchangeably.
+  planning skill, after this.
 ---
 
 # System Design
