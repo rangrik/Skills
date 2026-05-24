@@ -23,3 +23,5 @@ private/_evals/**/codex.stdout.jsonl
 private/_evals/**/*.patch
 private/_evals/**/git_*.txt
 private/_evals/kite-implementation/results/iteration-1/review.html
+
+_evals/
