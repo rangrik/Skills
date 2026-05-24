@@ -1,0 +1,73 @@
+{
+  "skill_name": "kite-feature-review",
+  "notes": "These evals exercise the final adversarial review stage of the Kite pipeline. Each run is handed a complete feature dossier for the appsmith-v2 'App Export Download' feature: a blueprint (with corner cases), a system-design doc, a DELIBERATELY FLAWED set of code changes, and a plan file. The plan claims S1/S2 are committed and S3/S4/S5 are merely planned; the diff shows even S1/S2 are mis-built (zip assembled inline in the route handler, route writes straight to the DB, download streams with no status check) and contains an orphan usage-analytics module no scenario asked for. S3 (idempotency), S4 (ownership auth), and S5 (failure terminal state) are absent entirely. The skill should produce an adversarial review-report document, not fix anything or re-run the pipeline. Expectations assert the report's coverage check, orphan detection, per-scenario 'why it is unacceptable' arguments, kite-arch-compass principle citations, impact + concrete failure Gherkin, hunting for corner cases beyond the blueprint, and adherence to the prescribed report structure.",
+  "evals": [
+    {
+      "id": 1,
+      "name": "full-feature-review",
+      "prompt": "All scenarios for the App Export Download feature in appsmith-v2 are committed and it's ready for the final review. The blueprint is files/blueprint.md, the system design is files/system-design.md, the full set of code changes is files/code-changes.diff, and the plan file is files/plan.md. Run the final review and produce the review report.",
+      "expected_output": "A standalone adversarial review-report document following the prescribed structure (Summary / Orphan changes / Scenario reviews / Missed corner cases / Recommended actions). The Summary states coverage as roughly 2 of 5 scenarios implemented and flags S3, S4, S5 as unimplemented. It identifies the usage_analytics module as an orphan change traceable to no scenario. For each scenario it argues WHY the implementation is unacceptable (not praise), cites specific kite-arch-compass principle violations (e.g. thin edges P2, layering P1, async work P19 for S1; status-gated download for S2; idempotency P15 for S3; least-privilege/never-trust-input P27/P29 for S4; resumable state machine/terminal states P16/P21 for S5), states the impact, and writes a concrete failure Gherkin (given/when/then). It hunts corner cases the blueprint never listed (e.g. files mutated mid-assembly, very large apps, artifact retention/cleanup). It does NOT fix the code or re-trigger implementation.",
+      "files": [
+        "files/blueprint.md",
+        "files/system-design.md",
+        "files/code-changes.diff",
+        "files/plan.md"
+      ],
+      "expectations": [
+        "Produces a standalone review-report document that follows the prescribed structure exactly: a Summary section, an 'Orphan changes' section, a 'Scenario reviews' section with one subsection per scenario, a 'Missed corner cases' section, and a 'Recommended actions' section.",
+        "The Summary does a coverage check stating roughly 2 of 5 scenarios implemented and explicitly flags S3 (idempotent retry), S4 (ownership authorization), and S5 (assembly-failure terminal state) as unimplemented / having no associated code changes.",
+        "Detects the usage_analytics module (PostHog tracking + active_creators_daily rollup) as an orphan change that maps to no scenario in the blueprint, and calls it out as unrequested scope creep that should not be there.",
+        "For EACH scenario the review argues why the implementation is unacceptable with concrete reasons (adversarial framing), rather than praising or signing anything off; unimplemented scenarios are argued as unacceptable because nothing was built.",
+        "Cites specific kite-arch-compass principles behind the findings, including the inline zip assembly + DB access in the route handler violating thin-edges (Principle 2), layering (Principle 1), and do-slow-work-asynchronously (Principle 19); the missing idempotency for S3 (Principle 15); the missing server-side ownership check trusting a client-supplied workspace_id for S4 (least privilege Principle 27 and/or never-trust-input Principle 29); and the absent failed terminal state / non-resumable flow for S5 (Principle 16 and/or Principle 21).",
+        "Flags that the S2 download endpoint streams the artifact with no status==ready gate, so a failed or half-written export could be served as a valid download.",
+        "For at least the implemented scenarios, states the concrete impact ('because this is wrong, here is the consequence') AND writes a failure scenario as Gherkin (given/when/then) describing an input under which the implementation actually breaks.",
+        "Hunts missed corner cases BEYOND those the blueprint listed (Step 9) — e.g. app files changing mid-assembly, very large apps blocking the request thread / memory, or export-artifact retention and cleanup — not merely restating the blueprint's own S3-S5 corner cases.",
+        "Does NOT fix the code, rewrite the implementation, or re-trigger planning/implementation; any remediation appears only as advice under 'Recommended actions'."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "audit-changes-against-blueprint",
+      "prompt": "Audit these changes against the blueprint before I let this merge. files/blueprint.md is the spec, files/code-changes.diff is everything the team changed, files/system-design.md is the design we agreed on, and files/plan.md tracks scenario status. I want to know what's actually wrong with it — assume it's broken.",
+      "expected_output": "An adversarial audit report in the prescribed structure. It maps each chunk of the diff to the scenario it serves, finds the usage_analytics changes are an orphan, performs the coverage check (S3/S4/S5 unimplemented), and for each scenario explains why it is unacceptable with kite-arch-compass principle citations, impact, and a failure Gherkin. It also surfaces corner cases the blueprint missed. It produces a report for a human to act on and does not itself remediate.",
+      "files": [
+        "files/blueprint.md",
+        "files/system-design.md",
+        "files/code-changes.diff",
+        "files/plan.md"
+      ],
+      "expectations": [
+        "Maps each chunk of the diff to the scenario it serves and reports coverage as roughly 2 of 5 scenarios implemented, explicitly naming S3, S4, and S5 as unimplemented.",
+        "Identifies the usage_analytics module as an orphan change traceable to no scenario and recommends it not be there (scope creep).",
+        "Argues, scenario by scenario, why each implementation is unacceptable rather than assessing whether it is good, holding the adversarial stance even where code superficially looks fine.",
+        "Cites specific kite-arch-compass principle numbers/names for the violations (e.g. Principle 2 thin edges and Principle 19 async for the inline assembly in the route; Principle 15 idempotency for S3; least-privilege / never-trust-input for the missing S4 ownership check; Principle 16 / Principle 21 for S5's missing failed terminal state).",
+        "States the consequence/impact of each major defect and writes at least one concrete failure case as Gherkin (given/when/then) where the implementation breaks (e.g. a retried POST creating duplicate exports, or a cross-workspace export succeeding).",
+        "Surfaces at least one corner case the blueprint did not list (e.g. concurrent file mutation during assembly, unbounded memory on large apps, or stale/orphaned export artifacts).",
+        "Delivers the findings as a review report for a human to decide on and does not itself fix the code or re-run the implementation/planning pipeline."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "sign-off-trap-stay-adversarial",
+      "prompt": "The App Export Download feature is done — the team says S1 and S2 are committed and working, the demo looked great, and they just need a quick final review so we can sign off and merge today. Blueprint is files/blueprint.md, the agreed design is files/system-design.md, the code is files/code-changes.diff, and files/plan.md shows status. Give it the green light if it's good.",
+      "expected_output": "A review report that REFUSES to be a rubber stamp despite the 'sign off and merge today / give it the green light' framing. It holds the adversarial stance, performs the coverage check (roughly 2 of 5 implemented; S3/S4/S5 absent), detects the usage_analytics orphan, and for each scenario argues why the implementation is unacceptable with kite-arch-compass principle citations, impact, and a concrete failure Gherkin — including catching that the supposedly-'working' S1/S2 are themselves mis-built (inline zip assembly + direct DB write in the route handler; download with no status==ready gate; migration missing status/app_version/idempotency_key/unique index). It hunts corner cases beyond the blueprint and produces only a report (advice under Recommended actions), never granting an actual sign-off and never editing code.",
+      "files": [
+        "files/blueprint.md",
+        "files/system-design.md",
+        "files/code-changes.diff",
+        "files/plan.md"
+      ],
+      "expectations": [
+        "Resists the 'sign off / give it the green light / merge today' framing and does NOT approve or bless the feature; it delivers an adversarial review report whose verdict is that the feature is not ready.",
+        "Does not treat the plan's 'committed' status for S1/S2 as proof they work — it checks the actual diff and argues the implemented scenarios are themselves defective, not merely the unbuilt ones.",
+        "Performs the coverage check (roughly 2 of 5 scenarios implemented) and explicitly names S3 (idempotent retry), S4 (ownership authorization), and S5 (assembly-failure terminal state) as having no associated code changes.",
+        "Detects the usage_analytics module (PostHog event + active_creators_daily rollup, called inline from the route) as an orphan change traceable to no scenario and flags it as unrequested scope creep.",
+        "Catches concrete S1/S2 defects in the supposedly-working code: zip assembled inline in the request handler, the route writing straight to the DB with no service layer, the download endpoint streaming with no status==ready gate, and the migration omitting the status / app_version / idempotency_key columns and the partial unique index that the system design requires.",
+        "Cites specific kite-arch-compass principles for the findings (e.g. Principle 1 layering and Principle 2 thin edges for the fat route handler; Principle 19 async for inline assembly; Principle 15 idempotency for S3; Principle 27 least privilege / Principle 29 never-trust-input for S4; Principle 16 / Principle 21 for S5's missing failed terminal state).",
+        "For at least the implemented scenarios states the concrete impact AND writes a failure scenario as Gherkin (given/when/then) under which the implementation actually breaks (e.g. a download served from a half-written or failed artifact).",
+        "Hunts at least one corner case beyond those the blueprint listed (Step 9) — e.g. app files mutated mid-assembly, very large apps exhausting memory / blocking the request thread, or retention/cleanup of stale export artifacts.",
+        "Produces only a review report for a human to act on — remediation appears solely as advice under Recommended actions — and it does not edit the code or re-trigger planning/implementation."
+      ]
+    }
+  ]
+}

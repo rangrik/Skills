@@ -1,0 +1,77 @@
+{
+  "expectations": [
+    {
+      "text": "A faithful benchmark requires the live appsmith-v2 repository as the working codebase; without it the run cannot reuse the EXISTS findings, add code at the MISSING extension points, run the architecture check, or produce real commits, and the run states this rather than inventing repo contents.",
+      "passed": true,
+      "evidence": "combined: - S1 RQ1 plan finding: `require_workspace_admin in backend/app/auth/guards.py:88`."
+    },
+    {
+      "text": "Treats the plan file as the resumable state machine: scenarios already marked committed are not rebuilt, and work resumes from the first non-committed, non-blocked scenario.",
+      "passed": true,
+      "evidence": "report/plan: ## Architecture Check Result Per Committed Scenario"
+    },
+    {
+      "text": "Processes the remaining scenarios in plan order, each as a vertical end-to-end slice across every layer it touches rather than as an isolated single layer.",
+      "passed": true,
+      "evidence": "report/plan: 1. S1 \u2014 Admin invites a new member by email"
+    },
+    {
+      "text": "Reuses the capabilities kite-research marked EXISTS at their given locations and adds new code only at the MISSING extension points, without re-discovering what research already settled.",
+      "passed": false,
+      "evidence": "patch/report:  - [x] S2: Invitee accepts a valid token and becomes a collaborator while the invite becomes accepted."
+    },
+    {
+      "text": "Tests selectively at the behavior, security/authorization, data-integrity, and reuse-regression boundaries, not exhaustively across every implementation detail.",
+      "passed": true,
+      "evidence": "patch/report: -- [ ] S3: Re-inviting an already pending email is idempotent and creates no duplicate row."
+    },
+    {
+      "text": "Runs the kite-arch-compass architecture check on each slice before committing and fixes violations before the commit.",
+      "passed": true,
+      "evidence": "report: - `pwd && git status --short`: passed before coding; cwd was the throwaway"
+    },
+    {
+      "text": "Runs an independent kite-scenario-check before each commit and does NOT commit any scenario whose check returns FAIL, fixing the named gaps and re-checking instead.",
+      "passed": true,
+      "evidence": "report: - S4 \u2014 Accepting an expired invite fails: skipped because the plan copy marks it"
+    },
+    {
+      "text": "Skips the blocked scenario S4, does not implement it, and surfaces it as needing re-planning by kite-planner.",
+      "passed": true,
+      "evidence": "report/plan: ## Scenarios Skipped As Blocked"
+    },
+    {
+      "text": "Fills in the Implementation record and sets status to committed for each scenario it finishes.",
+      "passed": true,
+      "evidence": "plan/report: | 1 | S1 | Admin invites a new member by email    | committed  |"
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 1,
+    "total": 9,
+    "pass_rate": 0.8889
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": 0,
+    "errors_encountered": 0,
+    "output_chars": 1425830,
+    "transcript_chars": 41059
+  },
+  "timing": {
+    "executor_duration_seconds": 1444.0,
+    "total_duration_seconds": 1444.0
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "Inline deterministic grading; no eval-structure suggestions."
+  }
+}

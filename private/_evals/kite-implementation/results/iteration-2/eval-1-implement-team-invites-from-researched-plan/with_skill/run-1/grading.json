@@ -1,0 +1,82 @@
+{
+  "expectations": [
+    {
+      "text": "A faithful benchmark requires the live appsmith-v2 repository checked out as the working codebase; the run cannot reuse the EXISTS findings, add code at the MISSING extension points, run the architecture check, or produce real commits without it, and the run states this dependency rather than fabricating file contents.",
+      "passed": true,
+      "evidence": "combined:     https://github.com/appsmithorg/appsmith-v2/pull/11556"
+    },
+    {
+      "text": "Implements the scenarios in plan order (S1 then S2 then S3) and never starts a later scenario before the earlier one is committed.",
+      "passed": true,
+      "evidence": "report/plan: | 1 | S1 | Admin invites a new member by email    | researched |"
+    },
+    {
+      "text": "Builds each scenario as a vertical end-to-end slice spanning every layer it touches (route, service, model/migration) so the scenario actually works for a user \u2014 it does NOT implement a single layer in isolation or batch all the database work first.",
+      "passed": false,
+      "evidence": "patch/report: +- `backend/app/routes/sandbox_routes.py`"
+    },
+    {
+      "text": "Reuses exactly what kite-research marked EXISTS at the stated locations \u2014 require_workspace_admin (guards.py:88), enqueue_email (email_jobs.py:31), and WorkspaceMembershipService.add_member (workspace_membership.py:54) \u2014 instead of re-discovering or reimplementing them.",
+      "passed": true,
+      "evidence": "combined: - RQ1 \u2192 EXISTS: require_workspace_admin in backend/app/auth/guards.py:88 \u2014"
+    },
+    {
+      "text": "Adds new code only at the MISSING extension points research identified \u2014 the invitations model and migration, the partial unique index on (workspace_id, lower(email)) WHERE status = pending, and the new accept-invite route \u2014 rather than re-deciding where things should live.",
+      "passed": false,
+      "evidence": "patch/report: evidence not found"
+    },
+    {
+      "text": "Tests selectively at the boundaries that matter \u2014 the S1 admin-authorization boundary, the S2 atomic single-membership-on-double-accept data-integrity boundary, and the S3 idempotent re-invite behavior \u2014 and does NOT generate exhaustive or mechanical tests for every implementation detail.",
+      "passed": false,
+      "evidence": "patch/report: +- `backend/tests/test_services/test_e2b_service_retry.py`"
+    },
+    {
+      "text": "Runs the kite-arch-compass architecture check on each slice before committing it, and fixes any flagged violation before the commit rather than carrying it into the commit.",
+      "passed": false,
+      "evidence": "report: evidence not found"
+    },
+    {
+      "text": "Runs an independent kite-scenario-check against each scenario's Gherkin before committing, and does NOT commit a scenario whose scenario-check returns FAIL \u2014 it fixes the listed gaps and re-checks first.",
+      "passed": false,
+      "evidence": "report: evidence not found"
+    },
+    {
+      "text": "Skips scenario S4 because research marked it blocked, does not attempt to implement it, and surfaces it clearly as needing kite-planner to re-plan.",
+      "passed": true,
+      "evidence": "report/plan: | 4 | S4 | Accepting an expired invite fails       | blocked    |"
+    },
+    {
+      "text": "For each committed scenario, fills in the plan file's Implementation record (changed files, tests added, architecture-check result, scenario-check verdict, commit) and sets that scenario's status to committed.",
+      "passed": false,
+      "evidence": "report: evidence not found"
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 6,
+    "total": 10,
+    "pass_rate": 0.4
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": 0,
+    "errors_encountered": 0,
+    "output_chars": 103807,
+    "transcript_chars": 0
+  },
+  "timing": {
+    "executor_duration_seconds": 3.3,
+    "total_duration_seconds": 3.3
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "Inline deterministic grading; no eval-structure suggestions."
+  }
+}

@@ -47,6 +47,51 @@ skills:
       suite: private/_evals/kite-arch-compass/suite
       results: private/_evals/kite-arch-compass/results
 
+  - id: kite-planner
+    name: kite-planner
+    bucket: private
+    path: private/kite-planner
+    install: true
+    evals:
+      suite: private/_evals/kite-planner/suite
+      results: private/_evals/kite-planner/results
+
+  - id: kite-research
+    name: kite-research
+    bucket: private
+    path: private/kite-research
+    install: true
+    evals:
+      suite: private/_evals/kite-research/suite
+      results: private/_evals/kite-research/results
+
+  - id: kite-implementation
+    name: kite-implementation
+    bucket: private
+    path: private/kite-implementation
+    install: true
+    evals:
+      suite: private/_evals/kite-implementation/suite
+      results: private/_evals/kite-implementation/results
+
+  - id: kite-scenario-check
+    name: kite-scenario-check
+    bucket: private
+    path: private/kite-scenario-check
+    install: true
+    evals:
+      suite: private/_evals/kite-scenario-check/suite
+      results: private/_evals/kite-scenario-check/results
+
+  - id: kite-feature-review
+    name: kite-feature-review
+    bucket: private
+    path: private/kite-feature-review
+    install: true
+    evals:
+      suite: private/_evals/kite-feature-review/suite
+      results: private/_evals/kite-feature-review/results
+
   - id: vendor-anthropic-skill-creator
     name: skill-creator
     bucket: vendor

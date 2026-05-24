@@ -1,0 +1,40 @@
+{
+  "expectations": [
+    {
+      "text": "Returns a clear FAIL verdict and states the scenario should NOT be committed",
+      "passed": true,
+      "evidence": "Verdict is FAIL and says not to commit."
+    },
+    {
+      "text": "Flags that there is no rejection of files larger than 5 MB, and ties it concretely to the Gherkin clause 'the uploaded file is rejected if it is larger than 5 MB'",
+      "passed": true,
+      "evidence": "It ties the missing size limit to the larger than 5 MB clause."
+    },
+    {
+      "text": "Flags that there is no PNG/JPEG content-type validation, and ties it concretely to the Gherkin clause 'the uploaded file is rejected if it is not a PNG or JPEG'",
+      "passed": true,
+      "evidence": "It ties the missing content-type validation to the PNG/JPEG clause."
+    },
+    {
+      "text": "Each reported gap is precise and actionable (names the missing check and the clause it violates), not vague commentary",
+      "passed": true,
+      "evidence": "The two reported gaps are concrete and actionable."
+    },
+    {
+      "text": "Stays a focused gate: does not expand into a full-feature audit or a principle-by-principle architecture critique, while still being allowed to note a single glaring architectural mismatch if one exists",
+      "passed": true,
+      "evidence": "The output is focused, though it loosely calls validation gaps drift; it does not become a full audit."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "total_tool_calls": 0,
+    "errors_encountered": 0,
+    "output_chars": 641
+  }
+}

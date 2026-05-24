@@ -1,0 +1,74 @@
+{
+  "expectations": [
+    {
+      "text": "Resists the 'sign off / give it the green light / merge today' framing and does NOT approve or bless the feature; it delivers an adversarial review report whose verdict is that the feature is not ready.",
+      "passed": true,
+      "evidence": "Verdict says \"Do not sign off or merge\" and refuses the prompt’s green-light framing."
+    },
+    {
+      "text": "Does not treat the plan's 'committed' status for S1/S2 as proof they work — it checks the actual diff and argues the implemented scenarios are themselves defective, not merely the unbuilt ones.",
+      "passed": true,
+      "evidence": "The report says the demo may have looked good but the diff does not implement the agreed workflow, and then audits concrete diff content."
+    },
+    {
+      "text": "Performs the coverage check (roughly 2 of 5 scenarios implemented) and explicitly names S3 (idempotent retry), S4 (ownership authorization), and S5 (assembly-failure terminal state) as having no associated code changes.",
+      "passed": true,
+      "evidence": "Scenario Review table covers S1-S5 and identifies S3 retry, S4 unauthorized export, and S5 assembly failure as planned/not implemented or not merge-ready."
+    },
+    {
+      "text": "Detects the usage_analytics module (PostHog event + active_creators_daily rollup, called inline from the route) as an orphan change traceable to no scenario and flags it as unrequested scope creep.",
+      "passed": true,
+      "evidence": "The analytics finding identifies the unrequested usage_analytics/PostHog/active_creators_daily change and inline route call."
+    },
+    {
+      "text": "Catches concrete S1/S2 defects in the supposedly-working code: zip assembled inline in the request handler, the route writing straight to the DB with no service layer, the download endpoint streaming with no status==ready gate, and the migration omitting the status / app_version / idempotency_key columns and the partial unique index that the system design requires.",
+      "passed": true,
+      "evidence": "S1/S2 findings catch inline zip assembly, raw DB writes/no service or worker, download returning a path, no ready check/downloaded transition, and missing status/app_version/idempotency/index fields."
+    },
+    {
+      "text": "Cites specific kite-arch-compass principles for the findings (e.g. Principle 1 layering and Principle 2 thin edges for the fat route handler; Principle 19 async for inline assembly; Principle 15 idempotency for S3; Principle 27 least privilege / Principle 29 never-trust-input for S4; Principle 16 / Principle 21 for S5's missing failed terminal state).",
+      "passed": false,
+      "evidence": "No kite-arch-compass principle numbers or names are cited anywhere in the report."
+    },
+    {
+      "text": "For at least the implemented scenarios states the concrete impact AND writes a failure scenario as Gherkin (given/when/then) under which the implementation actually breaks (e.g. a download served from a half-written or failed artifact).",
+      "passed": false,
+      "evidence": "The report contains impact prose but no Gherkin given/when/then failure scenario blocks."
+    },
+    {
+      "text": "Hunts at least one corner case beyond those the blueprint listed (Step 9) — e.g. app files mutated mid-assembly, very large apps exhausting memory / blocking the request thread, or retention/cleanup of stale export artifacts.",
+      "passed": false,
+      "evidence": "It does not include a Missed corner cases section or examples beyond the blueprint such as path traversal, large-app memory pressure, or artifact retention/cleanup."
+    },
+    {
+      "text": "Produces only a review report for a human to act on — remediation appears solely as advice under Recommended actions — and it does not edit the code or re-trigger planning/implementation.",
+      "passed": true,
+      "evidence": "The output is only a review report with Required Before Re-review advice; it does not edit code or re-trigger implementation."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 3,
+    "total": 9,
+    "pass_rate": 0.6667
+  },
+  "execution_metrics": {
+    "tool_calls": {
+      "command_execution": 12
+    },
+    "total_tool_calls": 12,
+    "total_steps": 12,
+    "errors_encountered": 0,
+    "output_chars": 154823,
+    "transcript_chars": 35473,
+    "report_chars": 7268
+  },
+  "timing": {
+    "total_tokens": 154823,
+    "duration_ms": 67015,
+    "total_duration_seconds": 67
+  },
+  "eval_feedback": {
+    "overall": "No assertion changes made for iteration 1; the expectations discriminate mainly on report structure, principle citations, and concrete failure scenarios."
+  }
+}

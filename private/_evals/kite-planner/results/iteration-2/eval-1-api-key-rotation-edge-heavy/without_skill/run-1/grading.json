@@ -1,0 +1,72 @@
+{
+  "expectations": [
+    {
+      "text": "Extracts the full scenario set as Gherkin, explicitly including the edge/corner cases the user flagged: rotating again while a grace period is active, a request arriving exactly at the grace-period boundary, and the old key never being used during grace \u2014 none silently omitted.",
+      "passed": false,
+      "evidence": "Scenario terms missing: ['no integration ever uses/unused/even when unused/never used']; gherkin_triplets=0."
+    },
+    {
+      "text": "Includes the adversarial scenarios as their own scenarios: admin-only rotate/revoke, and a revoked-or-unknown key being rejected without revealing whether the key ever existed.",
+      "passed": false,
+      "evidence": "admin_adversarial=True; rejection_adversarial=True; gherkin_triplets=0."
+    },
+    {
+      "text": "Orders the scenarios for maximum reuse and states, per scenario, the reasoning for its position (which earlier capabilities it builds on / dependency chain).",
+      "passed": false,
+      "evidence": "order_table=False; reuse_reasoning_terms=True."
+    },
+    {
+      "text": "Writes a code-blind plan per scenario covering Preconditions, Required capabilities, Postconditions, and Risks/assumptions, and references the relevant system-design decisions (state machine, canonical boundary comparison, transactional rotation) rather than inventing new ones.",
+      "passed": false,
+      "evidence": "Missing repeated code-blind plan headings."
+    },
+    {
+      "text": "Writes concrete per-scenario research questions phrased as answerable questions for the research step (e.g. 'is there an existing way to hash and store a key / resolve a presented key to a record, and where?').",
+      "passed": false,
+      "evidence": "research_questions_enough=False; specific_terms=True."
+    },
+    {
+      "text": "Sets every scenario's status to `planned` and follows the shared plan-file schema (Feature block, order/status table, per-scenario sections).",
+      "passed": false,
+      "evidence": "Not every scenario appears to be planned."
+    },
+    {
+      "text": "Stays strictly code-blind: never reads/greps source, never claims a capability already exists in the codebase, and describes required capabilities abstractly so the research step can answer existence.",
+      "passed": true,
+      "evidence": "No source paths or existing-code claims found."
+    },
+    {
+      "text": "Plans each scenario as a vertical slice and never orders the work by layer (no 'build all the auth-middleware first, UI later' phase).",
+      "passed": false,
+      "evidence": "vertical_terms=False; horizontal_layering_absent=True."
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 7,
+    "total": 8,
+    "pass_rate": 0.125
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": 0,
+    "errors_encountered": 0,
+    "output_chars": 21555,
+    "transcript_chars": 331
+  },
+  "timing": {
+    "executor_duration_seconds": 104.639,
+    "total_duration_seconds": 104.639
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "Heuristic inline grader; review qualitative outputs for borderline judgments."
+  }
+}

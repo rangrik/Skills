@@ -1,0 +1,72 @@
+{
+  "expectations": [
+    {
+      "text": "Extracts EVERY scenario from the blueprint as Gherkin given/when/then, including the edge cases (late-joining user, future start date, end-date-before-start-date), both deviation scenarios (concurrent publish wins, dismiss-then-edit keeps dismissal), and the admin-only adversarial scenarios \u2014 no corner case is dropped because it is awkward.",
+      "passed": true,
+      "evidence": "Scenario terms missing: []; gherkin_triplets=14."
+    },
+    {
+      "text": "Each scenario is tagged with its type (happy_path / edge_case / corner_case) and the plan reflects all three categories rather than only the happy path.",
+      "passed": true,
+      "evidence": "Found happy/edge/corner type labels."
+    },
+    {
+      "text": "Orders the scenarios explicitly (an order/status table plus per-scenario order) and gives a stated reason for why each scenario sits where it does, justified by reuse / dependency chains (foundational, capability-unlocking scenarios first).",
+      "passed": true,
+      "evidence": "order_table=True; reuse_reasoning_terms=True."
+    },
+    {
+      "text": "For each scenario, writes a code-blind plan with all four parts: Preconditions, Required capabilities (described as capabilities, e.g. 'a way to persist per-user dismissal', not as existing code), Postconditions, and Risks/assumptions.",
+      "passed": true,
+      "evidence": "Each scenario appears to include the four code-blind plan headings."
+    },
+    {
+      "text": "Writes concrete, answerable research questions per scenario that turn the required capabilities into questions for the research step (specific 'is there an X that does Y, and where?' form), not vague directives like 'look into the banner code'.",
+      "passed": true,
+      "evidence": "research_questions_enough=True; specific_terms=True."
+    },
+    {
+      "text": "Sets every scenario's status to `planned`.",
+      "passed": true,
+      "evidence": "Planned status appears for scenario sections/table."
+    },
+    {
+      "text": "NEVER reads, opens, greps, or references source code, and NEVER asserts what already exists in a codebase (no 'this already exists in...', no file paths into a repo); required capabilities are described in the abstract, leaving existence for the research step.",
+      "passed": true,
+      "evidence": "No source paths or existing-code claims found."
+    },
+    {
+      "text": "Treats every scenario as a vertical slice (full stack, end to end) and never orders or structures the plan by horizontal layer (no 'do all the database work first' phase).",
+      "passed": true,
+      "evidence": "vertical_terms=True; horizontal_layering_absent=True."
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 0,
+    "total": 8,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": 0,
+    "errors_encountered": 0,
+    "output_chars": 28392,
+    "transcript_chars": 506
+  },
+  "timing": {
+    "executor_duration_seconds": 160.277,
+    "total_duration_seconds": 160.277
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "Heuristic inline grader; review qualitative outputs for borderline judgments."
+  }
+}

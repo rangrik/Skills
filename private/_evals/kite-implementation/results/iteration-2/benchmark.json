@@ -1,0 +1,479 @@
+{
+  "metadata": {
+    "skill_name": "kite-implementation",
+    "skill_path": "private/kite-implementation",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-05-24T04:10:42Z",
+    "evals_run": [
+      1,
+      2,
+      3
+    ],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "eval_name": "implement-team-invites-from-researched-plan",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.4,
+        "passed": 4,
+        "failed": 6,
+        "total": 10,
+        "time_seconds": 3.3,
+        "tokens": 103807,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "A faithful benchmark requires the live appsmith-v2 repository checked out as the working codebase; the run cannot reuse the EXISTS findings, add code at the MISSING extension points, run the architecture check, or produce real commits without it, and the run states this dependency rather than fabricating file contents.",
+          "passed": true,
+          "evidence": "combined:     https://github.com/appsmithorg/appsmith-v2/pull/11556"
+        },
+        {
+          "text": "Implements the scenarios in plan order (S1 then S2 then S3) and never starts a later scenario before the earlier one is committed.",
+          "passed": true,
+          "evidence": "report/plan: | 1 | S1 | Admin invites a new member by email    | researched |"
+        },
+        {
+          "text": "Builds each scenario as a vertical end-to-end slice spanning every layer it touches (route, service, model/migration) so the scenario actually works for a user \u2014 it does NOT implement a single layer in isolation or batch all the database work first.",
+          "passed": false,
+          "evidence": "patch/report: +- `backend/app/routes/sandbox_routes.py`"
+        },
+        {
+          "text": "Reuses exactly what kite-research marked EXISTS at the stated locations \u2014 require_workspace_admin (guards.py:88), enqueue_email (email_jobs.py:31), and WorkspaceMembershipService.add_member (workspace_membership.py:54) \u2014 instead of re-discovering or reimplementing them.",
+          "passed": true,
+          "evidence": "combined: - RQ1 \u2192 EXISTS: require_workspace_admin in backend/app/auth/guards.py:88 \u2014"
+        },
+        {
+          "text": "Adds new code only at the MISSING extension points research identified \u2014 the invitations model and migration, the partial unique index on (workspace_id, lower(email)) WHERE status = pending, and the new accept-invite route \u2014 rather than re-deciding where things should live.",
+          "passed": false,
+          "evidence": "patch/report: evidence not found"
+        },
+        {
+          "text": "Tests selectively at the boundaries that matter \u2014 the S1 admin-authorization boundary, the S2 atomic single-membership-on-double-accept data-integrity boundary, and the S3 idempotent re-invite behavior \u2014 and does NOT generate exhaustive or mechanical tests for every implementation detail.",
+          "passed": false,
+          "evidence": "patch/report: +- `backend/tests/test_services/test_e2b_service_retry.py`"
+        },
+        {
+          "text": "Runs the kite-arch-compass architecture check on each slice before committing it, and fixes any flagged violation before the commit rather than carrying it into the commit.",
+          "passed": false,
+          "evidence": "report: evidence not found"
+        },
+        {
+          "text": "Runs an independent kite-scenario-check against each scenario's Gherkin before committing, and does NOT commit a scenario whose scenario-check returns FAIL \u2014 it fixes the listed gaps and re-checks first.",
+          "passed": false,
+          "evidence": "report: evidence not found"
+        },
+        {
+          "text": "Skips scenario S4 because research marked it blocked, does not attempt to implement it, and surfaces it clearly as needing kite-planner to re-plan.",
+          "passed": true,
+          "evidence": "report/plan: | 4 | S4 | Accepting an expired invite fails       | blocked    |"
+        },
+        {
+          "text": "For each committed scenario, fills in the plan file's Implementation record (changed files, tests added, architecture-check result, scenario-check verdict, commit) and sets that scenario's status to committed.",
+          "passed": false,
+          "evidence": "report: evidence not found"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "resume-partially-committed-plan",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.3333,
+        "passed": 3,
+        "failed": 6,
+        "total": 9,
+        "time_seconds": 3.4,
+        "tokens": 101431,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "A faithful benchmark requires the live appsmith-v2 repository as the working codebase; without it the run cannot reuse the EXISTS findings, add code at the MISSING extension points, run the architecture check, or produce real commits, and the run states this rather than inventing repo contents.",
+          "passed": true,
+          "evidence": "combined:     https://github.com/appsmithorg/appsmith-v2/pull/11556"
+        },
+        {
+          "text": "Treats the plan file as the resumable state machine: scenarios already marked committed are not rebuilt, and work resumes from the first non-committed, non-blocked scenario.",
+          "passed": false,
+          "evidence": "report/plan: evidence not found"
+        },
+        {
+          "text": "Processes the remaining scenarios in plan order, each as a vertical end-to-end slice across every layer it touches rather than as an isolated single layer.",
+          "passed": true,
+          "evidence": "report/plan: | 1 | S1 | Admin invites a new member by email    | researched |"
+        },
+        {
+          "text": "Reuses the capabilities kite-research marked EXISTS at their given locations and adds new code only at the MISSING extension points, without re-discovering what research already settled.",
+          "passed": false,
+          "evidence": "patch/report: evidence not found"
+        },
+        {
+          "text": "Tests selectively at the behavior, security/authorization, data-integrity, and reuse-regression boundaries, not exhaustively across every implementation detail.",
+          "passed": false,
+          "evidence": "patch/report: +- `backend/tests/test_services/test_e2b_service_retry.py`"
+        },
+        {
+          "text": "Runs the kite-arch-compass architecture check on each slice before committing and fixes violations before the commit.",
+          "passed": false,
+          "evidence": "report: evidence not found"
+        },
+        {
+          "text": "Runs an independent kite-scenario-check before each commit and does NOT commit any scenario whose check returns FAIL, fixing the named gaps and re-checking instead.",
+          "passed": false,
+          "evidence": "report: evidence not found"
+        },
+        {
+          "text": "Skips the blocked scenario S4, does not implement it, and surfaces it as needing re-planning by kite-planner.",
+          "passed": true,
+          "evidence": "report/plan: | 4 | S4 | Accepting an expired invite fails       | blocked    |"
+        },
+        {
+          "text": "Fills in the Implementation record and sets status to committed for each scenario it finishes.",
+          "passed": false,
+          "evidence": "plan/report: evidence not found"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "implement-announcement-dismissal-grounded-in-real-code",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.5455,
+        "passed": 6,
+        "failed": 5,
+        "total": 11,
+        "time_seconds": 5.0,
+        "tokens": 105597,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Actually opens and reuses the REAL files the research findings name \u2014 the Announcement model (models/announcement.py), the announcement data layer (database/announcement_db.py / get_active_announcement), the existing announcement_routes.py, and session_manager.get_current_user() \u2014 at their stated locations, rather than re-discovering, reinventing, or redefining the announcement table.",
+          "passed": true,
+          "evidence": "combined: - RQ1 \u2192 EXISTS: session_manager.get_current_user() \u2014 used by authenticated"
+        },
+        {
+          "text": "Adds new code only at the MISSING extension points research identified: a new announcement_dismissals model, a SQL migration filed as the next sequential number under backend/app/migrations/, a unique constraint on (user_id, announcement_id), and the dismiss endpoint added into the existing announcement_routes.py (relying on glob auto-registration rather than adding a manual registration line).",
+          "passed": false,
+          "evidence": "patch: evidence not found"
+        },
+        {
+          "text": "Implements the scenarios in plan order (S1 then S2 then S3) and never starts a later scenario before the earlier one is committed.",
+          "passed": true,
+          "evidence": "report/plan: | 1 | S1 | User dismisses the active announcement          | researched |"
+        },
+        {
+          "text": "Builds each scenario as a vertical end-to-end slice spanning every layer it touches (route, data layer, model/migration) so the dismissal actually works, rather than implementing a single isolated layer or batching all the DB work first.",
+          "passed": false,
+          "evidence": "patch/report: +- `backend/app/routes/sandbox_routes.py`"
+        },
+        {
+          "text": "Resolves the current user via session_manager.get_current_user() for the dismiss route so an anonymous caller cannot dismiss, and tests that authenticated-only boundary (S1).",
+          "passed": true,
+          "evidence": "combined: - RQ1 \u2192 EXISTS: session_manager.get_current_user() \u2014 used by authenticated"
+        },
+        {
+          "text": "For S2, makes the active-announcement lookup user-aware so a dismissed announcement is hidden from the user who dismissed it while still shown to other users, and does NOT regress the existing route's DB-timeout / anonymous tolerance.",
+          "passed": true,
+          "evidence": "combined: +                timeout=60,"
+        },
+        {
+          "text": "For S3, relies on the (user_id, announcement_id) unique constraint and treats a repeat dismiss as a successful idempotent no-op, with a test covering the double-dismiss boundary, rather than generating exhaustive mechanical tests of every detail.",
+          "passed": true,
+          "evidence": "combined:   idempotent (dismissing twice is a safe no-op), and the active-announcement"
+        },
+        {
+          "text": "Runs the kite-arch-compass architecture check on each slice before committing it and fixes any flagged violation before the commit.",
+          "passed": false,
+          "evidence": "report: evidence not found"
+        },
+        {
+          "text": "Runs an independent kite-scenario-check against each scenario's Gherkin before committing, and does NOT commit a scenario whose scenario-check returns FAIL \u2014 it fixes the listed gaps and re-checks first.",
+          "passed": false,
+          "evidence": "report: evidence not found"
+        },
+        {
+          "text": "Skips scenario S4 because research marked it blocked, does not attempt to implement it, and surfaces it clearly as needing kite-planner to re-plan.",
+          "passed": true,
+          "evidence": "report/plan: | 4 | S4 | Auto-expire dismissals after the retention window| blocked    |"
+        },
+        {
+          "text": "For each committed scenario, fills in the plan file's Implementation record (changed files, tests added, architecture-check result, scenario-check verdict, commit) and sets that scenario's status to committed.",
+          "passed": false,
+          "evidence": "report: evidence not found"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "implement-team-invites-from-researched-plan",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.8,
+        "passed": 8,
+        "failed": 2,
+        "total": 10,
+        "time_seconds": 722.4,
+        "tokens": 1536768,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "A faithful benchmark requires the live appsmith-v2 repository checked out as the working codebase; the run cannot reuse the EXISTS findings, add code at the MISSING extension points, run the architecture check, or produce real commits without it, and the run states this dependency rather than fabricating file contents.",
+          "passed": true,
+          "evidence": "combined: - S1 RQ1: `require_workspace_admin in backend/app/auth/guards.py:88` was marked"
+        },
+        {
+          "text": "Implements the scenarios in plan order (S1 then S2 then S3) and never starts a later scenario before the earlier one is committed.",
+          "passed": true,
+          "evidence": "report/plan: 1. S1 \u2014 Admin invites a new member by email"
+        },
+        {
+          "text": "Builds each scenario as a vertical end-to-end slice spanning every layer it touches (route, service, model/migration) so the scenario actually works for a user \u2014 it does NOT implement a single layer in isolation or batch all the database work first.",
+          "passed": false,
+          "evidence": "patch/report:  from app.models import Invitation, User"
+        },
+        {
+          "text": "Reuses exactly what kite-research marked EXISTS at the stated locations \u2014 require_workspace_admin (guards.py:88), enqueue_email (email_jobs.py:31), and WorkspaceMembershipService.add_member (workspace_membership.py:54) \u2014 instead of re-discovering or reimplementing them.",
+          "passed": true,
+          "evidence": "combined: - S1 RQ1: `require_workspace_admin in backend/app/auth/guards.py:88` was marked"
+        },
+        {
+          "text": "Adds new code only at the MISSING extension points research identified \u2014 the invitations model and migration, the partial unique index on (workspace_id, lower(email)) WHERE status = pending, and the new accept-invite route \u2014 rather than re-deciding where things should live.",
+          "passed": false,
+          "evidence": "patch/report: diff --git a/backend/app/database/invitation_db.py b/backend/app/database/invitation_db.py"
+        },
+        {
+          "text": "Tests selectively at the boundaries that matter \u2014 the S1 admin-authorization boundary, the S2 atomic single-membership-on-double-accept data-integrity boundary, and the S3 idempotent re-invite behavior \u2014 and does NOT generate exhaustive or mechanical tests for every implementation detail.",
+          "passed": true,
+          "evidence": "patch/report:     Make pending team reinvites idempotent"
+        },
+        {
+          "text": "Runs the kite-arch-compass architecture check on each slice before committing it, and fixes any flagged violation before the commit rather than carrying it into the commit.",
+          "passed": true,
+          "evidence": "report: - Passed: `backend/.venv/bin/python -m py_compile ...` for the changed backend"
+        },
+        {
+          "text": "Runs an independent kite-scenario-check against each scenario's Gherkin before committing, and does NOT commit a scenario whose scenario-check returns FAIL \u2014 it fixes the listed gaps and re-checks first.",
+          "passed": true,
+          "evidence": "report: - S4 \u2014 Accepting an expired invite fails gracefully"
+        },
+        {
+          "text": "Skips scenario S4 because research marked it blocked, does not attempt to implement it, and surfaces it clearly as needing kite-planner to re-plan.",
+          "passed": true,
+          "evidence": "report/plan: ## Scenarios skipped as blocked"
+        },
+        {
+          "text": "For each committed scenario, fills in the plan file's Implementation record (changed files, tests added, architecture-check result, scenario-check verdict, commit) and sets that scenario's status to committed.",
+          "passed": true,
+          "evidence": "report: - S4 \u2014 Accepting an expired invite fails gracefully"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "resume-partially-committed-plan",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.8889,
+        "passed": 8,
+        "failed": 1,
+        "total": 9,
+        "time_seconds": 1444.0,
+        "tokens": 1425830,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "A faithful benchmark requires the live appsmith-v2 repository as the working codebase; without it the run cannot reuse the EXISTS findings, add code at the MISSING extension points, run the architecture check, or produce real commits, and the run states this rather than inventing repo contents.",
+          "passed": true,
+          "evidence": "combined: - S1 RQ1 plan finding: `require_workspace_admin in backend/app/auth/guards.py:88`."
+        },
+        {
+          "text": "Treats the plan file as the resumable state machine: scenarios already marked committed are not rebuilt, and work resumes from the first non-committed, non-blocked scenario.",
+          "passed": true,
+          "evidence": "report/plan: ## Architecture Check Result Per Committed Scenario"
+        },
+        {
+          "text": "Processes the remaining scenarios in plan order, each as a vertical end-to-end slice across every layer it touches rather than as an isolated single layer.",
+          "passed": true,
+          "evidence": "report/plan: 1. S1 \u2014 Admin invites a new member by email"
+        },
+        {
+          "text": "Reuses the capabilities kite-research marked EXISTS at their given locations and adds new code only at the MISSING extension points, without re-discovering what research already settled.",
+          "passed": false,
+          "evidence": "patch/report:  - [x] S2: Invitee accepts a valid token and becomes a collaborator while the invite becomes accepted."
+        },
+        {
+          "text": "Tests selectively at the behavior, security/authorization, data-integrity, and reuse-regression boundaries, not exhaustively across every implementation detail.",
+          "passed": true,
+          "evidence": "patch/report: -- [ ] S3: Re-inviting an already pending email is idempotent and creates no duplicate row."
+        },
+        {
+          "text": "Runs the kite-arch-compass architecture check on each slice before committing and fixes violations before the commit.",
+          "passed": true,
+          "evidence": "report: - `pwd && git status --short`: passed before coding; cwd was the throwaway"
+        },
+        {
+          "text": "Runs an independent kite-scenario-check before each commit and does NOT commit any scenario whose check returns FAIL, fixing the named gaps and re-checking instead.",
+          "passed": true,
+          "evidence": "report: - S4 \u2014 Accepting an expired invite fails: skipped because the plan copy marks it"
+        },
+        {
+          "text": "Skips the blocked scenario S4, does not implement it, and surfaces it as needing re-planning by kite-planner.",
+          "passed": true,
+          "evidence": "report/plan: ## Scenarios Skipped As Blocked"
+        },
+        {
+          "text": "Fills in the Implementation record and sets status to committed for each scenario it finishes.",
+          "passed": true,
+          "evidence": "plan/report: | 1 | S1 | Admin invites a new member by email    | committed  |"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "implement-announcement-dismissal-grounded-in-real-code",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.9091,
+        "passed": 10,
+        "failed": 1,
+        "total": 11,
+        "time_seconds": 437.8,
+        "tokens": 896300,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Actually opens and reuses the REAL files the research findings name \u2014 the Announcement model (models/announcement.py), the announcement data layer (database/announcement_db.py / get_active_announcement), the existing announcement_routes.py, and session_manager.get_current_user() \u2014 at their stated locations, rather than re-discovering, reinventing, or redefining the announcement table.",
+          "passed": true,
+          "evidence": "combined: - `session_manager.get_current_user()` exists and is used by authenticated routes; verified in `backend/app/routes/account_routes.py`. The dismiss route reuses `session_manager.has_current_user()` and `session_manager.get_current_user()`."
+        },
+        {
+          "text": "Adds new code only at the MISSING extension points research identified: a new announcement_dismissals model, a SQL migration filed as the next sequential number under backend/app/migrations/, a unique constraint on (user_id, announcement_id), and the dismiss endpoint added into the existing announcement_routes.py (relying on glob auto-registration rather than adding a manual registration line).",
+          "passed": true,
+          "evidence": "patch: @@ -63,9 +64,13 @@ async def create_announcement_dismissal("
+        },
+        {
+          "text": "Implements the scenarios in plan order (S1 then S2 then S3) and never starts a later scenario before the earlier one is committed.",
+          "passed": true,
+          "evidence": "report/plan: 1. S1 \u2014 User dismisses the active announcement \u2014 committed"
+        },
+        {
+          "text": "Builds each scenario as a vertical end-to-end slice spanning every layer it touches (route, data layer, model/migration) so the dismissal actually works, rather than implementing a single isolated layer or batching all the DB work first.",
+          "passed": false,
+          "evidence": "patch/report: diff --git a/backend/app/database/announcement_db.py b/backend/app/database/announcement_db.py"
+        },
+        {
+          "text": "Resolves the current user via session_manager.get_current_user() for the dismiss route so an anonymous caller cannot dismiss, and tests that authenticated-only boundary (S1).",
+          "passed": true,
+          "evidence": "combined: - `session_manager.get_current_user()` exists and is used by authenticated routes; verified in `backend/app/routes/account_routes.py`. The dismiss route reuses `session_manager.has_current_user()` and `session_manager.get_current_user()`."
+        },
+        {
+          "text": "For S2, makes the active-announcement lookup user-aware so a dismissed announcement is hidden from the user who dismissed it while still shown to other users, and does NOT regress the existing route's DB-timeout / anonymous tolerance.",
+          "passed": true,
+          "evidence": "combined: 2. S2 \u2014 Active endpoint hides a dismissed announcement \u2014 committed"
+        },
+        {
+          "text": "For S3, relies on the (user_id, announcement_id) unique constraint and treats a repeat dismiss as a successful idempotent no-op, with a test covering the double-dismiss boundary, rather than generating exhaustive mechanical tests of every detail.",
+          "passed": true,
+          "evidence": "combined: - Added `backend/app/migrations/115-create-announcement-dismissals.sql`, the next migration number after 114, with `announcement_dismissals`, `announcement_id` FK to `announcements(id)`, `user_id`, timestamps, and unique constraint `uq_announcement_dismissals_user_announcement` on `(user_id, announcement_id)`."
+        },
+        {
+          "text": "Runs the kite-arch-compass architecture check on each slice before committing it and fixes any flagged violation before the commit.",
+          "passed": true,
+          "evidence": "report: - Ran `python3 -m py_compile ...` on touched Python files for each scenario \u2014 passed."
+        },
+        {
+          "text": "Runs an independent kite-scenario-check against each scenario's Gherkin before committing, and does NOT commit a scenario whose scenario-check returns FAIL \u2014 it fixes the listed gaps and re-checks first.",
+          "passed": true,
+          "evidence": "report: - Ran `python3 -m py_compile ...` on touched Python files for each scenario \u2014 passed."
+        },
+        {
+          "text": "Skips scenario S4 because research marked it blocked, does not attempt to implement it, and surfaces it clearly as needing kite-planner to re-plan.",
+          "passed": true,
+          "evidence": "report/plan: ## Scenarios skipped as blocked"
+        },
+        {
+          "text": "For each committed scenario, fills in the plan file's Implementation record (changed files, tests added, architecture-check result, scenario-check verdict, commit) and sets that scenario's status to committed.",
+          "passed": true,
+          "evidence": "report: - Ran `python3 -m py_compile ...` on touched Python files for each scenario \u2014 passed."
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 0.4263,
+        "stddev": 0.1085,
+        "min": 0.3333,
+        "max": 0.5455
+      },
+      "time_seconds": {
+        "mean": 3.9,
+        "stddev": 0.9539,
+        "min": 3.3,
+        "max": 5.0
+      },
+      "tokens": {
+        "mean": 103611.6667,
+        "stddev": 2089.8577,
+        "min": 101431,
+        "max": 105597
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.866,
+        "stddev": 0.058,
+        "min": 0.8,
+        "max": 0.9091
+      },
+      "time_seconds": {
+        "mean": 868.0667,
+        "stddev": 518.6749,
+        "min": 437.8,
+        "max": 1444.0
+      },
+      "tokens": {
+        "mean": 1286299.3333,
+        "stddev": 342273.8961,
+        "min": 896300,
+        "max": 1536768
+      }
+    },
+    "delta": {
+      "pass_rate": "-0.44",
+      "time_seconds": "-864.2",
+      "tokens": "-1182688"
+    }
+  },
+  "notes": []
+}

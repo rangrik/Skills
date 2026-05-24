@@ -1,0 +1,11 @@
+{
+  "eval_id": 1,
+  "eval_name": "passing-scenario-public-profile",
+  "prompt": "I'm working in appsmith-v2 and just finished implementing the public-profile scenario. Here are my code changes plus the Gherkin for the scenario (in profile.md attached). Check this scenario against the Gherkin and tell me whether I can commit it.",
+  "expectations": [
+    "Returns a clear PASS verdict and states the scenario can be committed",
+    "Confirms each then-clause is satisfied: 200 status, display_name present, join_date present, and email deliberately absent from PublicProfileResponse",
+    "Does not invent gaps or fail the scenario over things the Gherkin never asked for",
+    "Stays a fast, focused gate: does not perform a full-feature audit, does not hunt for other scenarios' corner cases, and does not deliver a principle-by-principle architecture critique"
+  ]
+}

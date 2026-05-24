@@ -4,3 +4,22 @@
 generated/installed-skills.json
 generated/installed-skills.js
 tools/installed-skills-data.js
+
+# Local agent worktrees
+.claude/
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Stray local logs
+error.log
+
+# Eval raw run artifacts (transcripts/logs/patches kept locally, not committed)
+private/_evals/**/*.jsonl
+private/_evals/**/*.stderr
+private/_evals/**/stderr.log
+private/_evals/**/codex.stdout.jsonl
+private/_evals/**/*.patch
+private/_evals/**/git_*.txt
+private/_evals/kite-implementation/results/iteration-1/review.html

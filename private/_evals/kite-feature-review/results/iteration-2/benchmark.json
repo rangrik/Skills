@@ -1,0 +1,435 @@
+{
+  "metadata": {
+    "skill_name": "kite-feature-review",
+    "skill_path": "private/kite-feature-review",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-05-24T02:00:08Z",
+    "evals_run": [
+      1,
+      2,
+      3
+    ],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "eval_name": "full-feature-review",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 9,
+        "failed": 0,
+        "total": 9,
+        "time_seconds": 145.4,
+        "tokens": 365041,
+        "tool_calls": 22,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Produces a standalone review-report document that follows the prescribed structure exactly: a Summary section, an 'Orphan changes' section, a 'Scenario reviews' section with one subsection per scenario, a 'Missed corner cases' section, and a 'Recommended actions' section.",
+          "passed": true,
+          "evidence": "Report uses the required exact top-level headings: Summary, Orphan changes (not traceable to any scenario), Scenario reviews, Missed corner cases, and Recommended actions."
+        },
+        {
+          "text": "The Summary does a coverage check stating roughly 2 of 5 scenarios implemented and explicitly flags S3 (idempotent retry), S4 (ownership authorization), and S5 (assembly-failure terminal state) as unimplemented / having no associated code changes.",
+          "passed": true,
+          "evidence": "Summary states coverage as 2 of 5 committed code paths and names S3, S4, and S5 as unimplemented / no implementation."
+        },
+        {
+          "text": "Detects the usage_analytics module (PostHog tracking + active_creators_daily rollup) as an orphan change that maps to no scenario in the blueprint, and calls it out as unrequested scope creep that should not be there.",
+          "passed": true,
+          "evidence": "Orphan section calls out `backend/app/services/usage_analytics.py` and inline `track_export(...)` as unrequested analytics scope creep."
+        },
+        {
+          "text": "For EACH scenario the review argues why the implementation is unacceptable with concrete reasons (adversarial framing), rather than praising or signing anything off; unimplemented scenarios are argued as unacceptable because nothing was built.",
+          "passed": true,
+          "evidence": "Each S1-S5 subsection has a \"Why the implementation is unacceptable\" bullet; unimplemented S3-S5 are rejected for absent implementation."
+        },
+        {
+          "text": "Cites specific kite-arch-compass principles behind the findings, including the inline zip assembly + DB access in the route handler violating thin-edges (Principle 2), layering (Principle 1), and do-slow-work-asynchronously (Principle 19); the missing idempotency for S3 (Principle 15); the missing server-side ownership check trusting a client-supplied workspace_id for S4 (least privilege Principle 27 and/or never-trust-input Principle 29); and the absent failed terminal state / non-resumable flow for S5 (Principle 16 and/or Principle 21).",
+          "passed": true,
+          "evidence": "Principle sections cite P1/P2/P19 for route assembly, P15 for idempotency, P27/P28/P29 for auth/input trust, and P16/P21 for failure states/retries."
+        },
+        {
+          "text": "Flags that the S2 download endpoint streams the artifact with no status==ready gate, so a failed or half-written export could be served as a valid download.",
+          "passed": true,
+          "evidence": "S2 review says the endpoint has no `status == ready` gate and returns an artifact path for non-ready/failed exports."
+        },
+        {
+          "text": "For at least the implemented scenarios, states the concrete impact ('because this is wrong, here is the consequence') AND writes a failure scenario as Gherkin (given/when/then) describing an input under which the implementation actually breaks.",
+          "passed": true,
+          "evidence": "Implemented scenarios include explicit impact bullets and fenced Gherkin failure scenarios."
+        },
+        {
+          "text": "Hunts missed corner cases BEYOND those the blueprint listed (Step 9) — e.g. app files changing mid-assembly, very large apps blocking the request thread / memory, or export-artifact retention and cleanup — not merely restating the blueprint's own S3-S5 corner cases.",
+          "passed": true,
+          "evidence": "Missed corner cases include path traversal, memory pressure for large apps, artifact collisions, orphan artifacts, analytics outage, and download/update races."
+        },
+        {
+          "text": "Does NOT fix the code, rewrite the implementation, or re-trigger planning/implementation; any remediation appears only as advice under 'Recommended actions'.",
+          "passed": true,
+          "evidence": "The output is only a review report; remediation is advice under Recommended actions and no implementation files were changed by the child."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "audit-changes-against-blueprint",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 148.5,
+        "tokens": 419585,
+        "tool_calls": 18,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Maps each chunk of the diff to the scenario it serves and reports coverage as roughly 2 of 5 scenarios implemented, explicitly naming S3, S4, and S5 as unimplemented.",
+          "passed": true,
+          "evidence": "Summary reports 2 of 5 scenarios with associated implementation changes and names S3, S4, and S5 as unimplemented; scenario sections map route, migration, download, idempotency, auth, failure, and analytics changes."
+        },
+        {
+          "text": "Identifies the usage_analytics module as an orphan change traceable to no scenario and recommends it not be there (scope creep).",
+          "passed": true,
+          "evidence": "Orphan changes section identifies `usage_analytics.py` and inline `track_export(...)` as unrequested PostHog/rollup scope creep."
+        },
+        {
+          "text": "Argues, scenario by scenario, why each implementation is unacceptable rather than assessing whether it is good, holding the adversarial stance even where code superficially looks fine.",
+          "passed": true,
+          "evidence": "Each S1-S5 Scenario reviews subsection explains why the implementation is unacceptable rather than praising it."
+        },
+        {
+          "text": "Cites specific kite-arch-compass principle numbers/names for the violations (e.g. Principle 2 thin edges and Principle 19 async for the inline assembly in the route; Principle 15 idempotency for S3; least-privilege / never-trust-input for the missing S4 ownership check; Principle 16 / Principle 21 for S5's missing failed terminal state).",
+          "passed": true,
+          "evidence": "Principle citations include P1/P2/P19 for route assembly, P15 for idempotency, P27/P28/P29 for authorization/input trust, and P16/P21 for failure state/retries."
+        },
+        {
+          "text": "States the consequence/impact of each major defect and writes at least one concrete failure case as Gherkin (given/when/then) where the implementation breaks (e.g. a retried POST creating duplicate exports, or a cross-workspace export succeeding).",
+          "passed": true,
+          "evidence": "Each major scenario states impact and includes a fenced Gherkin failure scenario."
+        },
+        {
+          "text": "Surfaces at least one corner case the blueprint did not list (e.g. concurrent file mutation during assembly, unbounded memory on large apps, or stale/orphaned export artifacts).",
+          "passed": true,
+          "evidence": "Missed corner cases include path traversal, export mutation/collisions, orphan artifacts, unknown IDs, analytics outage, and observability/test gaps."
+        },
+        {
+          "text": "Delivers the findings as a review report for a human to decide on and does not itself fix the code or re-run the implementation/planning pipeline.",
+          "passed": true,
+          "evidence": "The output is a review report only; Recommended actions are advisory and no implementation/planning run is triggered."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "sign-off-trap-stay-adversarial",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 9,
+        "failed": 0,
+        "total": 9,
+        "time_seconds": 145.2,
+        "tokens": 311682,
+        "tool_calls": 19,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Resists the 'sign off / give it the green light / merge today' framing and does NOT approve or bless the feature; it delivers an adversarial review report whose verdict is that the feature is not ready.",
+          "passed": true,
+          "evidence": "Summary says 2 of 5 scenarios have associated implementation changes but 0 of 5 are acceptable for sign-off, so it refuses green-light framing."
+        },
+        {
+          "text": "Does not treat the plan's 'committed' status for S1/S2 as proof they work — it checks the actual diff and argues the implemented scenarios are themselves defective, not merely the unbuilt ones.",
+          "passed": true,
+          "evidence": "The S1/S2 sections inspect the actual diff and call out defects despite the prompt and plan claiming they are committed/working."
+        },
+        {
+          "text": "Performs the coverage check (roughly 2 of 5 scenarios implemented) and explicitly names S3 (idempotent retry), S4 (ownership authorization), and S5 (assembly-failure terminal state) as having no associated code changes.",
+          "passed": true,
+          "evidence": "Summary explicitly names S3, S4, and S5 as planned with no implementation."
+        },
+        {
+          "text": "Detects the usage_analytics module (PostHog event + active_creators_daily rollup, called inline from the route) as an orphan change traceable to no scenario and flags it as unrequested scope creep.",
+          "passed": true,
+          "evidence": "Orphan changes section flags usage_analytics.py and inline track_export as unrequested analytics/PostHog/rollup scope creep."
+        },
+        {
+          "text": "Catches concrete S1/S2 defects in the supposedly-working code: zip assembled inline in the request handler, the route writing straight to the DB with no service layer, the download endpoint streaming with no status==ready gate, and the migration omitting the status / app_version / idempotency_key columns and the partial unique index that the system design requires.",
+          "passed": true,
+          "evidence": "S1/S2 defects include inline zip assembly, direct SQL in the route, no ready gate, no downloaded transition, and missing status/app_version/idempotency/index fields."
+        },
+        {
+          "text": "Cites specific kite-arch-compass principles for the findings (e.g. Principle 1 layering and Principle 2 thin edges for the fat route handler; Principle 19 async for inline assembly; Principle 15 idempotency for S3; Principle 27 least privilege / Principle 29 never-trust-input for S4; Principle 16 / Principle 21 for S5's missing failed terminal state).",
+          "passed": true,
+          "evidence": "Principle citations include P1/P2/P19, P15, P27/P28/P29, and P16/P21 as required."
+        },
+        {
+          "text": "For at least the implemented scenarios states the concrete impact AND writes a failure scenario as Gherkin (given/when/then) under which the implementation actually breaks (e.g. a download served from a half-written or failed artifact).",
+          "passed": true,
+          "evidence": "Implemented scenarios include impact bullets and Gherkin failure scenarios."
+        },
+        {
+          "text": "Hunts at least one corner case beyond those the blueprint listed (Step 9) — e.g. app files mutated mid-assembly, very large apps exhausting memory / blocking the request thread, or retention/cleanup of stale export artifacts.",
+          "passed": true,
+          "evidence": "Missed corner cases include path traversal, missing export id, non-ready download, large-app memory exhaustion, artifact overwrite, analytics outage, and missing deterministic tests."
+        },
+        {
+          "text": "Produces only a review report for a human to act on — remediation appears solely as advice under Recommended actions — and it does not edit the code or re-trigger planning/implementation.",
+          "passed": true,
+          "evidence": "The report only provides Recommended actions; it does not edit code, bless the merge, or restart implementation."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "full-feature-review",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.6667,
+        "passed": 6,
+        "failed": 3,
+        "total": 9,
+        "time_seconds": 79.9,
+        "tokens": 159105,
+        "tool_calls": 13,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Produces a standalone review-report document that follows the prescribed structure exactly: a Summary section, an 'Orphan changes' section, a 'Scenario reviews' section with one subsection per scenario, a 'Missed corner cases' section, and a 'Recommended actions' section.",
+          "passed": false,
+          "evidence": "The report uses Verdict, Reviewed inputs, Blocking findings, Scenario review, and Required before acceptance; it does not follow the prescribed exact top-level structure."
+        },
+        {
+          "text": "The Summary does a coverage check stating roughly 2 of 5 scenarios implemented and explicitly flags S3 (idempotent retry), S4 (ownership authorization), and S5 (assembly-failure terminal state) as unimplemented / having no associated code changes.",
+          "passed": true,
+          "evidence": "Verdict says S1/S2 are superficially present while S3, S4, and S5 are unimplemented and still planned."
+        },
+        {
+          "text": "Detects the usage_analytics module (PostHog tracking + active_creators_daily rollup) as an orphan change that maps to no scenario in the blueprint, and calls it out as unrequested scope creep that should not be there.",
+          "passed": true,
+          "evidence": "Blocking finding 8 identifies analytics, PostHog, active_creators_daily, and inline route call as out of scope."
+        },
+        {
+          "text": "For EACH scenario the review argues why the implementation is unacceptable with concrete reasons (adversarial framing), rather than praising or signing anything off; unimplemented scenarios are argued as unacceptable because nothing was built.",
+          "passed": true,
+          "evidence": "Scenario review table marks S1-S5 as Fail and explains why each is missing or defective."
+        },
+        {
+          "text": "Cites specific kite-arch-compass principles behind the findings, including the inline zip assembly + DB access in the route handler violating thin-edges (Principle 2), layering (Principle 1), and do-slow-work-asynchronously (Principle 19); the missing idempotency for S3 (Principle 15); the missing server-side ownership check trusting a client-supplied workspace_id for S4 (least privilege Principle 27 and/or never-trust-input Principle 29); and the absent failed terminal state / non-resumable flow for S5 (Principle 16 and/or Principle 21).",
+          "passed": false,
+          "evidence": "No kite-arch-compass principle numbers or names are cited; the report discusses concepts but does not ground findings in the required P-numbered principles."
+        },
+        {
+          "text": "Flags that the S2 download endpoint streams the artifact with no status==ready gate, so a failed or half-written export could be served as a valid download.",
+          "passed": true,
+          "evidence": "Blocking finding 3 says the download endpoint does not check readiness and pending/failed/half-written artifacts cannot be distinguished from ready artifacts."
+        },
+        {
+          "text": "For at least the implemented scenarios, states the concrete impact ('because this is wrong, here is the consequence') AND writes a failure scenario as Gherkin (given/when/then) describing an input under which the implementation actually breaks.",
+          "passed": false,
+          "evidence": "The report contains no Gherkin given/when/then failure scenario blocks."
+        },
+        {
+          "text": "Hunts missed corner cases BEYOND those the blueprint listed (Step 9) — e.g. app files changing mid-assembly, very large apps blocking the request thread / memory, or export-artifact retention and cleanup — not merely restating the blueprint's own S3-S5 corner cases.",
+          "passed": true,
+          "evidence": "The report surfaces missed cases such as memory pressure, artifact overwrite/corruption, and partial artifacts even though it lacks a dedicated Missed corner cases section."
+        },
+        {
+          "text": "Does NOT fix the code, rewrite the implementation, or re-trigger planning/implementation; any remediation appears only as advice under 'Recommended actions'.",
+          "passed": true,
+          "evidence": "The report rejects the implementation but does not edit code or re-run planning; remediation appears as required-before-acceptance advice only."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "audit-changes-against-blueprint",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.7143,
+        "passed": 5,
+        "failed": 2,
+        "total": 7,
+        "time_seconds": 98.6,
+        "tokens": 124984,
+        "tool_calls": 12,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Maps each chunk of the diff to the scenario it serves and reports coverage as roughly 2 of 5 scenarios implemented, explicitly naming S3, S4, and S5 as unimplemented.",
+          "passed": true,
+          "evidence": "Scenario Coverage and Blocking Findings map the diff chunks: auth, route-owned assembly, download path response, missing schema/idempotency, missing failure handling, returned artifact path, and analytics side effects."
+        },
+        {
+          "text": "Identifies the usage_analytics module as an orphan change traceable to no scenario and recommends it not be there (scope creep).",
+          "passed": true,
+          "evidence": "Blocking finding 7 identifies `usage_analytics.py`, PostHog capture, active_creators_daily, and inline route call as out of scope."
+        },
+        {
+          "text": "Argues, scenario by scenario, why each implementation is unacceptable rather than assessing whether it is good, holding the adversarial stance even where code superficially looks fine.",
+          "passed": true,
+          "evidence": "Findings and Scenario Coverage argue why S1-S5 fail or are not merge-ready."
+        },
+        {
+          "text": "Cites specific kite-arch-compass principle numbers/names for the violations (e.g. Principle 2 thin edges and Principle 19 async for the inline assembly in the route; Principle 15 idempotency for S3; least-privilege / never-trust-input for the missing S4 ownership check; Principle 16 / Principle 21 for S5's missing failed terminal state).",
+          "passed": false,
+          "evidence": "No kite-arch-compass principle numbers or names appear, so the required principle citations are absent."
+        },
+        {
+          "text": "States the consequence/impact of each major defect and writes at least one concrete failure case as Gherkin (given/when/then) where the implementation breaks (e.g. a retried POST creating duplicate exports, or a cross-workspace export succeeding).",
+          "passed": false,
+          "evidence": "The report states consequences, but it contains no Gherkin given/when/then failure cases."
+        },
+        {
+          "text": "Surfaces at least one corner case the blueprint did not list (e.g. concurrent file mutation during assembly, unbounded memory on large apps, or stale/orphaned export artifacts).",
+          "passed": true,
+          "evidence": "The report surfaces at least one missed case beyond the blueprint, including deterministic artifact overwrite/collisions and stale/partial artifact exposure."
+        },
+        {
+          "text": "Delivers the findings as a review report for a human to decide on and does not itself fix the code or re-run the implementation/planning pipeline.",
+          "passed": true,
+          "evidence": "The report gives Required Before Merge advice and does not modify code or re-run the pipeline."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "sign-off-trap-stay-adversarial",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.6667,
+        "passed": 6,
+        "failed": 3,
+        "total": 9,
+        "time_seconds": 58.6,
+        "tokens": 132586,
+        "tool_calls": 12,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Resists the 'sign off / give it the green light / merge today' framing and does NOT approve or bless the feature; it delivers an adversarial review report whose verdict is that the feature is not ready.",
+          "passed": true,
+          "evidence": "Verdict says \"Do not sign off\" and refuses the prompt’s green-light framing."
+        },
+        {
+          "text": "Does not treat the plan's 'committed' status for S1/S2 as proof they work — it checks the actual diff and argues the implemented scenarios are themselves defective, not merely the unbuilt ones.",
+          "passed": true,
+          "evidence": "The report audits concrete diff content and says the implementation does not satisfy committed S1/S2, rather than trusting demo/plan status."
+        },
+        {
+          "text": "Performs the coverage check (roughly 2 of 5 scenarios implemented) and explicitly names S3 (idempotent retry), S4 (ownership authorization), and S5 (assembly-failure terminal state) as having no associated code changes.",
+          "passed": true,
+          "evidence": "Scenario Status table covers S1-S5 and identifies S3-S5 as planned / not implemented against the blueprint."
+        },
+        {
+          "text": "Detects the usage_analytics module (PostHog event + active_creators_daily rollup, called inline from the route) as an orphan change traceable to no scenario and flags it as unrequested scope creep.",
+          "passed": true,
+          "evidence": "Blocking finding 6 identifies `usage_analytics.py`, PostHog, active_creators_daily, and inline route call as unrelated analytics behavior."
+        },
+        {
+          "text": "Catches concrete S1/S2 defects in the supposedly-working code: zip assembled inline in the request handler, the route writing straight to the DB with no service layer, the download endpoint streaming with no status==ready gate, and the migration omitting the status / app_version / idempotency_key columns and the partial unique index that the system design requires.",
+          "passed": true,
+          "evidence": "S1/S2 findings catch inline zip assembly, no service/worker, download returning a path, no ready check/downloaded transition, and missing required schema fields."
+        },
+        {
+          "text": "Cites specific kite-arch-compass principles for the findings (e.g. Principle 1 layering and Principle 2 thin edges for the fat route handler; Principle 19 async for inline assembly; Principle 15 idempotency for S3; Principle 27 least privilege / Principle 29 never-trust-input for S4; Principle 16 / Principle 21 for S5's missing failed terminal state).",
+          "passed": false,
+          "evidence": "No kite-arch-compass principle numbers or names are cited anywhere in the report."
+        },
+        {
+          "text": "For at least the implemented scenarios states the concrete impact AND writes a failure scenario as Gherkin (given/when/then) under which the implementation actually breaks (e.g. a download served from a half-written or failed artifact).",
+          "passed": false,
+          "evidence": "The report contains impact prose but no Gherkin given/when/then failure scenario blocks."
+        },
+        {
+          "text": "Hunts at least one corner case beyond those the blueprint listed (Step 9) — e.g. app files mutated mid-assembly, very large apps exhausting memory / blocking the request thread, or retention/cleanup of stale export artifacts.",
+          "passed": false,
+          "evidence": "It does not include a Missed corner cases section or examples beyond the blueprint such as path traversal, large-app memory pressure, or artifact retention/cleanup."
+        },
+        {
+          "text": "Produces only a review report for a human to act on — remediation appears solely as advice under Recommended actions — and it does not edit the code or re-trigger planning/implementation.",
+          "passed": true,
+          "evidence": "The output is only a review report with merge/rework advice; it does not edit code or re-trigger implementation."
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1,
+        "stddev": 0,
+        "min": 1,
+        "max": 1
+      },
+      "time_seconds": {
+        "mean": 146.3667,
+        "stddev": 1.8502,
+        "min": 145.2,
+        "max": 148.5
+      },
+      "tokens": {
+        "mean": 365436,
+        "stddev": 53952.5845,
+        "min": 311682,
+        "max": 419585
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.6826,
+        "stddev": 0.0275,
+        "min": 0.6667,
+        "max": 0.7143
+      },
+      "time_seconds": {
+        "mean": 79.0333,
+        "stddev": 20.0141,
+        "min": 58.6,
+        "max": 98.6
+      },
+      "tokens": {
+        "mean": 138891.6667,
+        "stddev": 17913.1721,
+        "min": 124984,
+        "max": 159105
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.32",
+      "time_seconds": "+67.3",
+      "tokens": "+226544"
+    }
+  },
+  "notes": [
+    "Iteration 2: with_skill again passed all 25 expectations across 3 evals; without_skill again passed 17/25. Pass-rate delta stayed +0.32, so quality did not regress after the skill revision.",
+    "Efficiency improved materially: skilled mean time dropped from 167.8s to 146.4s, and skilled mean token usage dropped from about 625.7k to 365.4k. The eval-2 skilled outlier fell from 1.16M tokens / 247.1s to 419.6k tokens / 148.5s.",
+    "The revised targeted architecture-lookup guidance reduced variance: skilled runtime stddev fell from 69.3s to 1.9s and token stddev from 463.7k to 54.0k.",
+    "Baseline remained strong at general defect discovery but consistently missed the Kite-specific report contract: exact headings, P-numbered architecture citations, and concrete Gherkin failure cases.",
+    "No third iteration is indicated: iteration 2 satisfies all key expectations and clearly beats baseline while improving efficiency over iteration 1."
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "eval_id": 2,
+  "eval_name": "code-blind-discipline-under-pressure",
+  "prompt": "Here's the next feature to plan for Kite: the admin announcement banner. Blueprint and design doc are files/announcement-banner-blueprint.md and files/announcement-banner-system-design.md in this folder. We already have a fairly mature Kite codebase with existing auth, workspaces, and notification plumbing, so feel free to lean on what's there \u2014 just give me the ordered scenario-by-scenario plan to hand off next.",
+  "expectations": [
+    "Resists the prompt's pressure to 'lean on what's there': does NOT assert that auth, workspaces, or notification plumbing already exist, and does NOT open, grep, or reference any source code \u2014 existence of those capabilities is deferred to the research step.",
+    "Converts the user's hint about existing infrastructure into concrete research questions (e.g. 'is there an existing per-user preference / dismissal store?', 'is there existing workspace-admin authorization?') rather than into claims about what the codebase already contains.",
+    "Extracts every blueprint scenario as Gherkin given/when/then \u2014 happy path, all edge cases, both deviation scenarios, and the admin-only adversarial cases \u2014 tagged by type.",
+    "Orders the scenarios for maximum reuse with a stated reason per scenario for its position in the order.",
+    "Writes a code-blind plan per scenario (Preconditions, Required capabilities described abstractly, Postconditions, Risks/assumptions) and concrete research questions per scenario.",
+    "Sets every scenario's status to `planned` and follows the shared plan-file schema.",
+    "Treats each scenario as a vertical slice and never structures the plan as horizontal layers.",
+    "Frames the deliverable as a plan to be handed off to the research step (kite-research) for answering the research questions against the real codebase, without doing that research itself."
+  ]
+}

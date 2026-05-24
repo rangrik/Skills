@@ -1,0 +1,73 @@
+{
+  "skill_name": "kite-research",
+  "notes": "These evals exercise kite-research against a tiny self-contained fixture codebase (files/*.ts) plus a code-blind plan fixture (files/plan-public-profiles.md) whose scenarios reference capabilities that EXIST in the fixture, are MISSING from it, and one whose design assumption the fixture flatly contradicts. The skill must answer every research question one-to-one, point EXISTS findings at a function/module with a file:line and a reuse note, point MISSING findings at a concrete extension point, record reuse constraints as caveats, raise a BLOCKING finding (status blocked) where the codebase contradicts the plan, put only names/locations (never copied source) in the plan, and update each scenario's status to researched or blocked.",
+  "evals": [
+    {
+      "id": 0,
+      "name": "full-plan-research-with-blocking",
+      "prompt": "Here's a kite-planner plan file (files/plan-public-profiles.md) and the codebase it targets (the other files/*.ts in this folder — treat them as the real repo: src/users/service.ts, src/routes/account.ts, src/middleware/auth.ts, src/orders/schema.ts, src/notifications/notifier.ts). Research the codebase and answer every scenario's research questions, then annotate the plan file and update the statuses.",
+      "expected_output": "An annotated copy of the plan file in which every research question across S1, S2, and S3 has a one-to-one finding. S1 answers are both EXISTS: requireAuth in the auth middleware and getUserById in the user service, each with a file:line and a reuse note, and getUserById's 'assumes caller already authenticated' caveat recorded as a reuse constraint. S2 has one MISSING finding (no username lookup) and one MISSING finding for the public route, each naming a concrete extension point. S3 surfaces a BLOCKING finding because the design demands a synchronous order-confirmation send with an inline delivery result but the codebase only has an async, queue-only notifier and the order schema has no email field; S3's status becomes blocked. S1 and S2 statuses become researched. No source code is copied into the plan file.",
+      "files": [
+        "files/plan-public-profiles.md",
+        "files/user-service.ts",
+        "files/account-routes.ts",
+        "files/auth-middleware.ts",
+        "files/order-schema.ts",
+        "files/notifier.ts"
+      ],
+      "expectations": [
+        "Every research question in the plan is answered one-to-one: S1.RQ1, S1.RQ2, S2.RQ1, S2.RQ2, S3.RQ1, and S3.RQ2 each have a corresponding finding, with none left unanswered",
+        "S1.RQ1 is answered EXISTS, naming requireAuth in the auth middleware (src/middleware/auth.ts) with a file:line location and a note on how to reuse it",
+        "S1.RQ2 is answered EXISTS, naming getUserById in the user service (src/users/service.ts) with a file:line location and a note that it returns the full user record and can be reused directly",
+        "The reuse constraint that getUserById assumes the caller is already authenticated is recorded as a caveat on that EXISTS finding",
+        "S2.RQ1 is answered MISSING (no lookup-by-username exists) and names a concrete extension point — where to add the username lookup (e.g. alongside getUserById in src/users/service.ts)",
+        "S2.RQ2 is answered MISSING (no public/unauthenticated profile route exists) and names a concrete extension point — where to add a new public route fitting the existing routing structure (e.g. a profile route alongside src/routes/account.ts)",
+        "S3 raises a BLOCKING finding: the design requires a synchronous order-confirmation send returning an inline delivery result, but the codebase's notifier is asynchronous/queue-only (queueOrderConfirmation) and the order schema has no email field, so the plan's assumption is contradicted",
+        "S3's status is set to blocked, and the BLOCKING finding explains exactly what is wrong rather than inventing a workaround",
+        "S1 and S2 statuses are updated to researched (and the scenario order/status table reflects researched/blocked, not still planned)",
+        "Only names and locations appear in the annotated plan — no verbatim source code from the fixture files is copied into the plan"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "single-scenario-exists-and-missing",
+      "prompt": "I'm only interested in the 'View someone's public profile' scenario (S2) in files/plan-public-profiles.md right now. Check what we already have in the codebase (the files/*.ts in this folder) for looking up a user by username and for serving a public profile route, and write the findings for that scenario into the plan. Don't paste any of our source into the plan — just tell me where things are.",
+      "expected_output": "Findings written for S2 only. Both research questions answered one-to-one as MISSING: there is no username lookup (the existing getUserById is by id, so the answer should note that and point to where a username lookup would be added) and there is no public unauthenticated route (the existing account routes are auth-gated, so the answer names where a new public profile route should live). The plan contains pointers and file:line references but no copied source code. S2's status becomes researched.",
+      "files": [
+        "files/plan-public-profiles.md",
+        "files/user-service.ts",
+        "files/account-routes.ts",
+        "files/auth-middleware.ts"
+      ],
+      "expectations": [
+        "Both of S2's research questions are answered one-to-one (S2.RQ1 and S2.RQ2), neither left unanswered",
+        "S2.RQ1 is MISSING — recognizes that the existing getUserById looks up by id, not username, so no username lookup exists — and names a concrete extension point for adding one (e.g. in src/users/service.ts next to getUserById)",
+        "S2.RQ2 is MISSING — recognizes the existing routes (src/routes/account.ts) are authenticated/account-scoped, so no public profile route exists — and names where a new public unauthenticated route should be added to fit the routing structure",
+        "Findings cite file:line locations for the existing code referenced (getUserById, the account routes) rather than vague references",
+        "No verbatim source code from the fixture is copied into the plan — only names and locations",
+        "S2's status is updated to researched"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "blocking-contradiction-detection",
+      "prompt": "Focus on the order-confirmation scenario (S3) in files/plan-public-profiles.md. The design says checkout must send the confirmation email synchronously and return the delivery result in the response. Look at how notifications and orders actually work in the codebase (files/notifier.ts and files/order-schema.ts, plus the rest) and tell me whether the plan can be implemented as written. Annotate S3 and set its status.",
+      "expected_output": "A BLOCKING finding on S3. The notifier (queueOrderConfirmation) is asynchronous and queue-only with no synchronous path that returns a delivery result, and the Order schema has no email field, so the design's synchronous-send-with-inline-result assumption cannot be satisfied. The skill must NOT invent a workaround; it records the BLOCKING finding describing exactly the contradiction and sets S3's status to blocked, signaling kite-planner must re-plan. Both of S3's research questions are still answered one-to-one, and no source code is copied into the plan.",
+      "files": [
+        "files/plan-public-profiles.md",
+        "files/notifier.ts",
+        "files/order-schema.ts",
+        "files/user-service.ts"
+      ],
+      "expectations": [
+        "Both of S3's research questions (S3.RQ1 and S3.RQ2) are answered one-to-one",
+        "S3.RQ1 establishes there is no synchronous order-confirmation send that returns an inline delivery result — only the asynchronous, queue-only queueOrderConfirmation (src/notifications/notifier.ts) exists — cited with a file:line",
+        "S3.RQ2 establishes the Order schema (src/orders/schema.ts) has no email field to send to, cited with a file:line",
+        "A BLOCKING finding is raised on S3 explaining the contradiction precisely: the design assumes a synchronous send with inline delivery result and an order email field, neither of which the codebase supports",
+        "The skill does NOT invent a workaround or redesign the solution — it surfaces the contradiction as a blocker for kite-planner to re-plan",
+        "S3's status is set to blocked",
+        "No verbatim source code from the fixture is copied into the plan — only names and locations"
+      ]
+    }
+  ]
+}

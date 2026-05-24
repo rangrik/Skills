@@ -1,0 +1,11 @@
+{
+  "eval_id": 3,
+  "eval_name": "scenario-drift-display-name",
+  "prompt": "Pre-commit check in appsmith-v2: here's the display-name update scenario plus my code changes (in member.md attached). Verify this scenario against the Gherkin before I commit.",
+  "expectations": [
+    "Confirms the display_name then-clauses (200, returns updated display_name, persisted) are satisfied",
+    "Explicitly flags that the implementation drifted outside this scenario by adding things the scenario never called for: marketing_emails_opt_in handling (and sending an email) and theme_preference",
+    "Identifies the out-of-scope additions concretely by name rather than vaguely noting 'extra code'",
+    "Stays a focused gate scoped to this one scenario: does not turn into a full-feature audit or a principle-by-principle architecture critique"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "eval_id": 2,
+  "eval_name": "audit-changes-against-blueprint",
+  "prompt": "Audit these changes against the blueprint before I let this merge. files/blueprint.md is the spec, files/code-changes.diff is everything the team changed, files/system-design.md is the design we agreed on, and files/plan.md tracks scenario status. I want to know what's actually wrong with it — assume it's broken.",
+  "expectations": [
+    "Maps each chunk of the diff to the scenario it serves and reports coverage as roughly 2 of 5 scenarios implemented, explicitly naming S3, S4, and S5 as unimplemented.",
+    "Identifies the usage_analytics module as an orphan change traceable to no scenario and recommends it not be there (scope creep).",
+    "Argues, scenario by scenario, why each implementation is unacceptable rather than assessing whether it is good, holding the adversarial stance even where code superficially looks fine.",
+    "Cites specific kite-arch-compass principle numbers/names for the violations (e.g. Principle 2 thin edges and Principle 19 async for the inline assembly in the route; Principle 15 idempotency for S3; least-privilege / never-trust-input for the missing S4 ownership check; Principle 16 / Principle 21 for S5's missing failed terminal state).",
+    "States the consequence/impact of each major defect and writes at least one concrete failure case as Gherkin (given/when/then) where the implementation breaks (e.g. a retried POST creating duplicate exports, or a cross-workspace export succeeding).",
+    "Surfaces at least one corner case the blueprint did not list (e.g. concurrent file mutation during assembly, unbounded memory on large apps, or stale/orphaned export artifacts).",
+    "Delivers the findings as a review report for a human to decide on and does not itself fix the code or re-run the implementation/planning pipeline."
+  ]
+}

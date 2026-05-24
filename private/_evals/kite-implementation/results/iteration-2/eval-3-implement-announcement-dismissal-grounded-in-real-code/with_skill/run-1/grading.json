@@ -1,0 +1,87 @@
+{
+  "expectations": [
+    {
+      "text": "Actually opens and reuses the REAL files the research findings name \u2014 the Announcement model (models/announcement.py), the announcement data layer (database/announcement_db.py / get_active_announcement), the existing announcement_routes.py, and session_manager.get_current_user() \u2014 at their stated locations, rather than re-discovering, reinventing, or redefining the announcement table.",
+      "passed": true,
+      "evidence": "combined: - RQ1 \u2192 EXISTS: session_manager.get_current_user() \u2014 used by authenticated"
+    },
+    {
+      "text": "Adds new code only at the MISSING extension points research identified: a new announcement_dismissals model, a SQL migration filed as the next sequential number under backend/app/migrations/, a unique constraint on (user_id, announcement_id), and the dismiss endpoint added into the existing announcement_routes.py (relying on glob auto-registration rather than adding a manual registration line).",
+      "passed": false,
+      "evidence": "patch: evidence not found"
+    },
+    {
+      "text": "Implements the scenarios in plan order (S1 then S2 then S3) and never starts a later scenario before the earlier one is committed.",
+      "passed": true,
+      "evidence": "report/plan: | 1 | S1 | User dismisses the active announcement          | researched |"
+    },
+    {
+      "text": "Builds each scenario as a vertical end-to-end slice spanning every layer it touches (route, data layer, model/migration) so the dismissal actually works, rather than implementing a single isolated layer or batching all the DB work first.",
+      "passed": false,
+      "evidence": "patch/report: +- `backend/app/routes/sandbox_routes.py`"
+    },
+    {
+      "text": "Resolves the current user via session_manager.get_current_user() for the dismiss route so an anonymous caller cannot dismiss, and tests that authenticated-only boundary (S1).",
+      "passed": true,
+      "evidence": "combined: - RQ1 \u2192 EXISTS: session_manager.get_current_user() \u2014 used by authenticated"
+    },
+    {
+      "text": "For S2, makes the active-announcement lookup user-aware so a dismissed announcement is hidden from the user who dismissed it while still shown to other users, and does NOT regress the existing route's DB-timeout / anonymous tolerance.",
+      "passed": true,
+      "evidence": "combined: +                timeout=60,"
+    },
+    {
+      "text": "For S3, relies on the (user_id, announcement_id) unique constraint and treats a repeat dismiss as a successful idempotent no-op, with a test covering the double-dismiss boundary, rather than generating exhaustive mechanical tests of every detail.",
+      "passed": true,
+      "evidence": "combined:   idempotent (dismissing twice is a safe no-op), and the active-announcement"
+    },
+    {
+      "text": "Runs the kite-arch-compass architecture check on each slice before committing it and fixes any flagged violation before the commit.",
+      "passed": false,
+      "evidence": "report: evidence not found"
+    },
+    {
+      "text": "Runs an independent kite-scenario-check against each scenario's Gherkin before committing, and does NOT commit a scenario whose scenario-check returns FAIL \u2014 it fixes the listed gaps and re-checks first.",
+      "passed": false,
+      "evidence": "report: evidence not found"
+    },
+    {
+      "text": "Skips scenario S4 because research marked it blocked, does not attempt to implement it, and surfaces it clearly as needing kite-planner to re-plan.",
+      "passed": true,
+      "evidence": "report/plan: | 4 | S4 | Auto-expire dismissals after the retention window| blocked    |"
+    },
+    {
+      "text": "For each committed scenario, fills in the plan file's Implementation record (changed files, tests added, architecture-check result, scenario-check verdict, commit) and sets that scenario's status to committed.",
+      "passed": false,
+      "evidence": "report: evidence not found"
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 5,
+    "total": 11,
+    "pass_rate": 0.5455
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": 0,
+    "errors_encountered": 0,
+    "output_chars": 105597,
+    "transcript_chars": 0
+  },
+  "timing": {
+    "executor_duration_seconds": 5.0,
+    "total_duration_seconds": 5.0
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "Inline deterministic grading; no eval-structure suggestions."
+  }
+}
