@@ -1,0 +1,17 @@
+{
+  "eval_id": 1,
+  "eval_name": "implement-team-invites-from-researched-plan",
+  "prompt": "We've finished researching the team-invites feature for appsmith-v2 \u2014 the annotated plan file is team-invites-plan.md in this folder. Work through it and build the feature in the appsmith-v2 repo, one scenario at a time, committing each scenario as you go.",
+  "expectations": [
+    "A faithful benchmark requires the live appsmith-v2 repository checked out as the working codebase; the run cannot reuse the EXISTS findings, add code at the MISSING extension points, run the architecture check, or produce real commits without it, and the run states this dependency rather than fabricating file contents.",
+    "Implements the scenarios in plan order (S1 then S2 then S3) and never starts a later scenario before the earlier one is committed.",
+    "Builds each scenario as a vertical end-to-end slice spanning every layer it touches (route, service, model/migration) so the scenario actually works for a user \u2014 it does NOT implement a single layer in isolation or batch all the database work first.",
+    "Reuses exactly what kite-research marked EXISTS at the stated locations \u2014 require_workspace_admin (guards.py:88), enqueue_email (email_jobs.py:31), and WorkspaceMembershipService.add_member (workspace_membership.py:54) \u2014 instead of re-discovering or reimplementing them.",
+    "Adds new code only at the MISSING extension points research identified \u2014 the invitations model and migration, the partial unique index on (workspace_id, lower(email)) WHERE status = pending, and the new accept-invite route \u2014 rather than re-deciding where things should live.",
+    "Tests selectively at the boundaries that matter \u2014 the S1 admin-authorization boundary, the S2 atomic single-membership-on-double-accept data-integrity boundary, and the S3 idempotent re-invite behavior \u2014 and does NOT generate exhaustive or mechanical tests for every implementation detail.",
+    "Runs the kite-arch-compass architecture check on each slice before committing it, and fixes any flagged violation before the commit rather than carrying it into the commit.",
+    "Runs an independent kite-scenario-check against each scenario's Gherkin before committing, and does NOT commit a scenario whose scenario-check returns FAIL \u2014 it fixes the listed gaps and re-checks first.",
+    "Skips scenario S4 because research marked it blocked, does not attempt to implement it, and surfaces it clearly as needing kite-planner to re-plan.",
+    "For each committed scenario, fills in the plan file's Implementation record (changed files, tests added, architecture-check result, scenario-check verdict, commit) and sets that scenario's status to committed."
+  ]
+}

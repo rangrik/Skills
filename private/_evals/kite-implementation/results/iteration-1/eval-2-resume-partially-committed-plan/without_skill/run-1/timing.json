@@ -1,0 +1,10 @@
+{
+  "total_tokens": 12626762,
+  "duration_ms": 717676,
+  "total_duration_seconds": 717.7,
+  "started_at": "2026-05-24T02:35:58Z",
+  "thread_id": "019e57d6-da63-7d43-aad0-67661bd1a4d8",
+  "returncode": 0,
+  "timed_out": false,
+  "transcript_chars": 54829
+}

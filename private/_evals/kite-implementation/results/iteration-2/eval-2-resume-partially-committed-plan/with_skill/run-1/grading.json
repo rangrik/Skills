@@ -1,0 +1,77 @@
+{
+  "expectations": [
+    {
+      "text": "A faithful benchmark requires the live appsmith-v2 repository as the working codebase; without it the run cannot reuse the EXISTS findings, add code at the MISSING extension points, run the architecture check, or produce real commits, and the run states this rather than inventing repo contents.",
+      "passed": true,
+      "evidence": "combined:     https://github.com/appsmithorg/appsmith-v2/pull/11556"
+    },
+    {
+      "text": "Treats the plan file as the resumable state machine: scenarios already marked committed are not rebuilt, and work resumes from the first non-committed, non-blocked scenario.",
+      "passed": false,
+      "evidence": "report/plan: evidence not found"
+    },
+    {
+      "text": "Processes the remaining scenarios in plan order, each as a vertical end-to-end slice across every layer it touches rather than as an isolated single layer.",
+      "passed": true,
+      "evidence": "report/plan: | 1 | S1 | Admin invites a new member by email    | researched |"
+    },
+    {
+      "text": "Reuses the capabilities kite-research marked EXISTS at their given locations and adds new code only at the MISSING extension points, without re-discovering what research already settled.",
+      "passed": false,
+      "evidence": "patch/report: evidence not found"
+    },
+    {
+      "text": "Tests selectively at the behavior, security/authorization, data-integrity, and reuse-regression boundaries, not exhaustively across every implementation detail.",
+      "passed": false,
+      "evidence": "patch/report: +- `backend/tests/test_services/test_e2b_service_retry.py`"
+    },
+    {
+      "text": "Runs the kite-arch-compass architecture check on each slice before committing and fixes violations before the commit.",
+      "passed": false,
+      "evidence": "report: evidence not found"
+    },
+    {
+      "text": "Runs an independent kite-scenario-check before each commit and does NOT commit any scenario whose check returns FAIL, fixing the named gaps and re-checking instead.",
+      "passed": false,
+      "evidence": "report: evidence not found"
+    },
+    {
+      "text": "Skips the blocked scenario S4, does not implement it, and surfaces it as needing re-planning by kite-planner.",
+      "passed": true,
+      "evidence": "report/plan: | 4 | S4 | Accepting an expired invite fails       | blocked    |"
+    },
+    {
+      "text": "Fills in the Implementation record and sets status to committed for each scenario it finishes.",
+      "passed": false,
+      "evidence": "plan/report: evidence not found"
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 6,
+    "total": 9,
+    "pass_rate": 0.3333
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": 0,
+    "errors_encountered": 0,
+    "output_chars": 101431,
+    "transcript_chars": 0
+  },
+  "timing": {
+    "executor_duration_seconds": 3.4,
+    "total_duration_seconds": 3.4
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "Inline deterministic grading; no eval-structure suggestions."
+  }
+}

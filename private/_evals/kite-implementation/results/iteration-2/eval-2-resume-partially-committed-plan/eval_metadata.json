@@ -1,0 +1,16 @@
+{
+  "eval_id": 2,
+  "eval_name": "resume-partially-committed-plan",
+  "prompt": "Pick up the team-invites build in appsmith-v2 from the attached plan file (team-invites-plan.md) and finish it. Some scenarios may already be done \u2014 don't redo committed work. Commit each remaining scenario only after it's verified.",
+  "expectations": [
+    "A faithful benchmark requires the live appsmith-v2 repository as the working codebase; without it the run cannot reuse the EXISTS findings, add code at the MISSING extension points, run the architecture check, or produce real commits, and the run states this rather than inventing repo contents.",
+    "Treats the plan file as the resumable state machine: scenarios already marked committed are not rebuilt, and work resumes from the first non-committed, non-blocked scenario.",
+    "Processes the remaining scenarios in plan order, each as a vertical end-to-end slice across every layer it touches rather than as an isolated single layer.",
+    "Reuses the capabilities kite-research marked EXISTS at their given locations and adds new code only at the MISSING extension points, without re-discovering what research already settled.",
+    "Tests selectively at the behavior, security/authorization, data-integrity, and reuse-regression boundaries, not exhaustively across every implementation detail.",
+    "Runs the kite-arch-compass architecture check on each slice before committing and fixes violations before the commit.",
+    "Runs an independent kite-scenario-check before each commit and does NOT commit any scenario whose check returns FAIL, fixing the named gaps and re-checking instead.",
+    "Skips the blocked scenario S4, does not implement it, and surfaces it as needing re-planning by kite-planner.",
+    "Fills in the Implementation record and sets status to committed for each scenario it finishes."
+  ]
+}

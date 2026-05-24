@@ -1,0 +1,87 @@
+{
+  "expectations": [
+    {
+      "text": "Actually opens and reuses the REAL files the research findings name \u2014 the Announcement model (models/announcement.py), the announcement data layer (database/announcement_db.py / get_active_announcement), the existing announcement_routes.py, and session_manager.get_current_user() \u2014 at their stated locations, rather than re-discovering, reinventing, or redefining the announcement table.",
+      "passed": true,
+      "evidence": "combined: - S1 RQ1 -> EXISTS: `session_manager.get_current_user()` \u2014 used by authenticated routes (see `backend/app/routes/account_routes.py`, which calls `current_user = session_manager.get_current_user()`) to resolve the current user inside a request. Reused in the dismiss route."
+    },
+    {
+      "text": "Adds new code only at the MISSING extension points research identified: a new announcement_dismissals model, a SQL migration filed as the next sequential number under backend/app/migrations/, a unique constraint on (user_id, announcement_id), and the dismiss endpoint added into the existing announcement_routes.py (relying on glob auto-registration rather than adding a manual registration line).",
+      "passed": true,
+      "evidence": "patch: @@ -20,10 +21,20 @@ async def record_announcement_dismissal("
+    },
+    {
+      "text": "Implements the scenarios in plan order (S1 then S2 then S3) and never starts a later scenario before the earlier one is committed.",
+      "passed": true,
+      "evidence": "report/plan: 1. S1 \u2014 User dismisses the active announcement \u2014 committed."
+    },
+    {
+      "text": "Builds each scenario as a vertical end-to-end slice spanning every layer it touches (route, data layer, model/migration) so the dismissal actually works, rather than implementing a single isolated layer or batching all the DB work first.",
+      "passed": false,
+      "evidence": "patch/report: diff --git a/backend/app/database/announcement_db.py b/backend/app/database/announcement_db.py"
+    },
+    {
+      "text": "Resolves the current user via session_manager.get_current_user() for the dismiss route so an anonymous caller cannot dismiss, and tests that authenticated-only boundary (S1).",
+      "passed": true,
+      "evidence": "combined: - S1 RQ1 -> EXISTS: `session_manager.get_current_user()` \u2014 used by authenticated routes (see `backend/app/routes/account_routes.py`, which calls `current_user = session_manager.get_current_user()`) to resolve the current user inside a request. Reused in the dismiss route."
+    },
+    {
+      "text": "For S2, makes the active-announcement lookup user-aware so a dismissed announcement is hidden from the user who dismissed it while still shown to other users, and does NOT regress the existing route's DB-timeout / anonymous tolerance.",
+      "passed": true,
+      "evidence": "combined: 2. S2 \u2014 Active endpoint hides a dismissed announcement \u2014 committed."
+    },
+    {
+      "text": "For S3, relies on the (user_id, announcement_id) unique constraint and treats a repeat dismiss as a successful idempotent no-op, with a test covering the double-dismiss boundary, rather than generating exhaustive mechanical tests of every detail.",
+      "passed": true,
+      "evidence": "combined: - S3 RQ1 -> MISSING: the dismissal model added in S1 needed a unique constraint on `(user_id, announcement_id)` in the same migration and duplicate dismissal handling as success. Added the unique constraint in S1 and implemented `ON CONFLICT DO NOTHING` in S3."
+    },
+    {
+      "text": "Runs the kite-arch-compass architecture check on each slice before committing it and fixes any flagged violation before the commit.",
+      "passed": true,
+      "evidence": "report: - Passed: `backend/.venv/bin/python -m py_compile backend/app/models/announcement_dismissal.py backend/app/database/announcement_db.py backend/app/services/announcement_service.py backend/app/schemas/announcement_schema.py backend/app/routes/announcement_routes.py backend/tests/test_routes/test_announcement_routes.py`."
+    },
+    {
+      "text": "Runs an independent kite-scenario-check against each scenario's Gherkin before committing, and does NOT commit a scenario whose scenario-check returns FAIL \u2014 it fixes the listed gaps and re-checks first.",
+      "passed": true,
+      "evidence": "report: - `backend/app/services/announcement_service.py` \u2014 new service layer for dismissing announcements and fetching active announcements with timeout fail-open handling."
+    },
+    {
+      "text": "Skips scenario S4 because research marked it blocked, does not attempt to implement it, and surfaces it clearly as needing kite-planner to re-plan.",
+      "passed": true,
+      "evidence": "report/plan: ## Scenarios skipped as blocked"
+    },
+    {
+      "text": "For each committed scenario, fills in the plan file's Implementation record (changed files, tests added, architecture-check result, scenario-check verdict, commit) and sets that scenario's status to committed.",
+      "passed": true,
+      "evidence": "report: - `backend/app/services/announcement_service.py` \u2014 new service layer for dismissing announcements and fetching active announcements with timeout fail-open handling."
+    }
+  ],
+  "summary": {
+    "passed": 10,
+    "failed": 1,
+    "total": 11,
+    "pass_rate": 0.9091
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": 0,
+    "errors_encountered": 0,
+    "output_chars": 1574854,
+    "transcript_chars": 52476
+  },
+  "timing": {
+    "executor_duration_seconds": 872.8,
+    "total_duration_seconds": 872.8
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "Inline deterministic grading; no eval-structure suggestions."
+  }
+}

@@ -24,33 +24,12 @@ each commit.
 
 ## The core loop
 
-Before coding, do a short **research/live-code preflight**:
-
-- Confirm you are in the intended codebase and `git status --short` is clean.
-- Read the plan as the source of truth for scenario order and status.
-- For the first scenario you may touch, verify every `EXISTS` finding you plan
-  to rely on by opening the named file/symbol in the live repo.
-- If an `EXISTS` file or symbol is missing, do not create an equivalent and call
-  it reuse — not even a "minimal" one to keep the slice working. Treat that as
-  stale research. Stop that scenario, mark it blocked for re-research/re-planning,
-  and surface the exact missing path/symbol. Building a stand-in for a missing
-  `EXISTS` dependency is the single most tempting way to drift off the plan, and
-  it silently invalidates every reuse the rest of the feature was supposed to do.
-  If the file exists but line numbers drifted, use the live symbol and record the
-  drift.
-- If a `MISSING` extension point depends on a parent file/module that is itself
-  absent, block and surface the stale assumption instead of choosing a new home.
-
-Work through the scenarios **in plan order**, treating the plan as a resumable
-state machine. Skip scenarios already marked `committed`. Skip scenarios marked
-`blocked`. Start with the first scenario that is neither committed nor blocked.
-For each scenario:
+Work through the scenarios **in plan order**. For each scenario:
 
 1. **Read the scenario's plan and research findings.** The research already
    located what to reuse and where to add new code — use it. Reuse what
    `kite-research` marked EXISTS; add new code at the extension points it
-   identified. Do not re-discover what has already been found, and do not
-   replace a missing researched dependency with a newly invented equivalent.
+   identified. Do not re-discover what has already been found.
 
 2. **Implement the scenario as a vertical slice.** Build it end to end, through
    every layer it touches, so the scenario actually works for a user. Never
@@ -77,11 +56,9 @@ For each scenario:
    away.
 
 6. **Commit — or fix and re-check.** If `kite-scenario-check` returns PASS,
-   commit this scenario as a single commit using the normal worktree Git
-   metadata. If Git cannot write the worktree index, report that as an
-   environment blocker instead of creating an alternate repository. If the check
-   returns FAIL, fix the specific gaps it listed and run the check again. Do not
-   commit a scenario that has not passed.
+   commit this scenario as a single commit. If it returns FAIL, fix the specific
+   gaps it listed and run the check again. Do not commit a scenario that has not
+   passed.
 
 7. **Record and move on.** Update the scenario's implementation record and set
    its status to `committed` in the plan file, then start the next scenario.
@@ -92,23 +69,11 @@ Repeat until every scenario is committed.
 
 If `kite-research` marked a scenario `blocked`, do not implement it. Skip it and
 surface it clearly — it needs `kite-planner` to re-plan before it can be built.
-Do not quietly implement policy, timing, retention, cleanup, expiry, billing, or
-authorization behavior that a blocked scenario says is undefined. If an earlier
-scenario appears to require that missing policy, stop and surface the dependency
-conflict rather than inventing a value.
 
 ## Staying in your lane
 
 Do not implement horizontally. Do not skip the architecture check or the
 scenario check. Do not commit on a failed check. Do not over-test.
-
-## Hand-off records
-
-For every finished scenario, update the implementation record with changed
-files, tests run or blocked, architecture-check result, scenario-check verdict,
-and commit hash. For skipped or blocked scenarios, record the exact reason and
-the next pipeline stage needed. The next agent should be able to resume from the
-plan file without reading your transcript.
 
 ## Hand-off
 
