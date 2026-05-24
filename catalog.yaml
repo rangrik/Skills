@@ -47,6 +47,15 @@ skills:
       suite: personal/_evals/system-taxonomy/suite
       results: personal/_evals/system-taxonomy/results
 
+  - id: slice-blueprint
+    name: slice-blueprint
+    bucket: personal
+    path: personal/slice-blueprint
+    install: false
+    evals:
+      suite: personal/_evals/slice-blueprint/suite
+      results: personal/_evals/slice-blueprint/results
+
   - id: kite-arch-compass
     name: kite-arch-compass
     bucket: private
@@ -100,15 +109,6 @@ skills:
     evals:
       suite: private/_evals/kite-feature-review/suite
       results: private/_evals/kite-feature-review/results
-
-  - id: kite-blueprint-slicer
-    name: kite-blueprint-slicer
-    bucket: private
-    path: private/kite-blueprint-slicer
-    install: true
-    evals:
-      suite: private/_evals/kite-blueprint-slicer/suite
-      results: private/_evals/kite-blueprint-slicer/results
 
   - id: vendor-anthropic-skill-creator
     name: skill-creator

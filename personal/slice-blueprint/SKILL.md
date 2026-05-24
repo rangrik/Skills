@@ -1,5 +1,5 @@
 ---
-name: kite-blueprint-slicer
+name: slice-blueprint
 description: >-
   Cuts one large behavior blueprint into a stacked sequence of smaller blueprints, each a
   thin but FULL-STACK, end-to-end shippable vertical slice — DB, backend, API, and UI
@@ -7,16 +7,16 @@ description: >-
   (a walking skeleton first, then capability layered on top), and is written in the exact
   same section format as the source blueprint, with its Gherkin and every other section
   narrowed to that slice's scope. Use this as the stage immediately AFTER a behavior
-  blueprint exists and BEFORE planning — feed each resulting slice into kite-planner on its
-  own. Reach for it whenever the user says "slice this blueprint", "break this feature into
+  blueprint exists and BEFORE planning — feed each resulting slice into your planning skill on
+  its own. Reach for it whenever the user says "slice this blueprint", "break this feature into
   slices", "split this into deliverable increments", "how should we phase / stack this
   build", "cut this into vertical slices", or has a finished blueprint and is about to start
   building something too big to ship in one go — even if they never say the word "slice".
   Do NOT use it to write the original blueprint (that is the blueprint skill) or to produce
-  an implementation plan for a single slice (that is kite-planner).
+  an implementation plan for a single slice (that is a planning skill).
 ---
 
-# Kite Blueprint Slicer
+# Slice Blueprint
 
 You take one large behavior blueprint and cut it into an ordered, **stacked** sequence of
 smaller blueprints. Each smaller blueprint describes a single **vertical slice** of the
@@ -79,7 +79,7 @@ A `<feature-name>-slices/` directory, created next to the source blueprint, cont
   on, and a coverage ledger proving every scenario from the source blueprint landed in
   exactly one slice. See the template file for its shape.
 
-Each slice file is meant to be fed into `kite-planner` on its own, as if it were a small
+Each slice file is meant to be fed into your planning skill on its own, as if it were a small
 standalone blueprint. That is the whole point of keeping the format identical.
 
 ## Workflow
@@ -233,7 +233,7 @@ shape.
 Give a short summary: how many slices, a one-line "delivers" for each, and explicit
 confirmation that every source scenario is covered (cite the ledger). Flag any scenario you
 could not cleanly place and any assumption you had to make about layer boundaries. Then point
-the user at `SLICES.md` and note the next step: each slice goes through `kite-planner`
+the user at `SLICES.md` and note the next step: each slice goes through your planning skill
 individually, in stacked order.
 
 ## Principles to hold throughout
