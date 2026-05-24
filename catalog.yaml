@@ -38,6 +38,15 @@ skills:
       suite: personal/_evals/skill-creator/suite
       results: personal/_evals/skill-creator/results
 
+  - id: system-taxonomy
+    name: system-taxonomy
+    bucket: personal
+    path: personal/system-taxonomy
+    install: true
+    evals:
+      suite: personal/_evals/system-taxonomy/suite
+      results: personal/_evals/system-taxonomy/results
+
   - id: kite-arch-compass
     name: kite-arch-compass
     bucket: private
