@@ -1,0 +1,74 @@
+{
+  "expectations": [
+    {
+      "text": "Produces a standalone review-report document that follows the prescribed structure exactly: a Summary section, an 'Orphan changes' section, a 'Scenario reviews' section with one subsection per scenario, a 'Missed corner cases' section, and a 'Recommended actions' section.",
+      "passed": true,
+      "evidence": "Report uses the required exact top-level headings: Summary, Orphan changes (not traceable to any scenario), Scenario reviews, Missed corner cases, and Recommended actions."
+    },
+    {
+      "text": "The Summary does a coverage check stating roughly 2 of 5 scenarios implemented and explicitly flags S3 (idempotent retry), S4 (ownership authorization), and S5 (assembly-failure terminal state) as unimplemented / having no associated code changes.",
+      "passed": true,
+      "evidence": "Summary states coverage as 2 of 5 committed code paths and names S3, S4, and S5 as unimplemented / no implementation."
+    },
+    {
+      "text": "Detects the usage_analytics module (PostHog tracking + active_creators_daily rollup) as an orphan change that maps to no scenario in the blueprint, and calls it out as unrequested scope creep that should not be there.",
+      "passed": true,
+      "evidence": "Orphan section calls out `backend/app/services/usage_analytics.py` and inline `track_export(...)` as unrequested analytics scope creep."
+    },
+    {
+      "text": "For EACH scenario the review argues why the implementation is unacceptable with concrete reasons (adversarial framing), rather than praising or signing anything off; unimplemented scenarios are argued as unacceptable because nothing was built.",
+      "passed": true,
+      "evidence": "Each S1-S5 subsection has a \"Why the implementation is unacceptable\" bullet; unimplemented S3-S5 are rejected for absent implementation."
+    },
+    {
+      "text": "Cites specific kite-arch-compass principles behind the findings, including the inline zip assembly + DB access in the route handler violating thin-edges (Principle 2), layering (Principle 1), and do-slow-work-asynchronously (Principle 19); the missing idempotency for S3 (Principle 15); the missing server-side ownership check trusting a client-supplied workspace_id for S4 (least privilege Principle 27 and/or never-trust-input Principle 29); and the absent failed terminal state / non-resumable flow for S5 (Principle 16 and/or Principle 21).",
+      "passed": true,
+      "evidence": "Principle sections cite P1/P2/P19 for route assembly, P15 for idempotency, P27/P28/P29 for auth/input trust, and P16/P21 for failure states/retries."
+    },
+    {
+      "text": "Flags that the S2 download endpoint streams the artifact with no status==ready gate, so a failed or half-written export could be served as a valid download.",
+      "passed": true,
+      "evidence": "S2 review says the endpoint has no `status == ready` gate and returns an artifact path for non-ready/failed exports."
+    },
+    {
+      "text": "For at least the implemented scenarios, states the concrete impact ('because this is wrong, here is the consequence') AND writes a failure scenario as Gherkin (given/when/then) describing an input under which the implementation actually breaks.",
+      "passed": true,
+      "evidence": "Implemented scenarios include explicit impact bullets and fenced Gherkin failure scenarios."
+    },
+    {
+      "text": "Hunts missed corner cases BEYOND those the blueprint listed (Step 9) — e.g. app files changing mid-assembly, very large apps blocking the request thread / memory, or export-artifact retention and cleanup — not merely restating the blueprint's own S3-S5 corner cases.",
+      "passed": true,
+      "evidence": "Missed corner cases include path traversal, memory pressure for large apps, artifact collisions, orphan artifacts, analytics outage, and download/update races."
+    },
+    {
+      "text": "Does NOT fix the code, rewrite the implementation, or re-trigger planning/implementation; any remediation appears only as advice under 'Recommended actions'.",
+      "passed": true,
+      "evidence": "The output is only a review report; remediation is advice under Recommended actions and no implementation files were changed by the child."
+    }
+  ],
+  "summary": {
+    "passed": 9,
+    "failed": 0,
+    "total": 9,
+    "pass_rate": 1
+  },
+  "execution_metrics": {
+    "tool_calls": {
+      "command_execution": 22
+    },
+    "total_tool_calls": 22,
+    "total_steps": 22,
+    "errors_encountered": 0,
+    "output_chars": 365041,
+    "report_chars": 15001,
+    "transcript_chars": 79472
+  },
+  "timing": {
+    "total_tokens": 365041,
+    "duration_ms": 145390,
+    "total_duration_seconds": 145.4
+  },
+  "eval_feedback": {
+    "overall": "No assertion changes made for iteration 2; expectations remained discriminating on structure, principle citations, Gherkin failure cases, and missed corner cases."
+  }
+}

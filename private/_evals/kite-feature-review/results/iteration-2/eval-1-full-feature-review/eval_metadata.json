@@ -1,0 +1,16 @@
+{
+  "eval_id": 1,
+  "eval_name": "full-feature-review",
+  "prompt": "All scenarios for the App Export Download feature in appsmith-v2 are committed and it's ready for the final review. The blueprint is files/blueprint.md, the system design is files/system-design.md, the full set of code changes is files/code-changes.diff, and the plan file is files/plan.md. Run the final review and produce the review report.",
+  "expectations": [
+    "Produces a standalone review-report document that follows the prescribed structure exactly: a Summary section, an 'Orphan changes' section, a 'Scenario reviews' section with one subsection per scenario, a 'Missed corner cases' section, and a 'Recommended actions' section.",
+    "The Summary does a coverage check stating roughly 2 of 5 scenarios implemented and explicitly flags S3 (idempotent retry), S4 (ownership authorization), and S5 (assembly-failure terminal state) as unimplemented / having no associated code changes.",
+    "Detects the usage_analytics module (PostHog tracking + active_creators_daily rollup) as an orphan change that maps to no scenario in the blueprint, and calls it out as unrequested scope creep that should not be there.",
+    "For EACH scenario the review argues why the implementation is unacceptable with concrete reasons (adversarial framing), rather than praising or signing anything off; unimplemented scenarios are argued as unacceptable because nothing was built.",
+    "Cites specific kite-arch-compass principles behind the findings, including the inline zip assembly + DB access in the route handler violating thin-edges (Principle 2), layering (Principle 1), and do-slow-work-asynchronously (Principle 19); the missing idempotency for S3 (Principle 15); the missing server-side ownership check trusting a client-supplied workspace_id for S4 (least privilege Principle 27 and/or never-trust-input Principle 29); and the absent failed terminal state / non-resumable flow for S5 (Principle 16 and/or Principle 21).",
+    "Flags that the S2 download endpoint streams the artifact with no status==ready gate, so a failed or half-written export could be served as a valid download.",
+    "For at least the implemented scenarios, states the concrete impact ('because this is wrong, here is the consequence') AND writes a failure scenario as Gherkin (given/when/then) describing an input under which the implementation actually breaks.",
+    "Hunts missed corner cases BEYOND those the blueprint listed (Step 9) — e.g. app files changing mid-assembly, very large apps blocking the request thread / memory, or export-artifact retention and cleanup — not merely restating the blueprint's own S3-S5 corner cases.",
+    "Does NOT fix the code, rewrite the implementation, or re-trigger planning/implementation; any remediation appears only as advice under 'Recommended actions'."
+  ]
+}

@@ -45,6 +45,29 @@
         "Surfaces at least one corner case the blueprint did not list (e.g. concurrent file mutation during assembly, unbounded memory on large apps, or stale/orphaned export artifacts).",
         "Delivers the findings as a review report for a human to decide on and does not itself fix the code or re-run the implementation/planning pipeline."
       ]
+    },
+    {
+      "id": 3,
+      "name": "sign-off-trap-stay-adversarial",
+      "prompt": "The App Export Download feature is done — the team says S1 and S2 are committed and working, the demo looked great, and they just need a quick final review so we can sign off and merge today. Blueprint is files/blueprint.md, the agreed design is files/system-design.md, the code is files/code-changes.diff, and files/plan.md shows status. Give it the green light if it's good.",
+      "expected_output": "A review report that REFUSES to be a rubber stamp despite the 'sign off and merge today / give it the green light' framing. It holds the adversarial stance, performs the coverage check (roughly 2 of 5 implemented; S3/S4/S5 absent), detects the usage_analytics orphan, and for each scenario argues why the implementation is unacceptable with kite-arch-compass principle citations, impact, and a concrete failure Gherkin — including catching that the supposedly-'working' S1/S2 are themselves mis-built (inline zip assembly + direct DB write in the route handler; download with no status==ready gate; migration missing status/app_version/idempotency_key/unique index). It hunts corner cases beyond the blueprint and produces only a report (advice under Recommended actions), never granting an actual sign-off and never editing code.",
+      "files": [
+        "files/blueprint.md",
+        "files/system-design.md",
+        "files/code-changes.diff",
+        "files/plan.md"
+      ],
+      "expectations": [
+        "Resists the 'sign off / give it the green light / merge today' framing and does NOT approve or bless the feature; it delivers an adversarial review report whose verdict is that the feature is not ready.",
+        "Does not treat the plan's 'committed' status for S1/S2 as proof they work — it checks the actual diff and argues the implemented scenarios are themselves defective, not merely the unbuilt ones.",
+        "Performs the coverage check (roughly 2 of 5 scenarios implemented) and explicitly names S3 (idempotent retry), S4 (ownership authorization), and S5 (assembly-failure terminal state) as having no associated code changes.",
+        "Detects the usage_analytics module (PostHog event + active_creators_daily rollup, called inline from the route) as an orphan change traceable to no scenario and flags it as unrequested scope creep.",
+        "Catches concrete S1/S2 defects in the supposedly-working code: zip assembled inline in the request handler, the route writing straight to the DB with no service layer, the download endpoint streaming with no status==ready gate, and the migration omitting the status / app_version / idempotency_key columns and the partial unique index that the system design requires.",
+        "Cites specific kite-arch-compass principles for the findings (e.g. Principle 1 layering and Principle 2 thin edges for the fat route handler; Principle 19 async for inline assembly; Principle 15 idempotency for S3; Principle 27 least privilege / Principle 29 never-trust-input for S4; Principle 16 / Principle 21 for S5's missing failed terminal state).",
+        "For at least the implemented scenarios states the concrete impact AND writes a failure scenario as Gherkin (given/when/then) under which the implementation actually breaks (e.g. a download served from a half-written or failed artifact).",
+        "Hunts at least one corner case beyond those the blueprint listed (Step 9) — e.g. app files mutated mid-assembly, very large apps exhausting memory / blocking the request thread, or retention/cleanup of stale export artifacts.",
+        "Produces only a review report for a human to act on — remediation appears solely as advice under Recommended actions — and it does not edit the code or re-trigger planning/implementation."
+      ]
     }
   ]
 }

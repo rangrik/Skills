@@ -1,0 +1,64 @@
+{
+  "expectations": [
+    {
+      "text": "Maps each chunk of the diff to the scenario it serves and reports coverage as roughly 2 of 5 scenarios implemented, explicitly naming S3, S4, and S5 as unimplemented.",
+      "passed": true,
+      "evidence": "Blocking findings map the diff chunks: route-owned assembly/DB writes, download path response, missing schema/idempotency, missing auth/failure handling, and analytics side effect; Scenario Coverage reports S1/S2 committed and S3/S4/S5 planned/not implemented."
+    },
+    {
+      "text": "Identifies the usage_analytics module as an orphan change traceable to no scenario and recommends it not be there (scope creep).",
+      "passed": true,
+      "evidence": "Finding 9 identifies `usage_analytics.py`, PostHog capture, active_creators_daily, and inline route call as out of scope."
+    },
+    {
+      "text": "Argues, scenario by scenario, why each implementation is unacceptable rather than assessing whether it is good, holding the adversarial stance even where code superficially looks fine.",
+      "passed": true,
+      "evidence": "Findings and Scenario Coverage argue why S1-S5 fail or are not merge-ready."
+    },
+    {
+      "text": "Cites specific kite-arch-compass principle numbers/names for the violations (e.g. Principle 2 thin edges and Principle 19 async for the inline assembly in the route; Principle 15 idempotency for S3; least-privilege / never-trust-input for the missing S4 ownership check; Principle 16 / Principle 21 for S5's missing failed terminal state).",
+      "passed": false,
+      "evidence": "No kite-arch-compass principle numbers or names appear, so the required P2/P19/P15/P27/P29/P16/P21 citations are absent."
+    },
+    {
+      "text": "States the consequence/impact of each major defect and writes at least one concrete failure case as Gherkin (given/when/then) where the implementation breaks (e.g. a retried POST creating duplicate exports, or a cross-workspace export succeeding).",
+      "passed": false,
+      "evidence": "The report states impact for defects, but it contains no Gherkin given/when/then failure cases."
+    },
+    {
+      "text": "Surfaces at least one corner case the blueprint did not list (e.g. concurrent file mutation during assembly, unbounded memory on large apps, or stale/orphaned export artifacts).",
+      "passed": true,
+      "evidence": "Additional Review Notes surface missed cases such as missing export row handling, path construction risk, artifact collisions, and unreliable plan check records."
+    },
+    {
+      "text": "Delivers the findings as a review report for a human to decide on and does not itself fix the code or re-run the implementation/planning pipeline.",
+      "passed": true,
+      "evidence": "The report gives Required Before Merge advice and does not modify code or re-run the pipeline."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 2,
+    "total": 7,
+    "pass_rate": 0.7143
+  },
+  "execution_metrics": {
+    "tool_calls": {
+      "command_execution": 12
+    },
+    "total_tool_calls": 12,
+    "total_steps": 12,
+    "errors_encountered": 0,
+    "output_chars": 148191,
+    "transcript_chars": 44588,
+    "report_chars": 9812
+  },
+  "timing": {
+    "total_tokens": 148191,
+    "duration_ms": 76155,
+    "total_duration_seconds": 76.2
+  },
+  "eval_feedback": {
+    "overall": "No assertion changes made for iteration 1; the expectations discriminate mainly on report structure, principle citations, and concrete failure scenarios."
+  }
+}
