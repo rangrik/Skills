@@ -1,0 +1,6 @@
+[
+  "With-skill passed every expectation across the three evals; without-skill failed mainly on shared plan-file schema, Gherkin extraction, planned status, and per-scenario research questions.",
+  "The pressure eval differentiates code-blind discipline: the without-skill output made an existing-code/plumbing assertion, while the with-skill output deferred existence claims to research questions.",
+  "With-skill cost more wall time and tokens than baseline, but the pass-rate gain is large: +0.79 on one run per configuration, with no variance estimate beyond per-eval spread.",
+  "The skill output quality appears strongest when it writes many explicit scenario sections; the revision should preserve that completeness while making the required output contract more explicit in SKILL.md."
+]
