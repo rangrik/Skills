@@ -1,0 +1,35 @@
+{
+  "expectations": [
+    {
+      "text": "Confirms the display_name then-clauses (200, returns updated display_name, persisted) are satisfied",
+      "passed": true,
+      "evidence": "It explicitly marks authenticated member, PATCH, 200 status, returned display_name, and persistence as satisfied."
+    },
+    {
+      "text": "Explicitly flags that the implementation drifted outside this scenario by adding things the scenario never called for: marketing_emails_opt_in handling (and sending an email) and theme_preference",
+      "passed": true,
+      "evidence": "It flags marketing_emails_opt_in, theme_preference, persistence, and marketing email side effect as drift."
+    },
+    {
+      "text": "Identifies the out-of-scope additions concretely by name rather than vaguely noting 'extra code'",
+      "passed": true,
+      "evidence": "The out-of-scope additions are named concretely."
+    },
+    {
+      "text": "Stays a focused gate scoped to this one scenario: does not turn into a full-feature audit or a principle-by-principle architecture critique",
+      "passed": true,
+      "evidence": "The output remains scoped to this scenario and does not become an architecture critique."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "total_tool_calls": 0,
+    "errors_encountered": 0,
+    "output_chars": 1235
+  }
+}

@@ -38,32 +38,6 @@ Answer only these four questions:
    scenario never called for?
 4. Should this scenario be committed?
 
-## How to check
-
-Start from the Gherkin, not from a general code-review checklist. Rewrite the
-scenario into its concrete obligations:
-
-- `given`: the required starting state or actor.
-- `when`: the exact action or endpoint under test.
-- `then` / `and`: the observable results that must be true.
-
-Then compare the provided code changes to only those obligations. A scenario
-passes when the code clearly implements the required behavior and avoids
-materially unrelated behavior in the same slice.
-
-Treat attached code as a focused scenario slice. Many fixtures omit routine
-imports, route registration, dependency-provider definitions, or surrounding
-module context. Do not fail a scenario for ordinary missing boilerplate unless
-the fixture makes that wiring the actual scenario issue or the omission is
-direct evidence that a Gherkin clause cannot work. If the concern is just
-"this snippet does not show the import/provider," ignore it or mention it as a
-non-blocking assumption.
-
-For each `then` clause, name the code evidence that satisfies it or the exact
-missing check/response/side effect that violates it. For drift, name the
-out-of-scope fields, endpoints, persistence, emails, jobs, external calls, or
-other side effects that the scenario never asked for.
-
 ## Output
 
 A verdict:
@@ -73,18 +47,6 @@ A verdict:
   clause it violates (for example: "the `then` clause requires the profile to
   show the join date, but the response omits it"). Vague feedback cannot be
   acted on; precise feedback can.
-
-Use a compact structure:
-
-1. `PASS` or `FAIL`.
-2. Clause check: the relevant Gherkin clauses and whether each is satisfied.
-3. Missing or drift: concrete gaps or "none."
-4. Commit readiness: whether this scenario should be committed.
-
-If the required scenario behavior is satisfied but the implementation includes
-material drift, the verdict should usually be `FAIL` because the slice is not
-ready to commit as this scenario. Say that the scenario behavior is satisfied,
-then separately explain the drift.
 
 ## Stay focused — what you are not
 

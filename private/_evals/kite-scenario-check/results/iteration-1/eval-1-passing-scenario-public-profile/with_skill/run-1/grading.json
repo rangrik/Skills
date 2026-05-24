@@ -1,0 +1,35 @@
+{
+  "expectations": [
+    {
+      "text": "Returns a clear PASS verdict and states the scenario can be committed",
+      "passed": false,
+      "evidence": "Verdict is FAIL and says not to commit because get_profile_service is not imported/defined."
+    },
+    {
+      "text": "Confirms each then-clause is satisfied: 200 status, display_name present, join_date present, and email deliberately absent from PublicProfileResponse",
+      "passed": false,
+      "evidence": "It confirms display_name, join_date, and email omission, but explicitly says the 200 status is blocked by route wiring."
+    },
+    {
+      "text": "Does not invent gaps or fail the scenario over things the Gherkin never asked for",
+      "passed": false,
+      "evidence": "It fails over omitted dependency wiring/import boilerplate that the fixture expected the checker not to treat as a scenario gap."
+    },
+    {
+      "text": "Stays a fast, focused gate: does not perform a full-feature audit, does not hunt for other scenarios' corner cases, and does not deliver a principle-by-principle architecture critique",
+      "passed": true,
+      "evidence": "The output stays scoped to this scenario and does not become a full-feature audit or architectural critique."
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 3,
+    "total": 4,
+    "pass_rate": 0.25
+  },
+  "execution_metrics": {
+    "total_tool_calls": 0,
+    "errors_encountered": 0,
+    "output_chars": 990
+  }
+}

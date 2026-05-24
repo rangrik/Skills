@@ -1,0 +1,309 @@
+{
+  "metadata": {
+    "skill_name": "kite-scenario-check",
+    "skill_path": "private/kite-scenario-check",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-05-24T01:38:03Z",
+    "evals_run": [
+      1,
+      2,
+      3
+    ],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "eval_name": "passing-scenario-public-profile",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 19.3,
+        "tokens": 48648,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Returns a clear PASS verdict and states the scenario can be committed",
+          "passed": true,
+          "evidence": "Verdict is PASS and says to commit this scenario."
+        },
+        {
+          "text": "Confirms each then-clause is satisfied: 200 status, display_name present, join_date present, and email deliberately absent from PublicProfileResponse",
+          "passed": true,
+          "evidence": "Clause check explicitly marks 200 status, display_name, join_date, and absence of email as satisfied."
+        },
+        {
+          "text": "Does not invent gaps or fail the scenario over things the Gherkin never asked for",
+          "passed": true,
+          "evidence": "It reports no missing behavior or drift and does not invent a gap from omitted boilerplate."
+        },
+        {
+          "text": "Stays a fast, focused gate: does not perform a full-feature audit, does not hunt for other scenarios' corner cases, and does not deliver a principle-by-principle architecture critique",
+          "passed": true,
+          "evidence": "The output is a compact scenario gate, not a full-feature or architecture review."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "failing-scenario-avatar-validation-gap",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 22.5,
+        "tokens": 32051,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Returns a clear FAIL verdict and states the scenario should NOT be committed",
+          "passed": true,
+          "evidence": "Verdict is FAIL and says not to commit yet."
+        },
+        {
+          "text": "Flags that there is no rejection of files larger than 5 MB, and ties it concretely to the Gherkin clause 'the uploaded file is rejected if it is larger than 5 MB'",
+          "passed": true,
+          "evidence": "It ties missing size validation to the larger than 5 MB rejection clause."
+        },
+        {
+          "text": "Flags that there is no PNG/JPEG content-type validation, and ties it concretely to the Gherkin clause 'the uploaded file is rejected if it is not a PNG or JPEG'",
+          "passed": true,
+          "evidence": "It ties missing content-type validation to the PNG/JPEG rejection clause."
+        },
+        {
+          "text": "Each reported gap is precise and actionable (names the missing check and the clause it violates), not vague commentary",
+          "passed": true,
+          "evidence": "Both gaps name the missing checks and required rejection behavior."
+        },
+        {
+          "text": "Stays a focused gate: does not expand into a full-feature audit or a principle-by-principle architecture critique, while still being allowed to note a single glaring architectural mismatch if one exists",
+          "passed": true,
+          "evidence": "The output stays focused on this scenario and does not become a full audit."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "scenario-drift-display-name",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 27.3,
+        "tokens": 48869,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Confirms the display_name then-clauses (200, returns updated display_name, persisted) are satisfied",
+          "passed": true,
+          "evidence": "It explicitly marks authenticated member, PATCH, 200 status, returned display_name, and persistence as satisfied."
+        },
+        {
+          "text": "Explicitly flags that the implementation drifted outside this scenario by adding things the scenario never called for: marketing_emails_opt_in handling (and sending an email) and theme_preference",
+          "passed": true,
+          "evidence": "It flags marketing_emails_opt_in, theme_preference, persistence, and marketing email side effect as drift."
+        },
+        {
+          "text": "Identifies the out-of-scope additions concretely by name rather than vaguely noting 'extra code'",
+          "passed": true,
+          "evidence": "The out-of-scope additions are named concretely."
+        },
+        {
+          "text": "Stays a focused gate scoped to this one scenario: does not turn into a full-feature audit or a principle-by-principle architecture critique",
+          "passed": true,
+          "evidence": "The output remains scoped to this scenario and does not become an architecture critique."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "passing-scenario-public-profile",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 25.7,
+        "tokens": 46311,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Returns a clear PASS verdict and states the scenario can be committed",
+          "passed": true,
+          "evidence": "Verdict is PASS and says ready to commit."
+        },
+        {
+          "text": "Confirms each then-clause is satisfied: 200 status, display_name present, join_date present, and email deliberately absent from PublicProfileResponse",
+          "passed": true,
+          "evidence": "It states status 200, display_name, join_date, and email exclusion are satisfied."
+        },
+        {
+          "text": "Does not invent gaps or fail the scenario over things the Gherkin never asked for",
+          "passed": true,
+          "evidence": "It reports no drift and does not invent gaps."
+        },
+        {
+          "text": "Stays a fast, focused gate: does not perform a full-feature audit, does not hunt for other scenarios' corner cases, and does not deliver a principle-by-principle architecture critique",
+          "passed": true,
+          "evidence": "The output is concise and focused."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "failing-scenario-avatar-validation-gap",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 28.8,
+        "tokens": 45274,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Returns a clear FAIL verdict and states the scenario should NOT be committed",
+          "passed": true,
+          "evidence": "Verdict is FAIL and says do not commit."
+        },
+        {
+          "text": "Flags that there is no rejection of files larger than 5 MB, and ties it concretely to the Gherkin clause 'the uploaded file is rejected if it is larger than 5 MB'",
+          "passed": true,
+          "evidence": "It ties the missing size check to the larger than 5 MB clause."
+        },
+        {
+          "text": "Flags that there is no PNG/JPEG content-type validation, and ties it concretely to the Gherkin clause 'the uploaded file is rejected if it is not a PNG or JPEG'",
+          "passed": true,
+          "evidence": "It ties missing PNG/JPEG allowlist validation to the file-type clause."
+        },
+        {
+          "text": "Each reported gap is precise and actionable (names the missing check and the clause it violates), not vague commentary",
+          "passed": true,
+          "evidence": "The gaps are concrete and actionable."
+        },
+        {
+          "text": "Stays a focused gate: does not expand into a full-feature audit or a principle-by-principle architecture critique, while still being allowed to note a single glaring architectural mismatch if one exists",
+          "passed": true,
+          "evidence": "The output stays focused, even though it loosely labels missing validation as drift."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "scenario-drift-display-name",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.75,
+        "passed": 3,
+        "failed": 1,
+        "total": 4,
+        "time_seconds": 23.6,
+        "tokens": 46477,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Confirms the display_name then-clauses (200, returns updated display_name, persisted) are satisfied",
+          "passed": false,
+          "evidence": "It confirms display_name is updated, saved, and returned, but does not explicitly confirm the 200 response then-clause."
+        },
+        {
+          "text": "Explicitly flags that the implementation drifted outside this scenario by adding things the scenario never called for: marketing_emails_opt_in handling (and sending an email) and theme_preference",
+          "passed": true,
+          "evidence": "It flags marketing_emails_opt_in, theme_preference, persistence of unrelated changes, and the marketing-preference email side effect."
+        },
+        {
+          "text": "Identifies the out-of-scope additions concretely by name rather than vaguely noting 'extra code'",
+          "passed": true,
+          "evidence": "The out-of-scope additions are identified by name."
+        },
+        {
+          "text": "Stays a focused gate scoped to this one scenario: does not turn into a full-feature audit or a principle-by-principle architecture critique",
+          "passed": true,
+          "evidence": "The output remains a focused scenario gate."
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 23.0333,
+        "stddev": 4.0266,
+        "min": 19.3,
+        "max": 27.3
+      },
+      "tokens": {
+        "mean": 43189.3333,
+        "stddev": 9646.7125,
+        "min": 32051,
+        "max": 48869
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.9167,
+        "stddev": 0.1443,
+        "min": 0.75,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 26.0333,
+        "stddev": 2.616,
+        "min": 23.6,
+        "max": 28.8
+      },
+      "tokens": {
+        "mean": 46020.6667,
+        "stddev": 651.9374,
+        "min": 45274,
+        "max": 46477
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.08",
+      "time_seconds": "-3.0",
+      "tokens": "-2831"
+    }
+  },
+  "notes": []
+}
