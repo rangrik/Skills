@@ -51,7 +51,7 @@ skills:
     name: slice-blueprint
     bucket: personal
     path: personal/slice-blueprint
-    install: false
+    install: true
     evals:
       suite: personal/_evals/slice-blueprint/suite
       results: personal/_evals/slice-blueprint/results
