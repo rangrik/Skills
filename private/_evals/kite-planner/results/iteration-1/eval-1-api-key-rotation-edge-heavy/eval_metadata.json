@@ -1,0 +1,15 @@
+{
+  "eval_id": 1,
+  "eval_name": "api-key-rotation-edge-heavy",
+  "prompt": "Plan the workspace API key rotation feature for Kite. Blueprint: files/api-key-rotation-blueprint.md. System design: files/api-key-rotation-system-design.md (both in this folder). I especially want the plan to account for the tricky cases \u2014 the grace-period boundary, rotating again mid-grace, and the revoked-key rejection behavior \u2014 not just the happy rotation. Produce the plan file.",
+  "expectations": [
+    "Extracts the full scenario set as Gherkin, explicitly including the edge/corner cases the user flagged: rotating again while a grace period is active, a request arriving exactly at the grace-period boundary, and the old key never being used during grace \u2014 none silently omitted.",
+    "Includes the adversarial scenarios as their own scenarios: admin-only rotate/revoke, and a revoked-or-unknown key being rejected without revealing whether the key ever existed.",
+    "Orders the scenarios for maximum reuse and states, per scenario, the reasoning for its position (which earlier capabilities it builds on / dependency chain).",
+    "Writes a code-blind plan per scenario covering Preconditions, Required capabilities, Postconditions, and Risks/assumptions, and references the relevant system-design decisions (state machine, canonical boundary comparison, transactional rotation) rather than inventing new ones.",
+    "Writes concrete per-scenario research questions phrased as answerable questions for the research step (e.g. 'is there an existing way to hash and store a key / resolve a presented key to a record, and where?').",
+    "Sets every scenario's status to `planned` and follows the shared plan-file schema (Feature block, order/status table, per-scenario sections).",
+    "Stays strictly code-blind: never reads/greps source, never claims a capability already exists in the codebase, and describes required capabilities abstractly so the research step can answer existence.",
+    "Plans each scenario as a vertical slice and never orders the work by layer (no 'build all the auth-middleware first, UI later' phase)."
+  ]
+}

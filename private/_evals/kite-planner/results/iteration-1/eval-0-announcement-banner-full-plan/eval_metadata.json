@@ -1,0 +1,15 @@
+{
+  "eval_id": 0,
+  "eval_name": "announcement-banner-full-plan",
+  "prompt": "We're about to build the admin announcement banner in Kite. The behavior blueprint is files/announcement-banner-blueprint.md and the system design document is files/announcement-banner-system-design.md, both in this folder. Plan the implementation: turn this into an ordered, scenario-by-scenario plan we can hand to research and then implementation. Write the plan file.",
+  "expectations": [
+    "Extracts EVERY scenario from the blueprint as Gherkin given/when/then, including the edge cases (late-joining user, future start date, end-date-before-start-date), both deviation scenarios (concurrent publish wins, dismiss-then-edit keeps dismissal), and the admin-only adversarial scenarios \u2014 no corner case is dropped because it is awkward.",
+    "Each scenario is tagged with its type (happy_path / edge_case / corner_case) and the plan reflects all three categories rather than only the happy path.",
+    "Orders the scenarios explicitly (an order/status table plus per-scenario order) and gives a stated reason for why each scenario sits where it does, justified by reuse / dependency chains (foundational, capability-unlocking scenarios first).",
+    "For each scenario, writes a code-blind plan with all four parts: Preconditions, Required capabilities (described as capabilities, e.g. 'a way to persist per-user dismissal', not as existing code), Postconditions, and Risks/assumptions.",
+    "Writes concrete, answerable research questions per scenario that turn the required capabilities into questions for the research step (specific 'is there an X that does Y, and where?' form), not vague directives like 'look into the banner code'.",
+    "Sets every scenario's status to `planned`.",
+    "NEVER reads, opens, greps, or references source code, and NEVER asserts what already exists in a codebase (no 'this already exists in...', no file paths into a repo); required capabilities are described in the abstract, leaving existence for the research step.",
+    "Treats every scenario as a vertical slice (full stack, end to end) and never orders or structures the plan by horizontal layer (no 'do all the database work first' phase)."
+  ]
+}

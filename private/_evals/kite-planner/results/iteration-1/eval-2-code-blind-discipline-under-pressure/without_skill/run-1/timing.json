@@ -1,0 +1,12 @@
+{
+  "total_tokens": 263713,
+  "duration_ms": 132420,
+  "total_duration_seconds": 132.42,
+  "returncode": 0,
+  "usage": {
+    "input_tokens": 255132,
+    "cached_input_tokens": 232576,
+    "output_tokens": 8581,
+    "reasoning_output_tokens": 2246
+  }
+}

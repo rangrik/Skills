@@ -1,0 +1,424 @@
+{
+  "metadata": {
+    "skill_name": "kite-planner",
+    "skill_path": "private/kite-planner",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-05-24T01:48:20Z",
+    "evals_run": [
+      0,
+      1,
+      2
+    ],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 0,
+      "eval_name": "announcement-banner-full-plan",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8,
+        "time_seconds": 160.277,
+        "tokens": 28392,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Extracts EVERY scenario from the blueprint as Gherkin given/when/then, including the edge cases (late-joining user, future start date, end-date-before-start-date), both deviation scenarios (concurrent publish wins, dismiss-then-edit keeps dismissal), and the admin-only adversarial scenarios \u2014 no corner case is dropped because it is awkward.",
+          "passed": true,
+          "evidence": "Scenario terms missing: []; gherkin_triplets=14."
+        },
+        {
+          "text": "Each scenario is tagged with its type (happy_path / edge_case / corner_case) and the plan reflects all three categories rather than only the happy path.",
+          "passed": true,
+          "evidence": "Found happy/edge/corner type labels."
+        },
+        {
+          "text": "Orders the scenarios explicitly (an order/status table plus per-scenario order) and gives a stated reason for why each scenario sits where it does, justified by reuse / dependency chains (foundational, capability-unlocking scenarios first).",
+          "passed": true,
+          "evidence": "order_table=True; reuse_reasoning_terms=True."
+        },
+        {
+          "text": "For each scenario, writes a code-blind plan with all four parts: Preconditions, Required capabilities (described as capabilities, e.g. 'a way to persist per-user dismissal', not as existing code), Postconditions, and Risks/assumptions.",
+          "passed": true,
+          "evidence": "Each scenario appears to include the four code-blind plan headings."
+        },
+        {
+          "text": "Writes concrete, answerable research questions per scenario that turn the required capabilities into questions for the research step (specific 'is there an X that does Y, and where?' form), not vague directives like 'look into the banner code'.",
+          "passed": true,
+          "evidence": "research_questions_enough=True; specific_terms=True."
+        },
+        {
+          "text": "Sets every scenario's status to `planned`.",
+          "passed": true,
+          "evidence": "Planned status appears for scenario sections/table."
+        },
+        {
+          "text": "NEVER reads, opens, greps, or references source code, and NEVER asserts what already exists in a codebase (no 'this already exists in...', no file paths into a repo); required capabilities are described in the abstract, leaving existence for the research step.",
+          "passed": true,
+          "evidence": "No source paths or existing-code claims found."
+        },
+        {
+          "text": "Treats every scenario as a vertical slice (full stack, end to end) and never orders or structures the plan by horizontal layer (no 'do all the database work first' phase).",
+          "passed": true,
+          "evidence": "vertical_terms=True; horizontal_layering_absent=True."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "api-key-rotation-edge-heavy",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8,
+        "time_seconds": 157.775,
+        "tokens": 26016,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Extracts the full scenario set as Gherkin, explicitly including the edge/corner cases the user flagged: rotating again while a grace period is active, a request arriving exactly at the grace-period boundary, and the old key never being used during grace \u2014 none silently omitted.",
+          "passed": true,
+          "evidence": "Scenario terms missing: []; gherkin_triplets=10."
+        },
+        {
+          "text": "Includes the adversarial scenarios as their own scenarios: admin-only rotate/revoke, and a revoked-or-unknown key being rejected without revealing whether the key ever existed.",
+          "passed": true,
+          "evidence": "admin_adversarial=True; rejection_adversarial=True; gherkin_triplets=10."
+        },
+        {
+          "text": "Orders the scenarios for maximum reuse and states, per scenario, the reasoning for its position (which earlier capabilities it builds on / dependency chain).",
+          "passed": true,
+          "evidence": "order_table=True; reuse_reasoning_terms=True."
+        },
+        {
+          "text": "Writes a code-blind plan per scenario covering Preconditions, Required capabilities, Postconditions, and Risks/assumptions, and references the relevant system-design decisions (state machine, canonical boundary comparison, transactional rotation) rather than inventing new ones.",
+          "passed": true,
+          "evidence": "Each scenario appears to include the four code-blind plan headings."
+        },
+        {
+          "text": "Writes concrete per-scenario research questions phrased as answerable questions for the research step (e.g. 'is there an existing way to hash and store a key / resolve a presented key to a record, and where?').",
+          "passed": true,
+          "evidence": "research_questions_enough=True; specific_terms=True."
+        },
+        {
+          "text": "Sets every scenario's status to `planned` and follows the shared plan-file schema (Feature block, order/status table, per-scenario sections).",
+          "passed": true,
+          "evidence": "Planned status appears for scenario sections/table."
+        },
+        {
+          "text": "Stays strictly code-blind: never reads/greps source, never claims a capability already exists in the codebase, and describes required capabilities abstractly so the research step can answer existence.",
+          "passed": true,
+          "evidence": "No source paths or existing-code claims found."
+        },
+        {
+          "text": "Plans each scenario as a vertical slice and never orders the work by layer (no 'build all the auth-middleware first, UI later' phase).",
+          "passed": true,
+          "evidence": "vertical_terms=True; horizontal_layering_absent=True."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "code-blind-discipline-under-pressure",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8,
+        "time_seconds": 197.138,
+        "tokens": 38286,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Resists the prompt's pressure to 'lean on what's there': does NOT assert that auth, workspaces, or notification plumbing already exist, and does NOT open, grep, or reference any source code \u2014 existence of those capabilities is deferred to the research step.",
+          "passed": true,
+          "evidence": "No source paths or existing-code claims found."
+        },
+        {
+          "text": "Converts the user's hint about existing infrastructure into concrete research questions (e.g. 'is there an existing per-user preference / dismissal store?', 'is there existing workspace-admin authorization?') rather than into claims about what the codebase already contains.",
+          "passed": true,
+          "evidence": "research_questions_enough=True; specific_terms=True."
+        },
+        {
+          "text": "Extracts every blueprint scenario as Gherkin given/when/then \u2014 happy path, all edge cases, both deviation scenarios, and the admin-only adversarial cases \u2014 tagged by type.",
+          "passed": true,
+          "evidence": "Scenario terms missing: []; gherkin_triplets=15."
+        },
+        {
+          "text": "Orders the scenarios for maximum reuse with a stated reason per scenario for its position in the order.",
+          "passed": true,
+          "evidence": "order_table=True; reuse_reasoning_terms=True."
+        },
+        {
+          "text": "Writes a code-blind plan per scenario (Preconditions, Required capabilities described abstractly, Postconditions, Risks/assumptions) and concrete research questions per scenario.",
+          "passed": true,
+          "evidence": "Each scenario appears to include the four code-blind plan headings."
+        },
+        {
+          "text": "Sets every scenario's status to `planned` and follows the shared plan-file schema.",
+          "passed": true,
+          "evidence": "Planned status appears for scenario sections/table."
+        },
+        {
+          "text": "Treats each scenario as a vertical slice and never structures the plan as horizontal layers.",
+          "passed": true,
+          "evidence": "vertical_terms=True; horizontal_layering_absent=True."
+        },
+        {
+          "text": "Frames the deliverable as a plan to be handed off to the research step (kite-research) for answering the research questions against the real codebase, without doing that research itself.",
+          "passed": true,
+          "evidence": "research_questions_enough=True; specific_terms=True."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 0,
+      "eval_name": "announcement-banner-full-plan",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.25,
+        "passed": 2,
+        "failed": 6,
+        "total": 8,
+        "time_seconds": 152.661,
+        "tokens": 29926,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Extracts EVERY scenario from the blueprint as Gherkin given/when/then, including the edge cases (late-joining user, future start date, end-date-before-start-date), both deviation scenarios (concurrent publish wins, dismiss-then-edit keeps dismissal), and the admin-only adversarial scenarios \u2014 no corner case is dropped because it is awkward.",
+          "passed": false,
+          "evidence": "Scenario terms missing: ['end date is before/end date before/invalid schedule/end time before/ends before']; gherkin_triplets=0."
+        },
+        {
+          "text": "Each scenario is tagged with its type (happy_path / edge_case / corner_case) and the plan reflects all three categories rather than only the happy path.",
+          "passed": false,
+          "evidence": "Missing one or more type labels."
+        },
+        {
+          "text": "Orders the scenarios explicitly (an order/status table plus per-scenario order) and gives a stated reason for why each scenario sits where it does, justified by reuse / dependency chains (foundational, capability-unlocking scenarios first).",
+          "passed": false,
+          "evidence": "order_table=False; reuse_reasoning_terms=True."
+        },
+        {
+          "text": "For each scenario, writes a code-blind plan with all four parts: Preconditions, Required capabilities (described as capabilities, e.g. 'a way to persist per-user dismissal', not as existing code), Postconditions, and Risks/assumptions.",
+          "passed": false,
+          "evidence": "Missing repeated code-blind plan headings."
+        },
+        {
+          "text": "Writes concrete, answerable research questions per scenario that turn the required capabilities into questions for the research step (specific 'is there an X that does Y, and where?' form), not vague directives like 'look into the banner code'.",
+          "passed": false,
+          "evidence": "research_questions_enough=False; specific_terms=True."
+        },
+        {
+          "text": "Sets every scenario's status to `planned`.",
+          "passed": false,
+          "evidence": "Not every scenario appears to be planned."
+        },
+        {
+          "text": "NEVER reads, opens, greps, or references source code, and NEVER asserts what already exists in a codebase (no 'this already exists in...', no file paths into a repo); required capabilities are described in the abstract, leaving existence for the research step.",
+          "passed": true,
+          "evidence": "No source paths or existing-code claims found."
+        },
+        {
+          "text": "Treats every scenario as a vertical slice (full stack, end to end) and never orders or structures the plan by horizontal layer (no 'do all the database work first' phase).",
+          "passed": true,
+          "evidence": "vertical_terms=True; horizontal_layering_absent=True."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "api-key-rotation-edge-heavy",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.25,
+        "passed": 2,
+        "failed": 6,
+        "total": 8,
+        "time_seconds": 133.345,
+        "tokens": 18368,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Extracts the full scenario set as Gherkin, explicitly including the edge/corner cases the user flagged: rotating again while a grace period is active, a request arriving exactly at the grace-period boundary, and the old key never being used during grace \u2014 none silently omitted.",
+          "passed": false,
+          "evidence": "Scenario terms missing: ['exactly at the grace-period boundary/exact grace-period boundary/boundary is deterministic/canonical boundary', 'no integration ever uses/unused/even when unused/never used']; gherkin_triplets=0."
+        },
+        {
+          "text": "Includes the adversarial scenarios as their own scenarios: admin-only rotate/revoke, and a revoked-or-unknown key being rejected without revealing whether the key ever existed.",
+          "passed": false,
+          "evidence": "admin_adversarial=True; rejection_adversarial=True; gherkin_triplets=0."
+        },
+        {
+          "text": "Orders the scenarios for maximum reuse and states, per scenario, the reasoning for its position (which earlier capabilities it builds on / dependency chain).",
+          "passed": false,
+          "evidence": "order_table=False; reuse_reasoning_terms=False."
+        },
+        {
+          "text": "Writes a code-blind plan per scenario covering Preconditions, Required capabilities, Postconditions, and Risks/assumptions, and references the relevant system-design decisions (state machine, canonical boundary comparison, transactional rotation) rather than inventing new ones.",
+          "passed": false,
+          "evidence": "Missing repeated code-blind plan headings."
+        },
+        {
+          "text": "Writes concrete per-scenario research questions phrased as answerable questions for the research step (e.g. 'is there an existing way to hash and store a key / resolve a presented key to a record, and where?').",
+          "passed": false,
+          "evidence": "research_questions_enough=False; specific_terms=True."
+        },
+        {
+          "text": "Sets every scenario's status to `planned` and follows the shared plan-file schema (Feature block, order/status table, per-scenario sections).",
+          "passed": false,
+          "evidence": "Not every scenario appears to be planned."
+        },
+        {
+          "text": "Stays strictly code-blind: never reads/greps source, never claims a capability already exists in the codebase, and describes required capabilities abstractly so the research step can answer existence.",
+          "passed": true,
+          "evidence": "No source paths or existing-code claims found."
+        },
+        {
+          "text": "Plans each scenario as a vertical slice and never orders the work by layer (no 'build all the auth-middleware first, UI later' phase).",
+          "passed": true,
+          "evidence": "vertical_terms=True; horizontal_layering_absent=True."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "code-blind-discipline-under-pressure",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.125,
+        "passed": 1,
+        "failed": 7,
+        "total": 8,
+        "time_seconds": 132.42,
+        "tokens": 25530,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Resists the prompt's pressure to 'lean on what's there': does NOT assert that auth, workspaces, or notification plumbing already exist, and does NOT open, grep, or reference any source code \u2014 existence of those capabilities is deferred to the research step.",
+          "passed": false,
+          "evidence": "Found possible source path, grep mention, or existing-code assertion."
+        },
+        {
+          "text": "Converts the user's hint about existing infrastructure into concrete research questions (e.g. 'is there an existing per-user preference / dismissal store?', 'is there existing workspace-admin authorization?') rather than into claims about what the codebase already contains.",
+          "passed": false,
+          "evidence": "research_questions_enough=False; specific_terms=True."
+        },
+        {
+          "text": "Extracts every blueprint scenario as Gherkin given/when/then \u2014 happy path, all edge cases, both deviation scenarios, and the admin-only adversarial cases \u2014 tagged by type.",
+          "passed": false,
+          "evidence": "Scenario terms missing: ['end date is before/end date before/invalid schedule/end time before/ends before', 'no banner is active/no active banner/no announcement banner is rendered']; gherkin_triplets=0."
+        },
+        {
+          "text": "Orders the scenarios for maximum reuse with a stated reason per scenario for its position in the order.",
+          "passed": false,
+          "evidence": "order_table=False; reuse_reasoning_terms=True."
+        },
+        {
+          "text": "Writes a code-blind plan per scenario (Preconditions, Required capabilities described abstractly, Postconditions, Risks/assumptions) and concrete research questions per scenario.",
+          "passed": false,
+          "evidence": "Missing repeated code-blind plan headings."
+        },
+        {
+          "text": "Sets every scenario's status to `planned` and follows the shared plan-file schema.",
+          "passed": false,
+          "evidence": "Not every scenario appears to be planned."
+        },
+        {
+          "text": "Treats each scenario as a vertical slice and never structures the plan as horizontal layers.",
+          "passed": true,
+          "evidence": "vertical_terms=True; horizontal_layering_absent=True."
+        },
+        {
+          "text": "Frames the deliverable as a plan to be handed off to the research step (kite-research) for answering the research questions against the real codebase, without doing that research itself.",
+          "passed": false,
+          "evidence": "research_questions_enough=False; specific_terms=True."
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 171.73,
+        "stddev": 22.0395,
+        "min": 157.775,
+        "max": 197.138
+      },
+      "tokens": {
+        "mean": 30898.0,
+        "stddev": 6507.5535,
+        "min": 26016,
+        "max": 38286
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.2083,
+        "stddev": 0.0722,
+        "min": 0.125,
+        "max": 0.25
+      },
+      "time_seconds": {
+        "mean": 139.4753,
+        "stddev": 11.4285,
+        "min": 132.42,
+        "max": 152.661
+      },
+      "tokens": {
+        "mean": 24608.0,
+        "stddev": 5833.9013,
+        "min": 18368,
+        "max": 29926
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.79",
+      "time_seconds": "+32.3",
+      "tokens": "+6290"
+    }
+  },
+  "notes": [
+    "With-skill passed every expectation across the three evals; without-skill failed mainly on shared plan-file schema, Gherkin extraction, planned status, and per-scenario research questions.",
+    "The pressure eval differentiates code-blind discipline: the without-skill output made an existing-code/plumbing assertion, while the with-skill output deferred existence claims to research questions.",
+    "With-skill cost more wall time and tokens than baseline, but the pass-rate gain is large: +0.79 on one run per configuration, with no variance estimate beyond per-eval spread.",
+    "The skill output quality appears strongest when it writes many explicit scenario sections; the revision should preserve that completeness while making the required output contract more explicit in SKILL.md."
+  ]
+}

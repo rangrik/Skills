@@ -49,30 +49,12 @@ A single **plan file** following the shared plan-file schema. It is a living
 document — later skills append to it — so write it to be appended to, and never
 put code in it.
 
-Before writing the plan, read `references/plan-file.md` when it is available.
-That file is the output contract shared by the rest of the Kite pipeline. The
-planner-owned parts are the Feature block, the scenario order/status table, each
-scenario's Gherkin, the Code-blind plan, and the Research questions.
-
 ## Step 1 — Extract every scenario
 
 Pull every scenario from the blueprint: happy paths, edge cases, and corner
 cases alike. Capture each as Gherkin (given / when / then) and tag its type. Do
 not drop corner cases because they are awkward — a corner case missed here
 becomes a production incident later.
-
-Start with a scenario inventory before you plan. Scan the blueprint for:
-
-- Happy-path steps that represent distinct user-verifiable slices.
-- Named edge cases, deviation scenarios, and adversarial scenarios.
-- Normal empty or boundary states that the blueprint calls out as behavior.
-- User prompts that apply pressure to rely on "what already exists" — convert
-  those hints into research questions, not implementation claims.
-
-If two blueprint bullets are tightly coupled, you may combine them into one
-scenario only when the resulting Gherkin still proves both behaviors. Otherwise
-keep them separate. The inventory is your guardrail against accidentally
-planning only the happy path.
 
 ## Step 2 — Order the scenarios for maximum reuse
 
@@ -93,14 +75,6 @@ Heuristics:
 Write down _why_ each scenario sits where it does. The order is a claim, and the
 next skills should be able to see your reasoning.
 
-In the plan file, make the order visible in two places:
-
-- The `Scenario order & status` table, with every scenario set to `planned`.
-- Each scenario section's `Order` field plus a short reason in either the table
-  or an ordering-rationale paragraph. The reason should name the reuse or
-  dependency relationship, such as "builds on dismissal identity from S3" or
-  "hardens the publish route after the basic write path exists."
-
 ## Step 3 — Plan each scenario (code-blind)
 
 For each scenario, reasoning only from the blueprint and design doc, write:
@@ -112,21 +86,6 @@ For each scenario, reasoning only from the blueprint and design doc, write:
 - **Postconditions** — what is true once the scenario is implemented.
 - **Risks / assumptions** — anything uncertain, and which design-doc decisions
   apply.
-
-Use the same headings for every scenario so later agents can append cleanly:
-
-- `Design references`
-- `Gherkin`
-- `Code-blind plan`
-- `Research questions`
-- Placeholder `Research findings` and `Implementation record` sections for the
-  later pipeline stages
-
-Required capabilities should be concrete but abstract. Say "a way to authorize
-workspace-admin writes" or "a transaction that preserves one active banner," not
-"the existing auth middleware" or a file path. Preserve named system-design
-decisions, constraints, accepted compromises, and quality expectations; do not
-invent a different architecture because it feels convenient.
 
 ## Step 4 — Write research questions (the handoff contract)
 
@@ -140,27 +99,10 @@ Good research questions are specific and answerable:
   by user ID? If so, where?"
 - Weak: "Look into the user code."
 
-Write questions in a form that can be answered with EXISTS / MISSING later.
-When the user says "we probably already have auth/workspaces/plumbing," do not
-repeat that as fact. Ask: "Is there an existing workspace-admin authorization
-helper for this route surface, and where should it be applied?"
-
 ## Step 5 — Write the plan file
 
 Assemble everything into the plan file using the shared schema. Set each
 scenario's status to `planned`.
-
-Before finishing, audit the plan:
-
-- Every scenario from the inventory appears as Gherkin with a type tag.
-- Every scenario has `Status: planned`.
-- The order is justified by reuse or dependency, not by backend/frontend/database
-  layers.
-- Every scenario has Preconditions, Required capabilities, Postconditions, and
-  Risks / assumptions.
-- Every required capability has at least one concrete research question.
-- The plan contains no source-code paths, grep/search results, or claims that a
-  capability already exists.
 
 ## Optional — fan out for large features
 
