@@ -20,14 +20,14 @@ skills:
       suite: personal/_evals/blueprint/suite
       results: personal/_evals/blueprint/results
 
-  - id: system-design
-    name: system-design
+  - id: kite-slice-system-design
+    name: kite-slice-system-design
     bucket: personal
-    path: personal/system-design
+    path: personal/kite-slice-system-design
     install: true
     evals:
-      suite: personal/_evals/system-design/suite
-      results: personal/_evals/system-design/results
+      suite: personal/_evals/kite-slice-system-design/suite
+      results: personal/_evals/kite-slice-system-design/results
 
   - id: skill-creator
     name: skill-creator
