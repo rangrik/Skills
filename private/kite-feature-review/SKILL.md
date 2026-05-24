@@ -31,11 +31,11 @@ as pressure to audit more carefully, not as permission to relax the review.
 - The **system design document**.
 - The **full set of code changes** for the feature (every commit).
 - The **plan file**.
-- `kite-arch-compass`.
+- `kite-design-system-standards`.
 
-## Use `kite-arch-compass` economically
+## Use `kite-design-system-standards` economically
 
-Use `kite-arch-compass` in conformance-review mode, but do not load more of it
+Use `kite-design-system-standards` in conformance-review mode, but do not load more of it
 than the findings need. Identify the changed components first, then read the
 checklist and principle entries for those components. Common feature-review
 components are Backend HTTP Routes, Backend Services, Database Modules & Models,
@@ -70,7 +70,7 @@ fold the principle violations into each scenario review.
    assessing whether the changes are good; you are explaining why they are bad.
    For the scenario under review, dispel every unacceptable point about its
    changes, with reasons.
-8. **Name the principle violations** — using `kite-arch-compass`, cite exactly
+8. **Name the principle violations** — using `kite-design-system-standards`, cite exactly
    which pattern or principle the changes violate and should have honored.
 9. **State the impact and construct a failure case** — explain "because this is
    wrong, here is the consequence", and write a concrete Gherkin scenario (given
@@ -106,7 +106,7 @@ top-level headings:
 ## Scenario reviews
 ### Scenario <id> — <title>
 - Why the implementation is unacceptable: <reasons>
-- Principle violations (kite-arch-compass): <which, and why>
+- Principle violations (kite-design-system-standards): <which, and why>
 - Impact: <consequence>
 - Failure scenario: <Gherkin given/when/then where it breaks>
 

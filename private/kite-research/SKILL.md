@@ -90,9 +90,9 @@ extension point, and set the scenario to `researched`. Use **BLOCKING** only
 when the current codebase contradicts the plan's assumptions or makes the
 planned behavior impossible without re-planning the design.
 
-## Use kite-arch-compass lightly
+## Use kite-design-system-standards lightly
 
-Consult `kite-arch-compass` enough to recognize the codebase's existing
+Consult `kite-design-system-standards` enough to recognize the codebase's existing
 patterns, so the extension points you suggest fit the architecture rather than
 fight it. This is not a full architecture review — just do not point the
 implementer somewhere that violates Kite's structure.

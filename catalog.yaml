@@ -56,14 +56,14 @@ skills:
       suite: personal/_evals/slice-blueprint/suite
       results: personal/_evals/slice-blueprint/results
 
-  - id: kite-arch-compass
-    name: kite-arch-compass
+  - id: kite-design-system-standards
+    name: kite-design-system-standards
     bucket: private
-    path: private/kite-arch-compass
+    path: private/kite-design-system-standards
     install: true
     evals:
-      suite: private/_evals/kite-arch-compass/suite
-      results: private/_evals/kite-arch-compass/results
+      suite: private/_evals/kite-design-system-standards/suite
+      results: private/_evals/kite-design-system-standards/results
 
   - id: kite-planner
     name: kite-planner

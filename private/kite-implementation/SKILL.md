@@ -66,7 +66,7 @@ For each scenario:
    future change, and it buries the few tests that matter. A handful of sharp
    tests beats a hundred shallow ones.
 
-4. **Check the architecture before committing.** Invoke `kite-arch-compass` and
+4. **Check the architecture before committing.** Invoke `kite-design-system-standards` and
    verify the slice honors Kite's patterns and principles. If it violates one,
    fix it now — do not carry an architectural problem into the commit.
 

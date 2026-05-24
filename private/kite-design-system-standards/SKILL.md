@@ -1,5 +1,5 @@
 ---
-name: kite-arch-compass
+name: kite-design-system-standards
 description: >-
   The authoritative reference for the architecture, design principles, and
   engineering standards of the appsmith-v2 (Kite) platform. Consult it whenever
@@ -15,7 +15,7 @@ description: >-
   Kite platform — do not apply these standards to any other project or repo.
 ---
 
-# Kite Architecture Compass
+# Kite Design System Standards
 
 The single source of truth for *how code is meant to be written* in the
 appsmith-v2 (Kite) platform. It carries the platform's 43 engineering principles

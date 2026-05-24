@@ -50,7 +50,7 @@ Then <...>
 ### Implementation record      (written by kite-implementation)
 - Changed files: <...>
 - Tests added: <...>
-- Architecture check (kite-arch-compass): pass | <issues found and fixed>
+- Architecture check (kite-design-system-standards): pass | <issues found and fixed>
 - Scenario check verdict: pass
 - Commit: <hash / message>
 ```
