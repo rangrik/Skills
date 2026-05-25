@@ -1,262 +1,291 @@
 ---
 name: slice-blueprint
 description: >-
-  Cuts one large behavior blueprint into a stacked sequence of smaller blueprints, each a
-  thin but FULL-STACK, end-to-end shippable vertical slice — DB, backend, API, and UI
-  together, never one layer in isolation. Each slice builds on the slices before it
-  (a walking skeleton first, then capability layered on top), and is written in the exact
-  same section format as the source blueprint, with its Gherkin and every other section
-  narrowed to that slice's scope. Use this as the stage immediately AFTER a behavior
-  blueprint exists and BEFORE planning — feed each resulting slice into your planning skill on
-  its own. Reach for it whenever the user says "slice this blueprint", "break this feature into
-  slices", "split this into deliverable increments", "how should we phase / stack this
-  build", "cut this into vertical slices", or has a finished blueprint and is about to start
-  building something too big to ship in one go — even if they never say the word "slice".
-  Do NOT use it to write the original blueprint (that is the blueprint skill) or to produce
-  an implementation plan for a single slice (that is a planning skill).
+  Cuts one large behavior blueprint into a stacked sequence of smaller
+  blueprints, each a thin but FULL-STACK, end-to-end shippable vertical slice —
+  DB, backend, API, and UI together, never one layer in isolation. Each slice
+  builds on the slices before it (a walking skeleton first, then capability
+  layered on top), and is written in the exact same section format as the source
+  blueprint, with its Gherkin and every other section narrowed to that slice's
+  scope. Use this as the stage immediately AFTER a behavior blueprint exists and
+  the feature is too big to ship in one go. Reach for it whenever the user says
+  "slice this blueprint", "break this feature into slices", "split this into
+  deliverable increments", "how should we phase / stack this build", "cut this
+  into vertical slices", or has a finished blueprint and is about to start
+  building something too big to ship in one go — even if they never say the word
+  "slice".
 ---
 
 # Slice Blueprint
 
-You take one large behavior blueprint and cut it into an ordered, **stacked** sequence of
-smaller blueprints. Each smaller blueprint describes a single **vertical slice** of the
-feature: a thin but complete, end-to-end, shippable increment. The output files reuse the
-*exact* section format of the source blueprint — they are blueprints themselves, just
-narrower.
+You take one large behavior blueprint and cut it into an ordered, **stacked**
+sequence of smaller blueprints. Each smaller blueprint describes a single
+**vertical slice** of the feature: a thin but complete, end-to-end, shippable
+increment. The output files reuse the _exact_ section format of the source
+blueprint — they are blueprints themselves, just narrower.
 
 ## Why this skill exists
 
-A finished blueprint is complete but monolithic. It describes the whole feature — every
-happy path, every deviation, every edge case — as one indivisible thing. Trying to build
-all of it at once is how teams end up with three weeks of work that demos nothing until the
-very end, integrates late, and discovers its hardest risks last.
+A finished blueprint is complete but monolithic. It describes the whole feature
+— every happy path, every deviation, every edge case — as one indivisible thing.
+Trying to build all of it at once is how teams end up with three weeks of work
+that demos nothing until the very end, integrates late, and discovers its
+hardest risks last.
 
-The fix is to slice. But *how* you slice decides everything, and the tempting cut is the
-wrong one.
+The fix is to slice. But _how_ you slice decides everything, and the tempting
+cut is the wrong one.
 
-**The wrong cut is horizontal.** "First we build all the database tables, then all the API
-endpoints, then all the UI." Each horizontal layer is individually invisible: a schema with
-no reader proves nothing, an endpoint with no caller proves nothing, a UI with no backend is
-a mock. You integrate at the end, you demo at the end, and every risk you were worried about
-is still unproven until the end. Horizontal slicing front-loads effort and back-loads
-learning — exactly backwards.
+**The wrong cut is horizontal.** "First we build all the database tables, then
+all the API endpoints, then all the UI." Each horizontal layer is individually
+invisible: a schema with no reader proves nothing, an endpoint with no caller
+proves nothing, a UI with no backend is a mock. You integrate at the end, you
+demo at the end, and every risk you were worried about is still unproven until
+the end. Horizontal slicing front-loads effort and back-loads learning — exactly
+backwards.
 
-**The right cut is vertical.** Each slice reaches through *every* layer it needs — data,
-backend logic, API, UI — to deliver one observable, end-to-end behavior. The first slice is
-the thinnest path that still touches the whole stack: a *walking skeleton* that proves the
-architecture holds together. Every later slice stacks one coherent capability on top of the
-skeleton, reusing what earlier slices already built. At the end of *each* slice you have
-something a person can actually use and you can actually demo — and you learned your
+**The right cut is vertical.** Each slice reaches through _every_ layer it needs
+— data, backend logic, API, UI — to deliver one observable, end-to-end behavior.
+The first slice is the thinnest path that still touches the whole stack: a
+_walking skeleton_ that proves the architecture holds together. Every later
+slice stacks one coherent capability on top of the skeleton, reusing what
+earlier slices already built. At the end of _each_ slice you have something a
+person can actually use and you can actually demo — and you learned your
 integration risks on slice one, not slice five.
 
-So the one rule that defines this skill: **slices are vertical, never horizontal.** A slice
-that delivers only a schema, only routes, only UI, or only "plumbing" with no observable
-change is forbidden. If you cannot finish the sentence *"after this slice, the user can ___"*
-or *"after this slice, the user sees ___"*, you have cut horizontally — re-cut.
+So the one rule that defines this skill: **slices are vertical, never
+horizontal.** A slice that delivers only a schema, only routes, only UI, or only
+"plumbing" with no observable change is forbidden. If you cannot finish the
+sentence _"after this slice, the user can \_\_\_"_ or _"after this slice, the
+user sees \_\_\_"_, you have cut horizontally — re-cut.
 
 ## Inputs
 
-- **The source blueprint** — a behavior blueprint in the standard format (problem & intent,
-  actors, glossary, preconditions, scope, happy-path scenarios, deviation scenarios, flagged
-  assumptions, coverage checklist). This is your only required input and your source of
-  truth. Read it fully before cutting anything.
-- **Optional: a system design document.** If one exists, it tells you which layers each
-  behavior touches and where the architectural risk lives — useful for ordering, but the
-  blueprint remains the authority on behavior.
+- **The source blueprint** — a behavior blueprint in the standard format
+  (problem & intent, actors, glossary, preconditions, scope, happy-path
+  scenarios, deviation scenarios, flagged assumptions, coverage checklist). This
+  is your only required input and your source of truth. Read it fully before
+  cutting anything.
+- **Optional: a system design document.** If one exists, it tells you which
+  layers each behavior touches and where the architectural risk lives — useful
+  for ordering, but the blueprint remains the authority on behavior.
 
-Treat the blueprint as fixed. You are re-partitioning its scenarios, not rewriting them and
-not inventing new behavior. If the blueprint is genuinely ambiguous about something that
-changes where a scenario belongs, note it rather than silently guessing.
+Treat the blueprint as fixed. You are re-partitioning its scenarios, not
+rewriting them and not inventing new behavior. If the blueprint is genuinely
+ambiguous about something that changes where a scenario belongs, note it rather
+than silently guessing.
 
 ## What you produce
 
-A `<feature-name>-slices/` directory, created next to the source blueprint, containing:
+A `<feature-name>-slices/` directory, created next to the source blueprint,
+containing:
 
-- **`slice-1-<short>.md` … `slice-N-<short>.md`** — one mini-blueprint per slice, each in the
-  identical blueprint format (see `references/slice-blueprint-template.md`), with every
-  section narrowed to that slice.
-- **`SLICES.md`** — an index: the slices in stacked order, what each delivers, what it builds
-  on, and a coverage ledger proving every scenario from the source blueprint landed in
-  exactly one slice. See the template file for its shape.
+- **`slice-1-<short>.md` … `slice-N-<short>.md`** — one mini-blueprint per
+  slice, each in the identical blueprint format (see
+  `references/slice-blueprint-template.md`), with every section narrowed to that
+  slice.
+- **`SLICES.md`** — an index: the slices in stacked order, what each delivers,
+  what it builds on, and a coverage ledger proving every scenario from the
+  source blueprint landed in exactly one slice. See the template file for its
+  shape.
 
-Each slice file is meant to be fed into your planning skill on its own, as if it were a small
-standalone blueprint. That is the whole point of keeping the format identical.
+Each slice file is a self-contained mini-blueprint that stands on its own. That
+is the whole point of keeping the format identical.
 
 ## Workflow
 
-Seven phases. Do them in order. The early phases are analysis you do in your head or notes;
-do not start writing slice files until the user has confirmed the cut (Phase 5), and never
-before Phase 6.
+Seven phases. Do them in order. The early phases are analysis you do in your
+head or notes; do not start writing slice files until the user has confirmed the
+cut (Phase 5), and never before Phase 6.
 
 ### Phase 1 — Read the blueprint and inventory every scenario
 
-Read the source blueprint end to end. Then build a flat **scenario inventory**: a numbered
-list of every scenario in the blueprint — every `@happy-path`, every `@deviation`, every row
-of every `Scenario Outline`. Give each a stable ID (e.g. `HP-1`, `DEV-7.3a`).
+Read the source blueprint end to end. Then build a flat **scenario inventory**:
+a numbered list of every scenario in the blueprint — every `@happy-path`, every
+`@deviation`, every row of every `Scenario Outline`. Give each a stable ID (e.g.
+`HP-1`, `DEV-7.3a`).
 
-This inventory is your coverage ledger. The cardinal sin of slicing is losing a scenario —
-an edge case that quietly falls between two slices becomes the production incident the
-blueprint was written to prevent. Every scenario in this inventory must end up assigned to
-exactly one slice by the end. Nothing silently dropped.
+This inventory is your coverage ledger. The cardinal sin of slicing is losing a
+scenario — an edge case that quietly falls between two slices becomes the
+production incident the blueprint was written to prevent. Every scenario in this
+inventory must end up assigned to exactly one slice by the end. Nothing silently
+dropped.
 
 ### Phase 2 — Find the walking skeleton (slice 1)
 
-Find the single thinnest happy path that still exercises every architectural layer the
-feature needs end to end. That is slice 1.
+Find the single thinnest happy path that still exercises every architectural
+layer the feature needs end to end. That is slice 1.
 
-"Thinnest" is about **breadth, not depth** — and this distinction governs the whole skill.
-Cut slice 1 narrow on breadth: one entry condition, one path, defer every *other* behavior
-(alternative paths, the rest of the feature, the polish). But go *full depth* on the one
-behavior it does own: a slice is only worth shipping as a chunk if it is genuinely
-shippable, which means it handles the realistic failure modes of the behavior it introduces.
-So slice 1 includes the risk scenarios that protect its one happy path — the provider being
-down, the fetch returning nothing, the connection dropping mid-fetch — because shipping that
-path without them is not a smaller deliverable, it is a broken one.
+"Thinnest" is about **breadth, not depth** — and this distinction governs the
+whole skill. Cut slice 1 narrow on breadth: one entry condition, one path, defer
+every _other_ behavior (alternative paths, the rest of the feature, the polish).
+But go _full depth_ on the one behavior it does own: a slice is only worth
+shipping as a chunk if it is genuinely shippable, which means it handles the
+realistic failure modes of the behavior it introduces. So slice 1 includes the
+risk scenarios that protect its one happy path — the provider being down, the
+fetch returning nothing, the connection dropping mid-fetch — because shipping
+that path without them is not a smaller deliverable, it is a broken one.
 
-Concretely: slice 1 picks one path and strips away other *behaviors*, not the error handling
-*of* that path. Its job is to prove the integration works end to end *and* to be the first
-thing you could actually put in front of users.
+Concretely: slice 1 picks one path and strips away other _behaviors_, not the
+error handling _of_ that path. Its job is to prove the integration works end to
+end _and_ to be the first thing you could actually put in front of users.
 
 For guidance on what makes a good skeleton and how to recognize a bad one, read
 `references/slicing-heuristics.md`.
 
 ### Phase 3 — Stack the remaining slices
 
-Lay out the rest of the feature as slices that each add **one coherent capability** on top of
-what earlier slices already built. Order them by:
+Lay out the rest of the feature as slices that each add **one coherent
+capability** on top of what earlier slices already built. Order them by:
 
-1. **Dependency** — a slice may only rely on capabilities that earlier slices created. The
-   stack only grows upward.
-2. **Risk** — pull risky integrations (an external paid provider, a tricky concurrency
-   guarantee) earlier rather than later, so you learn the hard parts while there is still
-   room to react.
-3. **Value** — each slice should be independently demoable, and ideally shippable on its own.
+1. **Dependency** — a slice may only rely on capabilities that earlier slices
+   created. The stack only grows upward.
+2. **Risk** — pull risky integrations (an external paid provider, a tricky
+   concurrency guarantee) earlier rather than later, so you learn the hard parts
+   while there is still room to react.
+3. **Value** — each slice should be independently demoable, and ideally
+   shippable on its own.
 
-Then assign **every** scenario from the Phase 1 inventory to exactly one slice — happy paths
-*and* deviations. The rule for deviations is simple and strict:
+Then assign **every** scenario from the Phase 1 inventory to exactly one slice —
+happy paths _and_ deviations. The rule for deviations is simple and strict:
 
-**A deviation rides with the slice that introduces the behavior it protects.** A slice ships
-its happy path together with the risk scenarios for that path — provider errors, invalid
-input, the connection dropping, the boundary cases — because a chunk you ship is only
-meaningful if it is robust. A slice that delivers a happy path but defers that path's failure
-handling has not shipped a smaller thing; it has shipped a fragile thing, and shipping in
-chunks loses its point.
+**A deviation rides with the slice that introduces the behavior it protects.** A
+slice ships its happy path together with the risk scenarios for that path —
+provider errors, invalid input, the connection dropping, the boundary cases —
+because a chunk you ship is only meaningful if it is robust. A slice that
+delivers a happy path but defers that path's failure handling has not shipped a
+smaller thing; it has shipped a fragile thing, and shipping in chunks loses its
+point.
 
-This means deviations distribute *naturally* across the stack by behavior ownership: a
-manual-refresh race belongs to the slice that introduces manual refresh; a stale-cache
-boundary belongs to the slice that introduces caching; a script payload in the domain input
-belongs to the slice that introduces the input field. A deviation lands in a later slice only
-when the *behavior it concerns* is itself introduced later — never to thin out an earlier
-slice by stripping its risk handling.
+This means deviations distribute _naturally_ across the stack by behavior
+ownership: a manual-refresh race belongs to the slice that introduces manual
+refresh; a stale-cache boundary belongs to the slice that introduces caching; a
+script payload in the domain input belongs to the slice that introduces the
+input field. A deviation lands in a later slice only when the _behavior it
+concerns_ is itself introduced later — never to thin out an earlier slice by
+stripping its risk handling.
 
-So **do not create a "hardening" or "resilience" slice** that collects the error handling for
-behaviors shipped in earlier slices. That is a horizontal slice in the time dimension: it
-adds no new behavior, and it means every earlier slice shipped fragile for several iterations.
-If you find yourself reaching for one, the deviations in it almost always belong back with the
-slices whose behavior they guard.
+So **do not create a "hardening" or "resilience" slice** that collects the error
+handling for behaviors shipped in earlier slices. That is a horizontal slice in
+the time dimension: it adds no new behavior, and it means every earlier slice
+shipped fragile for several iterations. If you find yourself reaching for one,
+the deviations in it almost always belong back with the slices whose behavior
+they guard.
 
-`references/slicing-heuristics.md` has the detailed ordering criteria and worked examples of
-placing deviations by behavior ownership.
+`references/slicing-heuristics.md` has the detailed ordering criteria and worked
+examples of placing deviations by behavior ownership.
 
 ### Phase 4 — Validate the cut before writing anything
 
-Run these four checks across your planned slices. If any fails, re-cut — it is far cheaper to
-fix the partition now than after you have written N files.
+Run these four checks across your planned slices. If any fails, re-cut — it is
+far cheaper to fix the partition now than after you have written N files.
 
-- **Vertical check.** For every slice, can you complete *"after this slice the user can/sees
-  ___"*? Does it touch the layers that sentence requires (not a single isolated layer)? A
-  slice failing this is horizontal — merge it into a neighbor or re-cut.
-- **Robustness / shippability check.** For each slice, does it handle the realistic failure
-  modes of the behavior it introduces — or did its risk scenarios get deferred elsewhere? A
-  slice that ships a happy path while its error handling lives in a later slice is not
-  shippable; pull those deviations back in. And if you have a slice whose only content is
-  hardening behaviors shipped earlier, dissolve it and return its scenarios to their owning
-  slices.
-- **Stacking check.** Does each slice depend only on slices before it? If slice 2 secretly
-  needs something only slice 4 builds, the order is wrong.
-- **Coverage check.** Is every scenario from the Phase 1 inventory assigned to exactly one
-  slice? None dropped, none duplicated. If a scenario genuinely belongs nowhere, that is a
-  finding to surface, not a thing to bury.
-- **Independence check.** Could each slice be merged and shipped on its own as a coherent,
-  robust product increment? If a slice only makes sense bundled with another, they are one
-  slice.
+- **Vertical check.** For every slice, can you complete _"after this slice the
+  user can/sees \_\_\_"_? Does it touch the layers that sentence requires (not a
+  single isolated layer)? A slice failing this is horizontal — merge it into a
+  neighbor or re-cut.
+- **Robustness / shippability check.** For each slice, does it handle the
+  realistic failure modes of the behavior it introduces — or did its risk
+  scenarios get deferred elsewhere? A slice that ships a happy path while its
+  error handling lives in a later slice is not shippable; pull those deviations
+  back in. And if you have a slice whose only content is hardening behaviors
+  shipped earlier, dissolve it and return its scenarios to their owning slices.
+- **Stacking check.** Does each slice depend only on slices before it? If slice
+  2 secretly needs something only slice 4 builds, the order is wrong.
+- **Coverage check.** Is every scenario from the Phase 1 inventory assigned to
+  exactly one slice? None dropped, none duplicated. If a scenario genuinely
+  belongs nowhere, that is a finding to surface, not a thing to bury.
+- **Independence check.** Could each slice be merged and shipped on its own as a
+  coherent, robust product increment? If a slice only makes sense bundled with
+  another, they are one slice.
 
 ### Phase 5 — Confirm the cut with the user before writing the files
 
-Slicing is a judgment call, and the user is the authority on whether the increments are
-*meaningful*. The aim is delivery a reviewer can absorb quickly — not so coarse that a slice
-is a system-bloat hangover, not so fine that the stack is ceremony. There is no right number
-of slices; there is only whether *these* slices are the right cut for *this* feature.
+Slicing is a judgment call, and the user is the authority on whether the
+increments are _meaningful_. The aim is delivery a reviewer can absorb quickly —
+not so coarse that a slice is a system-bloat hangover, not so fine that the
+stack is ceremony. There is no right number of slices; there is only whether
+_these_ slices are the right cut for _this_ feature.
 
-So before writing the detailed slice files, present the proposed cut and ask the user to
-confirm it. Show, compactly:
+So before writing the detailed slice files, present the proposed cut and ask the
+user to confirm it. Show, compactly:
 
-- the ordered slice list, each with its one-line *"after this slice the user can/sees ___"*,
+- the ordered slice list, each with its one-line _"after this slice the user
+  can/sees \_\_\_"_,
 - what each slice owns (its happy path plus the risk scenarios riding with it),
 - and the `Builds on` dependency for each.
 
-Then ask plainly whether the slices look right, or whether any should be merged, split, or
-reordered. Adjust until they confirm. Confirming the boundaries now is far cheaper than
-rewriting a directory of mini-blueprints later — and it is the moment the user's sense of
-"meaningful delivery" gets to shape the cut.
+Then ask plainly whether the slices look right, or whether any should be merged,
+split, or reordered. Adjust until they confirm. Confirming the boundaries now is
+far cheaper than rewriting a directory of mini-blueprints later — and it is the
+moment the user's sense of "meaningful delivery" gets to shape the cut.
 
-(When running non-interactively with no user to answer, present the proposed cut in your
-summary as the thing you would have asked them to confirm, then proceed.)
+(When running non-interactively with no user to answer, present the proposed cut
+in your summary as the thing you would have asked them to confirm, then
+proceed.)
 
 ### Phase 6 — Write the slice files and the index
 
 Read `references/slice-blueprint-template.md`. For each slice, write
-`<feature-name>-slices/slice-N-<short>.md` as a full mini-blueprint in the identical format,
-with every section scoped to the slice:
+`<feature-name>-slices/slice-N-<short>.md` as a full mini-blueprint in the
+identical format, with every section scoped to the slice:
 
-- **Problem & intent** — the part of the overall problem this slice resolves, and its own
-  one-line success outcome. Not the whole feature's problem restated.
-- **Actors / glossary** — only the actors and terms this slice actually involves.
-- **Preconditions & assumptions** — include a `Builds on:` line naming the earlier slices
-  this one assumes are already shipped. That is what makes the stack legible.
-- **Scope** — *In scope:* what this slice delivers. *Out of scope:* the things deferred to
-  **named** later slices, plus anything the source blueprint itself put out of scope. Being
-  explicit here is what stops a reviewer from expecting more (or less) than the slice gives.
-- **Happy-path & deviation scenarios** — the Gherkin assigned to this slice, lifted from the
-  source blueprint and adapted only as far as the narrower scope requires. Keep the tags.
+- **Problem & intent** — the part of the overall problem this slice resolves,
+  and its own one-line success outcome. Not the whole feature's problem
+  restated.
+- **Actors / glossary** — only the actors and terms this slice actually
+  involves.
+- **Preconditions & assumptions** — include a `Builds on:` line naming the
+  earlier slices this one assumes are already shipped. That is what makes the
+  stack legible.
+- **Scope** — _In scope:_ what this slice delivers. _Out of scope:_ the things
+  deferred to **named** later slices, plus anything the source blueprint itself
+  put out of scope. Being explicit here is what stops a reviewer from expecting
+  more (or less) than the slice gives.
+- **Happy-path & deviation scenarios** — the Gherkin assigned to this slice,
+  lifted from the source blueprint and adapted only as far as the narrower scope
+  requires. Keep the tags.
 - **Flagged assumptions** — any assumption specific to this slice.
-- **Coverage checklist** — the same 14-category table, reflecting *this slice's* deviations.
-  Categories this slice does not touch are marked N/A with a real reason ("deferred to slice
-  4 — resilience" is a real reason; a blank cell is not).
+- **Coverage checklist** — the same 14-category table, reflecting _this slice's_
+  deviations. Categories this slice does not touch are marked N/A with a real
+  reason ("deferred to slice 4 — resilience" is a real reason; a blank cell is
+  not).
 
-Then write `SLICES.md` — the index and coverage ledger. Its job is to let someone see the
-whole stack at a glance and trust that nothing was lost. The template file specifies its
-shape.
+Then write `SLICES.md` — the index and coverage ledger. Its job is to let
+someone see the whole stack at a glance and trust that nothing was lost. The
+template file specifies its shape.
 
-### Phase 7 — Summarize and hand off
+### Phase 7 — Summarize and ask the user to review
 
-Give a short summary: how many slices, a one-line "delivers" for each, and explicit
-confirmation that every source scenario is covered (cite the ledger). Flag any scenario you
-could not cleanly place and any assumption you had to make about layer boundaries. Then point
-the user at `SLICES.md` and note the next step: each slice goes through your planning skill
-individually, in stacked order.
+Give a short summary: how many slices, a one-line "delivers" for each, and
+explicit confirmation that every source scenario is covered (cite the ledger).
+Flag any scenario you could not cleanly place and any assumption you had to make
+about layer boundaries. Point the user at `SLICES.md` and the slice files, and
+ask them to review the cut — whether the slices look right, whether any should
+be merged, split, or reordered.
 
 ## Principles to hold throughout
 
-- **Vertical or it doesn't ship.** This is the whole skill. Re-read the "after this slice the
-  user can ___" test whenever a slice feels off — a slice that fails it is the failure mode
-  this skill exists to prevent.
-- **The skeleton earns the right to the rest.** Slice 1 being thin is a feature, not a
-  weakness. Proving the full stack integrates on a tiny path is worth more than building any
-  single layer completely.
-- **Thin on breadth, full on depth.** Cut each slice narrow — few behaviors, one path — but
-  ship each behavior it owns complete with the risk scenarios that protect it. A slice that
-  defers its own failure handling is not a smaller deliverable, it is a fragile one, and
-  shipping in chunks only pays off when every chunk is genuinely shippable.
-- **The user owns "meaningful," you own the rest.** How coarse or fine the cut should be is a
-  product judgment about what a reviewer can absorb and what is worth shipping. Propose a cut,
-  but confirm it with the user before writing the files — do not decide the granularity for
-  them in silence.
-- **Conserve coverage.** The union of all slices equals the source blueprint, exactly. A
-  scenario may move to a different slice than first expected, but it may never vanish.
-- **Don't rewrite behavior, re-partition it.** You are a slicer, not an author. If a slice's
-  Gherkin says something the source blueprint never said, you have drifted — pull back to
-  what the blueprint specified.
-- **Stack honestly.** `Builds on:` lines and the deferred-to-slice-X notes are not
-  bureaucracy; they are the contract that lets each slice be planned and shipped in isolation
-  while still composing into the whole feature.
+- **Vertical or it doesn't ship.** This is the whole skill. Re-read the "after
+  this slice the user can \_\_\_" test whenever a slice feels off — a slice that
+  fails it is the failure mode this skill exists to prevent.
+- **The skeleton earns the right to the rest.** Slice 1 being thin is a feature,
+  not a weakness. Proving the full stack integrates on a tiny path is worth more
+  than building any single layer completely.
+- **Thin on breadth, full on depth.** Cut each slice narrow — few behaviors, one
+  path — but ship each behavior it owns complete with the risk scenarios that
+  protect it. A slice that defers its own failure handling is not a smaller
+  deliverable, it is a fragile one, and shipping in chunks only pays off when
+  every chunk is genuinely shippable.
+- **The user owns "meaningful," you own the rest.** How coarse or fine the cut
+  should be is a product judgment about what a reviewer can absorb and what is
+  worth shipping. Propose a cut, but confirm it with the user before writing the
+  files — do not decide the granularity for them in silence.
+- **Conserve coverage.** The union of all slices equals the source blueprint,
+  exactly. A scenario may move to a different slice than first expected, but it
+  may never vanish.
+- **Don't rewrite behavior, re-partition it.** You are a slicer, not an author.
+  If a slice's Gherkin says something the source blueprint never said, you have
+  drifted — pull back to what the blueprint specified.
+- **Stack honestly.** `Builds on:` lines and the deferred-to-slice-X notes are
+  not bureaucracy; they are what lets each slice stand on its own as a coherent
+  increment while still composing into the whole feature.

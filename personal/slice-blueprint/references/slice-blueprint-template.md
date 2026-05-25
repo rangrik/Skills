@@ -142,8 +142,9 @@ belongs._
 
 ## Producing the files
 
-- Each `slice-N-<short>.md` is a complete, standalone mini-blueprint. It should be feedable
-  to a planning skill with no other context except (optionally) the system design document.
+- Each `slice-N-<short>.md` is a complete, standalone mini-blueprint that stands on its own —
+  complete enough to be worked from with no other context except (optionally) the system
+  design document.
 - Keep the Gherkin clean and tagged exactly as in the source blueprint, so it can still be
   lifted into a `.feature` file later if test automation is wanted.
 - Name slice files `slice-<N>-<short-kebab>.md` where `<short>` is a 1–3 word handle for what
