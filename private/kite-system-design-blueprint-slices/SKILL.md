@@ -40,7 +40,11 @@ can answer.
 You work **one slice at a time** and produce a **one-to-one** output: for
 `slice-2-refresh.md` you write `slice-2-refresh-system-design.md` next to it.
 The spec, the slice, and a list of codebase questions are the artifact this step
-hands forward (after human approval) to planning and research.
+hands forward — but not straight to planning. Once **every** slice has a design,
+the full set goes to a fresh-eyes critic, **`kite-system-design-conformance-review`**,
+which audits each design against its slice before the specs proceed to human
+approval and planning (Step 4). See **P6 — Stop and hand off** for exactly when
+and how to make that handoff.
 
 ## What this skill is really for: resolve the unknowns
 
@@ -241,9 +245,33 @@ altitude:
 
 Deliver a short summary and stop. The spec is the deliverable; it goes to
 **human approval** (the pipeline's Step 3 gate), then to planning (Step 4) with
-its codebase questions feeding research (Step 5). Don't invoke those skills
-here. If more slices remain, offer the next one (in stacked order), each its own
-file.
+its codebase questions feeding research (Step 5). Don't invoke planning or
+research here.
+
+**If more slices remain, offer the next one** (in stacked order), each its own
+file — don't review yet. The conformance critic runs over the *whole set*, so it
+only makes sense once every slice has a design.
+
+**When the slice you just designed was the last one — every `slice-N-*.md` in
+the directory now has a `slice-N-<short>-system-design.md` sibling — hand off to
+the critic before these specs go to planning.** Recommend running
+**`kite-system-design-conformance-review`** on the `<feature>-slices/` directory.
+That skill is to this one what `slice-conformance-review` is to `slice-blueprint`:
+a fresh-eyes critic that re-derives each design's obligations from its slice and
+the design-doc template, rather than trusting the §11/§12 coverage checklists
+*this* skill wrote. It exists precisely because a generator grades its own
+homework — it will tick "scenario handled" against a section that doesn't handle
+it, mark a taxonomy dimension "Resolved" with a pointer that doesn't resolve it,
+or quietly bank an intent fork as a §6 assumption that an implementer would
+actually have to take back to the user. The critic catches those, fixes the
+mechanical gaps, surfaces the ones only the user can settle, and verifies its
+fixes landed.
+
+So the deliverable of *this* skill is "all slices designed," and what you do with
+that output is route it through the conformance review (the Step-3 critic) — the
+specs are not ready for human approval + planning until that review has run.
+Don't run the critic yourself per slice and don't act as your own critic on the
+set; recommend the dedicated skill, which uses independent sub-agents on purpose.
 
 ## Principles for running this skill
 
