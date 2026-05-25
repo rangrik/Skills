@@ -65,14 +65,23 @@ skills:
       suite: private/_evals/kite-design-system-standards/suite
       results: private/_evals/kite-design-system-standards/results
 
-  - id: kite-planner
-    name: kite-planner
+  - id: kite-planner-with-taxonomy
+    name: kite-planner-with-taxonomy
     bucket: private
-    path: private/kite-planner
+    path: private/kite-planner-with-taxonomy
     install: true
     evals:
-      suite: private/_evals/kite-planner/suite
-      results: private/_evals/kite-planner/results
+      suite: private/_evals/kite-planner-with-taxonomy/suite
+      results: private/_evals/kite-planner-with-taxonomy/results
+
+  - id: kite-plan-conformance-review
+    name: kite-plan-conformance-review
+    bucket: private
+    path: private/kite-plan-conformance-review
+    install: true
+    evals:
+      suite: private/_evals/kite-plan-conformance-review/suite
+      results: private/_evals/kite-plan-conformance-review/results
 
   - id: kite-research
     name: kite-research

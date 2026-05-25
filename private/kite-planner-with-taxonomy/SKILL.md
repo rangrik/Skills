@@ -1,0 +1,242 @@
+---
+name: kite-planner-with-taxonomy
+description: >-
+  Turns ONE approved system-design slice (a `slice-N-<short>-system-design.md`
+  produced by kite-system-design-blueprint-slices) into an ordered,
+  scenario-by-scenario implementation plan for that slice — CODE-BLIND, grounded
+  in the slice's design decisions, the platform's `SYSTEM_TAXONOMY.md`
+  vocabulary, and the `kite-design-system-standards` engineering principles. It
+  works one slice at a time and stops; it does not advance to the next slice. It
+  produces a per-slice plan file, orders the slice's scenarios for maximum reuse,
+  plans each scenario, and emits ONE consolidated set of slice-level research
+  questions for the codebase. When the plan is written it auto-spawns a
+  conformance/coverage review subagent (kite-plan-conformance-review) that checks
+  the plan against the slice's design and fixes what it can. This is Step 4 of
+  the Kite pipeline (after solution-design, before research). Use it whenever a
+  slice's system-design spec exists and the next job is to plan its build —
+  triggers on "plan this slice", "create the implementation plan for slice N",
+  "turn this system design into a plan", "order the scenarios for this slice", or
+  whenever an approved `*-system-design.md` slice is in hand and building is about
+  to start, even when the word "plan" is never said. Not for product behavior
+  (blueprint/slice first). Not for the system design itself (that is Step 3). Not
+  for reading the codebase (that is research, Step 5). Scope is the appsmith-v2 /
+  Kite platform.
+---
+
+# Kite Planner (with taxonomy)
+
+You turn **one** approved system-design slice into an ordered,
+scenario-by-scenario implementation plan for that slice — **without looking at a
+single line of source code**. You build *on top of* the slice's design: it
+already decided _how_ the system should achieve the behavior; your job is to
+break that into the ordered, buildable scenarios an implementer will work, and
+to name the open codebase questions that must be answered first.
+
+## Why this skill exists, and the one rule that defines it
+
+Planning and codebase research are deliberately separate jobs. If you plan while
+reading the code, you anchor on what the code already does and quietly plan
+around what is convenient today instead of what the slice's design intends. You
+also lose the ability to tell, later, whether a capability _should_ exist or
+merely _happens_ to exist.
+
+So the rule: **while using this skill, do not open, read, grep, or reference
+source code.** Your inputs are the slice's system-design spec, the behavior
+slice it designs, `SYSTEM_TAXONOMY.md`, and `kite-design-system-standards`.
+Deciding what already exists in the codebase is the research stage's job
+(`kite-research`). Your job is to work out what the slice _needs_, in build
+order.
+
+## One slice at a time — and stop
+
+You plan **exactly one slice** and then **stop**. You do not roll on to the next
+slice in the stack on your own, even when more remain. The pipeline maps
+one-to-one (one behavior slice → one system-design spec → one plan), and a human
+gate sits between slices. When you finish, say which slice is done and offer the
+next one — don't start it.
+
+## Inputs to gather first
+
+1. **The slice's system-design spec** — `slice-N-<short>-system-design.md`. This
+   is your primary source: its Decisions (D#), Tradeoffs, Assumptions, Scope,
+   Risks, Constraints, Dependencies, the data-flow narrative, and especially its
+   **§ Open Questions for the Codebase**. The design has already been made; you
+   plan to it, you do not re-make it. If the user hasn't said which slice, list
+   the `*-system-design.md` files and ask (plan in stacked order).
+2. **The behavior slice** — `slice-N-<short>.md`. The source of truth for
+   _behavior_: its scenarios (happy-path + deviations), scope, preconditions, and
+   `Builds on:` line. Every scenario this slice owns must appear in your plan.
+3. **`SLICES.md`** — the stack context, the coverage ledger, and any addendum.
+   Read the `Builds on:` line so you know which earlier slices' capabilities this
+   one assumes (reference them; don't replan them). **If an addendum contradicts
+   the original tables, the addendum wins** — plan to the corrected facts.
+4. **`SYSTEM_TAXONOMY.md`** (the `system-taxonomy` skill's output, at the repo
+   root). Use its canonical names for subsystems and concepts so the plan speaks
+   the team's language — "the **Snapshot** store", "the **domains** subsystem" —
+   not invented names. If absent, name things plainly and don't block on it.
+5. **`kite-design-system-standards`** (Mode A — guidance lookup). The platform's
+   engineering principles and Component Map. Use it to keep each scenario's plan
+   conformant and to cite the governing principle when a required capability or
+   ordering choice rests on one. You don't need to understand the skill's
+   internals — consult it the way its own instructions describe, pull only the
+   principles your scenario touches, and cite them by number (e.g. `[P15]`).
+
+Treat the design spec and the behavior slice as fixed. If they genuinely
+contradict each other or leave a gap an implementer couldn't close, say so
+plainly and flag it — don't invent a resolution or quietly re-architect.
+
+## What you produce
+
+A single **plan file** for this slice, written next to the slice as
+`slice-N-<short>-plan.md`, following `references/plan-file.md`. It is a living
+document — later pipeline stages append to it — so write it to be appended to,
+and never put code in it. Read `references/plan-file.md` before writing; it is
+the output contract shared with `kite-research` and `kite-implementation`.
+
+## Step 1 — Inventory every scenario the slice owns
+
+Pull every scenario this slice owns from the behavior slice: happy paths,
+deviations, edge and corner cases alike. Cross-check against the design spec's
+**Slice Coverage Checklist** so nothing the design accounted for is dropped.
+Capture each as Gherkin (given / when / then) and tag its type
+(`happy_path | edge_case | corner_case`).
+
+A corner case dropped here becomes a production incident later, so the inventory
+is your guardrail against accidentally planning only the happy path. If two
+scenarios are tightly coupled you may combine them into one only when the
+resulting Gherkin still proves both behaviors; otherwise keep them separate.
+
+## Step 2 — Order the scenarios for maximum reuse
+
+Decide the order in which this slice's scenarios should be built, so each
+scenario can stand on capabilities earlier ones already created and later work
+gets cheaper.
+
+Heuristics:
+
+- Foundational scenarios first — the ones that establish capabilities others
+  lean on (often the happy path that lays down the data path the design spec's
+  flow describes).
+- Prefer scenarios that unlock reusable building blocks early.
+- Identify dependency chains between scenarios and respect them.
+- Every scenario is a **vertical slice** — full stack, end to end. Never order or
+  plan by layer. "Do all the database work first" is wrong: it produces nothing a
+  user can exercise and defers all integration risk to the end.
+
+Write down _why_ each scenario sits where it does. The order is a claim, and the
+next stages should see your reasoning. Make it visible in two places: the
+`Scenario order & status` table (every scenario `planned`), and each scenario's
+`Order` field plus a one-line reason naming the reuse or dependency relationship
+("builds on the fetch+store path from S1", "hardens the save route after the
+basic write path exists").
+
+## Step 3 — Plan each scenario (code-blind, grounded in the design)
+
+For each scenario, reasoning only from the design spec, behavior slice,
+taxonomy, and standards, write:
+
+- **Design references** — the design decisions this scenario realizes, cited
+  (`D2`, `§2.2`, the relevant Risk/Constraint). This is what keeps the plan
+  faithful to the design instead of re-deciding it.
+- **Preconditions** — what must be true before this scenario can be implemented.
+- **Required capabilities** — the concrete things the scenario needs to exist
+  (for example, "a way to persist one Snapshot per fetch keyed by normalized
+  domain"). Describe the capability in taxonomy vocabulary; **do not assert
+  whether it already exists** and do not name a file or symbol. Where a
+  capability is shaped by a principle, cite it (`[P18]` for the migration
+  convention, `[P1]` for layering).
+- **Postconditions** — what is true once the scenario is implemented.
+- **Risks / assumptions** — anything uncertain, and which design-spec decisions,
+  accepted compromises, or quality expectations apply.
+
+Keep required capabilities **concrete but abstract**: "a way to authorize
+app-scoped writes" or "a transaction that stores all-or-nothing," not "the
+existing auth middleware" or a path. Preserve the design's named decisions,
+constraints, accepted compromises, and quality expectations; if you find
+yourself wanting a different architecture because it feels convenient, that's a
+finding to flag, not a change to make.
+
+## Step 4 — Consolidate the slice-level research questions
+
+Research questions live at the **slice level**, not per scenario — the codebase
+truths an implementer needs ("does a DataForSEO client already exist?", "what is
+the migration convention?") are shared across the slice's scenarios, and asking
+them once keeps the handoff to `kite-research` clean.
+
+Build the list in two moves:
+
+1. **Carry forward** every question from the design spec's **§ Open Questions for
+   the Codebase**. Those were authored at design altitude and are still owed;
+   bring them in verbatim, preserving their original IDs as the source.
+2. **Augment** with any _new_ question the act of planning the scenarios
+   surfaced — a capability you described in Step 3 whose existence/shape is
+   unknown and isn't already covered by a carried-forward question.
+
+Then **dedupe and consolidate** into one ordered list. Each question must be
+specific and answerable EXISTS / MISSING:
+
+- Good: "Is there an existing service or helper that resolves an app's connected
+  custom domain, and where? (Needed by S1, S4.)"
+- Weak: "Look into the domain code."
+
+When the user (or the design spec) says "we probably already have X," do not
+bank it as fact — phrase it as a question for research to confirm. Note which
+scenarios each question blocks, so research and implementation can sequence
+around it.
+
+## Step 5 — Write the plan file
+
+Assemble everything into `slice-N-<short>-plan.md` using `references/plan-file.md`.
+Set the slice and every scenario to status `planned`.
+
+Before finishing, audit the plan:
+
+- Every scenario the slice owns appears as Gherkin with a type tag and is in the
+  order/status table.
+- The order is justified by reuse or dependency, not by backend/frontend/database
+  layers.
+- Every scenario has Design references, Preconditions, Required capabilities,
+  Postconditions, and Risks / assumptions.
+- The slice-level research questions carry forward every §-Open-Question and add
+  the ones planning surfaced — deduped, each EXISTS/MISSING-answerable, each
+  noting the scenarios it blocks.
+- The plan contains no source-code paths, grep/search results, or claims that a
+  capability already exists.
+
+## Step 6 — Auto-review, then hand off
+
+After writing the plan, **spawn a subagent that runs `kite-plan-conformance-review`**
+on it. Give the subagent the absolute paths to the plan file, the slice's
+system-design spec, and the behavior slice. That review checks the plan's
+coverage and conformance against the design, **fixes what it safely can**
+(a missing scenario, a dropped §-Open-Question, a layer-ordered sequence, a
+stray code reference), and returns a short report of what it fixed plus any item
+it could **not** resolve without a human.
+
+Then:
+
+- If the review surfaced **human-needed** items (a genuine design/behavior
+  contradiction, a scope question, a decision that looks wrong), present them
+  plainly and stop for the human. These should be rare — most findings at this
+  stage are mechanical and the reviewer fixes them itself.
+- Otherwise, report that the slice plan is written and reviewed clean, and offer
+  the next slice (in stacked order) — **without starting it**.
+
+The finished plan file goes to `kite-research`, which answers the slice-level
+research questions against the real codebase, then to `kite-implementation`.
+
+## Optional — fan out for a large slice
+
+For a slice with many scenarios, you may spawn one subagent per scenario to do
+Step 3 in parallel, each given that scenario plus the design spec in isolation.
+You remain the orchestrator: do Steps 1–2 and Step 4 yourself (ordering and the
+consolidated research questions are slice-wide, not per scenario), then merge the
+per-scenario plans into the one ordered plan file before the Step 6 review.
+
+## Staying in your lane
+
+Do not write code. Do not read code. Do not skip the ordering step. Do not plan
+a scenario as horizontal layers. Do not re-decide the design — if a decision
+looks wrong, flag it, don't fork it. Do not declare what already exists — if you
+catch yourself writing "this already exists in…", stop: that is a research
+finding, not a plan. Do not roll on to the next slice.
