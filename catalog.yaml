@@ -47,6 +47,15 @@ skills:
       suite: personal/_evals/slice-blueprint/suite
       results: personal/_evals/slice-blueprint/results
 
+  - id: slice-conformance-review
+    name: slice-conformance-review
+    bucket: personal
+    path: personal/slice-conformance-review
+    install: true
+    evals:
+      suite: personal/_evals/slice-conformance-review/suite
+      results: personal/_evals/slice-conformance-review/results
+
   - id: kite-design-system-standards
     name: kite-design-system-standards
     bucket: private

@@ -93,9 +93,10 @@ is the whole point of keeping the format identical.
 
 ## Workflow
 
-Seven phases. Do them in order. The early phases are analysis you do in your
+Eight phases. Do them in order. The early phases are analysis you do in your
 head or notes; do not start writing slice files until the user has confirmed the
-cut (Phase 5), and never before Phase 6.
+cut (Phase 5), and never before Phase 6. Phase 7 is an automated self-check of
+what you wrote, before you hand anything to the user.
 
 ### Phase 1 — Read the blueprint and inventory everything it commits to
 
@@ -210,39 +211,40 @@ far cheaper to fix the partition now than after you have written N files.
   shipped earlier, dissolve it and return its scenarios to their owning slices.
 - **Stacking check.** Does each slice depend only on slices before it? If slice
   2 secretly needs something only slice 4 builds, the order is wrong.
-- **Coverage check.** Is every item from **both** Phase 1 inventories assigned to
-  exactly one slice — every scenario _and_ every commitment (glossary term,
+- **Coverage check.** Is every item from **both** Phase 1 inventories assigned
+  to exactly one slice — every scenario _and_ every commitment (glossary term,
   enumerated field, confirmed decision, standing assumption)? None dropped, none
   duplicated. If something genuinely belongs nowhere, that is a finding to
   surface, not a thing to bury.
 - **Realizability check.** For every scenario placed in a slice, walk its steps
-  and confirm each control, affordance, capability, or state the steps mention is
-  built by _this_ slice or an earlier one. A scenario can pass the coverage check
-  (it is "assigned somewhere") yet quietly reference machinery the slice does not
-  build — a "refresh" button that arrives two slices later, a "previous snapshot"
-  that does not exist yet, a background job nothing in scope runs. That is a
-  silent defect a ledger never catches. When you find one, you have two honest
-  moves: move the scenario to the slice that builds the thing, or adapt the
-  scenario's wording to this slice's reality and flag the adaptation. Never leave
-  a placed scenario pointing at something unbuilt.
+  and confirm each control, affordance, capability, or state the steps mention
+  is built by _this_ slice or an earlier one. A scenario can pass the coverage
+  check (it is "assigned somewhere") yet quietly reference machinery the slice
+  does not build — a "refresh" button that arrives two slices later, a "previous
+  snapshot" that does not exist yet, a background job nothing in scope runs.
+  That is a silent defect a ledger never catches. When you find one, you have
+  two honest moves: move the scenario to the slice that builds the thing, or
+  adapt the scenario's wording to this slice's reality and flag the adaptation.
+  Never leave a placed scenario pointing at something unbuilt.
 - **Internal-consistency check.** A slice's happy-path and deviation scenarios
   must describe one coherent world. When a slice makes a layer-boundary decision
   that removes or changes a behavior the monolith had — "this slice always
-  fetches; the fresh-cache short-circuit is deferred" — re-read every scenario in
-  that slice and confirm none still assumes the removed behavior. A happy path
-  that says "a loading state is shown on every visit" sitting next to a deviation
-  that says "the previously cached data stays on screen" is two different worlds
-  in one slice; reconcile them.
+  fetches; the fresh-cache short-circuit is deferred" — re-read every scenario
+  in that slice and confirm none still assumes the removed behavior. A happy
+  path that says "a loading state is shown on every visit" sitting next to a
+  deviation that says "the previously cached data stays on screen" is two
+  different worlds in one slice; reconcile them.
 - **Boundary-state check.** Stacking creates transient or degraded states the
-  whole-feature blueprint never had to consider, precisely because earlier slices
-  have not built later capabilities yet: the first slice serves stale data
-  because caching is not in yet; the first manual refresh has no prior snapshot to
-  diff for movement deltas. These are real states a user hits when a slice ships
-  alone. You do not silently invent feature behavior for them — but you do
-  **surface each as a flagged boundary assumption** in the slice, and raise it to
-  the user when it needs a defined product behavior. (This is not authoring: the
-  feature's behavior is conserved; the boundary state exists only because of the
-  ordering _you_ introduced, so naming it is part of slicing honestly.)
+  whole-feature blueprint never had to consider, precisely because earlier
+  slices have not built later capabilities yet: the first slice serves stale
+  data because caching is not in yet; the first manual refresh has no prior
+  snapshot to diff for movement deltas. These are real states a user hits when a
+  slice ships alone. You do not silently invent feature behavior for them — but
+  you do **surface each as a flagged boundary assumption** in the slice, and
+  raise it to the user when it needs a defined product behavior. (This is not
+  authoring: the feature's behavior is conserved; the boundary state exists only
+  because of the ordering _you_ introduced, so naming it is part of slicing
+  honestly.)
 - **Independence check.** Could each slice be merged and shipped on its own as a
   coherent, robust product increment? If a slice only makes sense bundled with
   another, they are one slice.
@@ -283,11 +285,11 @@ identical format, with every section scoped to the slice:
   restated.
 - **Actors / glossary** — only the actors and terms this slice actually
   involves. When you narrow the glossary, **defer terms to the slice that
-  introduces them — never silently drop one.** And if a term enumerates fields (a
-  table defined by its columns, a scoreboard defined by its metrics), each field
-  follows the same rule: a column belongs in the slice that renders it, and if
-  none does, that is a gap to surface, not a column to quietly delete. The
-  commitments inventory from Phase 1 is your checklist here.
+  introduces them — never silently drop one.** And if a term enumerates fields
+  (a table defined by its columns, a scoreboard defined by its metrics), each
+  field follows the same rule: a column belongs in the slice that renders it,
+  and if none does, that is a gap to surface, not a column to quietly delete.
+  The commitments inventory from Phase 1 is your checklist here.
 - **Preconditions & assumptions** — include a `Builds on:` line naming the
   earlier slices this one assumes are already shipped. That is what makes the
   stack legible.
@@ -317,7 +319,46 @@ Then write `SLICES.md` — the index and coverage ledger. Its job is to let
 someone see the whole stack at a glance and trust that nothing was lost. The
 template file specifies its shape.
 
-### Phase 7 — Summarize and ask the user to review
+### Phase 7 — Self-check the cut with a conformance review (before handoff)
+
+You just wrote these slices, so you are the worst-placed agent to judge whether
+they faithfully conserve the source blueprint — you will trust your own ledger
+and rationalize your own adaptations. So before handing anything to the user,
+run an independent conformance review and act on what it finds. This is not
+optional polish; it is the step that catches the silent guarantee you softened,
+the scenario your ledger double-claims, and the "arrives in a later slice"
+promise that has no owner.
+
+Run it as a delegated loop — **the review and the verification must each be a
+fresh sub-agent, never your own context** (the whole point is independence from
+the agent that did the slicing):
+
+1. **Review (sub-agent).** Spawn a sub-agent to apply the
+   `slice-conformance-review` skill against the source blueprint and the
+   `<feature>-slices/` directory you just wrote, returning candidate findings
+   only (each with a proposed verdict and meaningfulness). It must not see your
+   slicing rationale — only the files.
+2. **Evaluate the feedback (you).** Critically read the returned findings. Keep
+   the ones that are genuinely _real and meaningful_ — a lost guarantee, a
+   duplicated scenario the ledger lies about, an orphaned forward-promise, a
+   dropped commitment. Discard false positives, and **leave defensible judgment
+   calls alone** (a boundary state you already flagged, a mechanism you reframed
+   on purpose). Do not fix a gap just because it was reported.
+3. **Apply the meaningful fixes (you).** Make the surgical edits to the slice
+   files and `SLICES.md`. Minimal changes that restore the lost commitment — not
+   a re-slice.
+4. **Verify (a different sub-agent).** Spawn a _separate_ sub-agent — not the
+   one that reviewed, and not you who applied the fixes — to confirm each fix
+   actually landed in the files. A fixer confirming its own fix is the bias this
+   step exists to remove.
+
+If `slice-conformance-review` is not available in this environment, do the
+equivalent yourself as a deliberately fresh, adversarial pass — but prefer the
+delegated sub-agent loop, because the independence is what makes the check worth
+anything. Carry what the self-check found and fixed into the Phase 8 summary so
+the user sees it.
+
+### Phase 8 — Summarize and ask the user to review
 
 Give a short summary: how many slices, a one-line "delivers" for each, and
 explicit confirmation that every source scenario **and every commitment** (the
@@ -348,18 +389,18 @@ reordered.
   files — do not decide the granularity for them in silence.
 - **Conserve everything the blueprint asserts, not just its scenarios.** The
   union of all slices equals the source blueprint, exactly — its scenarios _and_
-  its glossary fields, confirmed decisions, and standing assumptions. Any of them
-  may move to a different slice than first expected, but none may vanish. A
+  its glossary fields, confirmed decisions, and standing assumptions. Any of
+  them may move to a different slice than first expected, but none may vanish. A
   scenario count that reconciles can still hide a dropped table column or a lost
   "no confirmation dialog" decision; conserve the commitments too.
 - **Don't rewrite behavior, re-partition it — but do name the states stacking
-  creates.** You are a slicer, not an author: if a slice's Gherkin says something
-  the source blueprint never said about the _feature_, you have drifted — pull
-  back. The exception is the transient or degraded states that exist _only_
-  because of the slice ordering you chose (a slice that has no cache yet, a first
-  refresh with no prior snapshot). Those are not new feature behavior, and
-  leaving them undefined is its own defect — flag them as boundary assumptions
-  and raise the ones that need a product call.
+  creates.** You are a slicer, not an author: if a slice's Gherkin says
+  something the source blueprint never said about the _feature_, you have
+  drifted — pull back. The exception is the transient or degraded states that
+  exist _only_ because of the slice ordering you chose (a slice that has no
+  cache yet, a first refresh with no prior snapshot). Those are not new feature
+  behavior, and leaving them undefined is its own defect — flag them as boundary
+  assumptions and raise the ones that need a product call.
 - **A placed scenario must be a buildable scenario.** Assigning a scenario to a
   slice is not enough; the slice must actually build everything the scenario's
   steps reference. A scenario that points at a control or state two slices away
