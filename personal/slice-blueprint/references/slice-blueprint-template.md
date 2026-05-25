@@ -30,8 +30,12 @@ who enters a domain may not belong here yet. One line each._
 
 ### 3. Glossary
 
-_Only the terms **this slice** actually uses. Drop terms that belong to deferred behavior.
-Two-column table (Term | Definition). "No specialized terms" if none._
+_Only the terms **this slice** actually uses. Terms whose behavior is deferred move to the
+slice that introduces them — **never silently dropped.** If a term enumerates fields (a table
+by its columns, a scoreboard by its metrics), keep only the fields this slice renders, and
+make sure every other field lands in a later slice; a field that lands in no slice is a gap to
+surface, not a column to delete. Two-column table (Term | Definition). "No specialized terms"
+if none._
 
 ### 4. Preconditions & Assumptions
 
@@ -59,7 +63,10 @@ than the slice delivers._
 
 _The happy-path Gherkin **assigned to this slice**, lifted from the source blueprint. Adapt
 only as far as the narrower scope requires — e.g. a `Background` precondition that now names a
-capability an earlier slice built. Keep the `@happy-path` tags. Use the same fenced `gherkin`
+capability an earlier slice built. Apply the realizability check: a step that references a
+control or state this slice does not build yet (a "refresh" action, a "previous snapshot")
+must be rewritten to this slice's reality or the scenario moved to the slice that builds it —
+never pasted through unchanged. Keep the `@happy-path` tags. Use the same fenced `gherkin`
 block format as the source._
 
 ### 7. Deviation Scenarios
@@ -131,6 +138,21 @@ an unplaced scenario is a finding the user needs to see._
 | HP-1 — _short label_ | `@happy-path` | 1 |
 | DEV-7.3a — _short label_ | `@deviation @rate-limit` | 3 |
 | …               | …      | …              |
+
+### Carried-content ledger
+
+_The proof that the blueprint's non-scenario commitments survived the cut too (the Phase 1
+commitments inventory). One row per glossary term, enumerated field (table column / scoreboard
+metric), confirmed decision, and standing assumption — each mapped to the slice that carries
+it, or marked "deferred → Slice N". An item that lands nowhere is a finding, surfaced in Notes,
+not an omitted row. This is the ledger that catches a dropped table column or a lost
+"no confirmation dialog" decision — things the scenario ledger above will never show._
+
+| Commitment | Kind | Owned by / deferred to slice |
+| ---------- | ---- | ---------------------------- |
+| _year-over-year trend_ | keyword-table column | 1 |
+| _no confirmation dialog on manual refresh_ | confirmed decision | 4 |
+| …          | …    | …                            |
 
 ### Notes
 

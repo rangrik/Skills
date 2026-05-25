@@ -151,6 +151,67 @@ The test to apply to a finished cut: **pick any slice and imagine shipping only 
 reasonable user hit a broken or unsafe state doing the thing that slice introduces?** If yes,
 a deviation that belongs to that slice got deferred — pull it back.
 
+## Conserve the commitments, not just the scenarios
+
+A clean scenario ledger — every `HP-` and `DEV-` assigned to exactly one slice — feels like
+proof the cut lost nothing. It isn't. A blueprint commits to more than its scenarios, and those
+other commitments slip through the gaps a scenario count can't see:
+
+- **Glossary fields.** When a term is defined by an enumeration — a "Keyword table" listing its
+  columns, a "Scoreboard" listing its metrics — each entry is a commitment. Narrowing the term
+  for a slice tempts you to trim the list to "what this slice shows" and move on. Do that without
+  tracking the trimmed entries and a column (say, a per-keyword *year-over-year trend*) lands in
+  no slice at all. It reads as housekeeping; it is a dropped feature.
+- **Confirmed decisions.** A blueprint's flagged-assumptions section often records resolved
+  product calls — "manual refresh fires immediately, *no confirmation dialog*." If that decision
+  doesn't ride into the slice that builds manual refresh, an implementer is free to add a confirm
+  step and contradict a call the owner already made. No scenario will have caught it.
+- **Standing assumptions and in-scope bullets.** Same logic.
+
+So when you trim a term, a metric, or a decision out of a slice, the only safe move is **defer it
+to a named slice**, recorded in the carried-content ledger — never delete it. If it belongs in no
+slice, that is a finding, surfaced in `SLICES.md` Notes.
+
+## A placed scenario must be a buildable scenario
+
+The coverage ledger checks that a scenario is assigned *somewhere*. It does not check that the
+slice it landed in actually builds what the scenario does. Those are different questions, and the
+gap between them is where two failure shapes live:
+
+- **A step references a control the slice doesn't build.** The source blueprint's zero-results
+  scenario says the empty state "offers a way to refresh." Lift it verbatim into the walking
+  skeleton and you've promised a refresh affordance — but manual refresh is a later slice. The
+  scenario is "covered," and it's also unbuildable here. Fix: rewrite the step to what the slice
+  truly offers, or move the scenario to the slice that adds refresh.
+- **A scenario tests infrastructure nothing in scope runs.** A "background refresh races the
+  on-visit refetch" scenario presupposes a scheduled background job. If no slice's scope actually
+  builds that job, the scenario is testing a ghost — placing it in a slice just hides that the
+  mechanism was never scoped. Fix: scope the job, or reframe the scenario to a mechanism a slice
+  really has.
+
+The check is mechanical once you name it: for each step, ask "does this slice, or one below it,
+build the thing this step touches?" A "no" means the scenario is mis-placed or un-adapted.
+
+## The states stacking creates
+
+Re-partitioning conserves the *feature's* behavior — you don't invent new feature behavior, and
+you don't lose any. But the order you stack slices in creates states the monolithic blueprint
+never had to face, because in the monolith every capability always existed at once:
+
+- The first slice serves *stale* data on a repeat visit, because the fresh-cache short-circuit is
+  a later slice — yet the blueprint's failure scenarios, written for a world with a cache, say
+  "the previously cached data stays on screen." Two different worlds collide inside one slice
+  unless you reconcile them.
+- The *first* manual refresh has no prior snapshot to diff, so movement deltas are absent until a
+  second snapshot exists — a transient state the blueprint never described because it assumed
+  history always existed.
+
+These are not yours to invent behavior for, but they are yours to **name**. Flag each as a
+boundary assumption in the slice, and raise the ones that need a real product decision (what does
+the UI show when deltas aren't computable yet?) to the user. The whole-feature blueprint couldn't
+have anticipated them; they exist only because *you* chose to ship the capability in stages.
+Leaving them undefined is the slicing equivalent of a dropped scenario.
+
 ## How to recognize a bad cut
 
 Re-cut if you see any of these:
@@ -173,6 +234,17 @@ Re-cut if you see any of these:
   ceremony without value. Each slice should be a coherent increment, not a single function.
 - **A deviation with no home.** Every section-7 scenario must land somewhere. If one truly
   fits nowhere, that is a finding to surface in `SLICES.md`, not a scenario to drop.
+- **A commitment with no home.** A glossary term, a table column, a scoreboard metric, or a
+  confirmed decision that survived in the source but appears in no slice and no carried-content
+  ledger row. Trimmed as "detail," it is a silently dropped feature.
+- **A scenario pointing at something unbuilt.** A step in a placed scenario references a control,
+  state, or job this slice (and every slice below it) does not build. Re-word it or move it.
+- **A slice that contradicts itself.** Its happy path assumes one world ("loads fresh every
+  visit") while one of its deviations assumes another ("shows the cached data"). A layer-boundary
+  decision changed a behavior and the scenarios weren't reconciled.
+- **An unnamed boundary state.** The slice ships a degraded/transient state the stacking created
+  (no cache yet, no prior snapshot yet) but never flags it, so a reviewer can't tell intent from
+  oversight.
 
 ## Sizing
 
