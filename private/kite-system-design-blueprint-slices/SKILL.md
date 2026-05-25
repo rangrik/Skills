@@ -1,5 +1,5 @@
 ---
-name: kite-slice-system-design
+name: kite-system-design-blueprint-slices
 description: >-
   Takes one approved behavior slice (a `slice-N-*.md` from a `<feature>-slices/`
   directory produced by slice-blueprint) and works out HOW the system should

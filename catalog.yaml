@@ -110,14 +110,14 @@ skills:
       suite: private/_evals/kite-feature-review/suite
       results: private/_evals/kite-feature-review/results
 
-  - id: kite-slice-system-design
-    name: kite-slice-system-design
+  - id: kite-system-design-blueprint-slices
+    name: kite-system-design-blueprint-slices
     bucket: private
-    path: private/kite-slice-system-design
+    path: private/kite-system-design-blueprint-slices
     install: true
     evals:
-      suite: private/_evals/kite-slice-system-design/suite
-      results: private/_evals/kite-slice-system-design/results
+      suite: private/_evals/kite-system-design-blueprint-slices/suite
+      results: private/_evals/kite-system-design-blueprint-slices/results
 
   - id: vendor-anthropic-skill-creator
     name: skill-creator
