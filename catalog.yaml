@@ -20,15 +20,6 @@ skills:
       suite: personal/_evals/blueprint/suite
       results: personal/_evals/blueprint/results
 
-  - id: kite-slice-system-design
-    name: kite-slice-system-design
-    bucket: personal
-    path: personal/kite-slice-system-design
-    install: true
-    evals:
-      suite: personal/_evals/kite-slice-system-design/suite
-      results: personal/_evals/kite-slice-system-design/results
-
   - id: skill-creator
     name: skill-creator
     bucket: personal
@@ -109,6 +100,15 @@ skills:
     evals:
       suite: private/_evals/kite-feature-review/suite
       results: private/_evals/kite-feature-review/results
+
+  - id: kite-slice-system-design
+    name: kite-slice-system-design
+    bucket: private
+    path: private/kite-slice-system-design
+    install: true
+    evals:
+      suite: private/_evals/kite-slice-system-design/suite
+      results: private/_evals/kite-slice-system-design/results
 
   - id: vendor-anthropic-skill-creator
     name: skill-creator
