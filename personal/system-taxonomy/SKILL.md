@@ -3,7 +3,7 @@ name: system-taxonomy
 description: >-
   Extract the ubiquitous language of a code repository — the shared vocabulary
   of domain concepts AND named subsystems that a team actually uses to discuss
-  the product and its architecture — and write it to UBIQUITOUS_LANGUAGE.md: an
+  the product and its architecture — and write it to SYSTEM_TAXONOMY.md: an
   opinionated, grouped glossary with tight definitions, aliases to avoid,
   relationships with cardinality, an example dialogue, and flagged ambiguities.
   The result is a communication contract: reading it lets one engineer (or an
@@ -46,10 +46,10 @@ should be able to do all three of those without reaching for a single word that
 isn't defined here.** If you need outside jargon to describe how the system
 works, locate a feature, or place a bug, the taxonomy has a gap. That test
 drives both what you include and when you're done — and it raises the bar on
-*precision*: each term must pick out exactly one thing, so naming it leaves no
+_precision_: each term must pick out exactly one thing, so naming it leaves no
 doubt about which module or concept you mean.
 
-This is a *ubiquitous language* in the domain-driven-design sense: the words the
+This is a _ubiquitous language_ in the domain-driven-design sense: the words the
 team already uses, harvested from the codebase, then made opinionated — one
 canonical name per concept, synonyms demoted to "aliases to avoid," and genuine
 ambiguities called out rather than smoothed over.
@@ -59,14 +59,14 @@ ambiguities called out rather than smoothed over.
 Capture two layers, because for an engineering product you cannot explain the
 system design with only business words:
 
-| Include | Exclude |
-| --- | --- |
-| **Product-domain concepts** people use in conversation: the core entities, actors, lifecycles, and surfaces (e.g. App, Customer, Order, Invoice, Publish, Dashboard, Subscription). | **Incidental code identifiers** — a specific service class, helper function, util module, variable, or file name that names an implementation, not a concept (`OrderServiceImpl`, `useFetch`, `utils.ts`). |
-| **Named subsystems and architectural concepts** the team refers to by name (e.g. Orchestrator, Sandbox, Coding Agent, Workpad, Deploy Preview, Queue). These ARE domain language for the people building the system. | **Generic programming vocabulary** with no product-specific meaning (array, endpoint, callback, repository-pattern, DTO) — unless the team has given the word a special local meaning. |
-| **A word the team gives a special local meaning**, even if it looks generic — define it precisely. | **Pure infrastructure plumbing** nobody discusses by name (a specific Docker base image, a CI step) unless it's a concept people actually reason about. |
+| Include                                                                                                                                                                                                              | Exclude                                                                                                                                                                                                    |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Product-domain concepts** people use in conversation: the core entities, actors, lifecycles, and surfaces (e.g. App, Customer, Order, Invoice, Publish, Dashboard, Subscription).                                  | **Incidental code identifiers** — a specific service class, helper function, util module, variable, or file name that names an implementation, not a concept (`OrderServiceImpl`, `useFetch`, `utils.ts`). |
+| **Named subsystems and architectural concepts** the team refers to by name (e.g. Orchestrator, Sandbox, Coding Agent, Workpad, Deploy Preview, Queue). These ARE domain language for the people building the system. | **Generic programming vocabulary** with no product-specific meaning (array, endpoint, callback, repository-pattern, DTO) — unless the team has given the word a special local meaning.                     |
+| **A word the team gives a special local meaning**, even if it looks generic — define it precisely.                                                                                                                   | **Pure infrastructure plumbing** nobody discusses by name (a specific Docker base image, a CI step) unless it's a concept people actually reason about.                                                    |
 
-The litmus test for inclusion: *would two teammates use this word in a design
-conversation, and does it name a concept rather than a piece of code?* If yes,
+The litmus test for inclusion: _would two teammates use this word in a design
+conversation, and does it name a concept rather than a piece of code?_ If yes,
 it belongs. If it only ever appears as an identifier in source and never in a
 sentence between humans, leave it out.
 
@@ -93,16 +93,16 @@ sharpen it, not author it from scratch. Read, in roughly this order of signal:
 5. **Named agents, services, workers, queues, jobs, events** — the moving parts
    of the system design that people refer to by name.
 6. **External integrations** that carry domain meaning (a named provider, a
-   "Deploy Preview", a payment processor) — include the *concept*, not the SDK.
+   "Deploy Preview", a payment processor) — include the _concept_, not the SDK.
 
 For a deeper, repo-shape-by-repo-shape map of exactly where each kind of term
 hides, read `references/extraction-guide.md`.
 
 ### 2. Build the candidate list, then filter
 
-List every candidate concept you saw. Then run each through the inclusion
-litmus test above and drop the incidental identifiers and generic CS terms.
-Being ruthless here is what separates a useful taxonomy from a noisy dump.
+List every candidate concept you saw. Then run each through the inclusion litmus
+test above and drop the incidental identifiers and generic CS terms. Being
+ruthless here is what separates a useful taxonomy from a noisy dump.
 
 ### 3. Canonicalize — be opinionated
 
@@ -114,11 +114,11 @@ third. For each concept:
   most clearly to a newcomer, and that won't collide with another concept.
 - **Prefer the spoken term over the code identifier.** When the word people say
   in a design conversation differs from the symbol in the code or the DB (the
-  team says "Website" but the table is `applications`; they say "Publish" but the
-  service is `deployment_service`), the *spoken* word is canonical and the code
-  identifier is just one of its aliases. This document exists so humans and
-  agents can talk to each other, so it must speak their language — and naming the
-  code identifier as an alias is exactly what lets a reader bridge from a
+  team says "Website" but the table is `applications`; they say "Publish" but
+  the service is `deployment_service`), the _spoken_ word is canonical and the
+  code identifier is just one of its aliases. This document exists so humans and
+  agents can talk to each other, so it must speak their language — and naming
+  the code identifier as an alias is exactly what lets a reader bridge from a
   conversation to the right symbol. Apply this the same way every time so the
   canonical name for the central entity never flip-flops between sections or
   between two runs of this skill.
@@ -127,21 +127,21 @@ third. For each concept:
 
 Distinguish three situations carefully — they are handled differently:
 
-- *Many words → one concept* (site / app / project all mean the same thing):
+- _Many words → one concept_ (site / app / project all mean the same thing):
   canonical term + **aliases to avoid**.
-- *One word → two distinct concepts* ("account" used for both a paying Customer
+- _One word → two distinct concepts_ ("account" used for both a paying Customer
   and a login identity): this is an **ambiguity**, not a synonym. Don't pick a
-  winner — split it into two terms and record the collision in *Flagged
-  ambiguities* with a recommendation.
-- *Two words → two genuinely distinct but paired concepts*, most often an
+  winner — split it into two terms and record the collision in _Flagged
+  ambiguities_ with a recommendation.
+- _Two words → two genuinely distinct but paired concepts_, most often an
   **action and its mechanism** or a **user-facing name and its system name**
   ("**Publish**" is what the user does; "**Deployment**" is the system pipeline
-  it triggers). These are **not** synonyms — do not demote one to an alias of the
-  other. Keep both as terms and connect them in *Relationships* and *Key flows*
-  ("one **Publish** triggers one **Deployment**"). The tell is whether they sit
-  at different layers or have different actors; if so, collapsing them destroys a
-  distinction people rely on. When in doubt, keep both and relate them rather
-  than merging.
+  it triggers). These are **not** synonyms — do not demote one to an alias of
+  the other. Keep both as terms and connect them in _Relationships_ and _Key
+  flows_ ("one **Publish** triggers one **Deployment**"). The tell is whether
+  they sit at different layers or have different actors; if so, collapsing them
+  destroys a distinction people rely on. When in doubt, keep both and relate
+  them rather than merging.
 
 ### 4. Cluster into groups
 
@@ -160,9 +160,9 @@ a glance. The framing depends on what kind of term it is:
   phrase, not a behavior. "An **Invoice** is a request for payment sent after
   delivery," not "An Invoice charges the customer and updates the ledger."
 - **Modules and subsystems** (an Agent, a Service, a queue) — here the concept's
-  identity *is* its responsibility, so define it by its role in one sentence:
-  "The **Coding Agent** is the module that makes all code changes to a website by
-  driving the editor on the Sandbox." Don't fight the grain by forcing a pure
+  identity _is_ its responsibility, so define it by its role in one sentence:
+  "The **Coding Agent** is the module that makes all code changes to a website
+  by driving the editor on the Sandbox." Don't fight the grain by forcing a pure
   "what it is" noun phrase onto something whose whole point is what it does —
   just keep it to its single defining responsibility, not a list of behaviors.
 
@@ -182,24 +182,25 @@ If the taxonomy covers a system with named subsystems — anything where someone
 will say "the bug is in **X** handing off to **Y**" — add a short **Key flows**
 section. List the two or three main end-to-end sequences (e.g. the core product
 journey, the generation/build path) as an ordered chain of the modules involved,
-naming each **handoff** between them: "**Orchestrator** → (`trigger_coding_agent`
-tool call) → **Coding Agent** → drives **OpenCode CLI** → on the **Sandbox**." A
-relationships list tells you what connects to what; a flow tells you the *order
-and the seams*, which is exactly what lets a reader point at the boundary a
-defect lives on. Skip this for a pure business-domain taxonomy (orders, invoices)
-where there's no runtime pipeline to localize against — it would be noise.
+naming each **handoff** between them: "**Orchestrator** →
+(`trigger_coding_agent` tool call) → **Coding Agent** → drives **OpenCode CLI**
+→ on the **Sandbox**." A relationships list tells you what connects to what; a
+flow tells you the _order and the seams_, which is exactly what lets a reader
+point at the boundary a defect lives on. Skip this for a pure business-domain
+taxonomy (orders, invoices) where there's no runtime pipeline to localize
+against — it would be noise.
 
 Here — and only here — it's worth naming the actual tool, function, or handler
 at a seam (`trigger_coding_agent`, `deployment_service.create_deployment()`)
 even though those code identifiers are not taxonomy terms. The flow's whole job
 is letting someone jump from "the bug is at this handoff" to the exact code, so
-the seam labels earn their place. Keep the *nodes* in taxonomy terms; let the
-*edges* cite the code that implements the handoff.
+the seam labels earn their place. Keep the _nodes_ in taxonomy terms; let the
+_edges_ cite the code that implements the handoff.
 
 ### 8. Write the example dialogue
 
 A short conversation (3–5 exchanges) between a dev and a domain expert that
-shows the terms used precisely and naturally. Its job is to clarify *boundaries*
+shows the terms used precisely and naturally. Its job is to clarify _boundaries_
 between concepts that are easy to confuse — make the dialogue hinge on exactly
 the distinction a newcomer would get wrong, ideally the same seam a real bug
 would sit on. Use bold term names throughout.
@@ -227,12 +228,11 @@ Narrate each of these to yourself using **only** the terms in the taxonomy:
 Every time you're forced to reach for a word that isn't defined, you've found a
 gap — add the term (or flag the ambiguity) and narrate again. And every time a
 term is too vague to land on one thing ("the service", "the handler" — which
-one?), that's a *precision* gap: split or rename it until naming it is
+one?), that's a _precision_ gap: split or rename it until naming it is
 unambiguous. Stop when all four narrations read cleanly with no outside jargon
 and every reference resolves to exactly one concept. This is the operational
 meaning of "exhaustive" — not "I listed a lot of terms," but "nothing is left
-that I'd have to explain with, or point at using, a word from outside the
-list."
+that I'd have to explain with, or point at using, a word from outside the list."
 
 ## Output format
 
@@ -263,20 +263,27 @@ headings below are illustrative.
 - An **Order** produces one or more **Invoices**
 
 ## Key flows
+
 <!-- Include for systems with named subsystems; omit for a pure business domain. -->
 
-- **Order fulfilment:** **Order** placed → **Fulfilment** confirmed → one **Shipment** dispatched → **Invoice** generated and sent to the **Customer**.
+- **Order fulfilment:** **Order** placed → **Fulfilment** confirmed → one
+  **Shipment** dispatched → **Invoice** generated and sent to the **Customer**.
 
 ## Example dialogue
 
-> **Dev:** "When a **Customer** places an **Order**, do we create the **Invoice** immediately?"
-> **Domain expert:** "No — an **Invoice** is only generated once a **Fulfillment** is confirmed. A single **Order** can produce multiple **Invoices** if items ship in separate **Shipments**."
-> **Dev:** "So if a **Shipment** is cancelled before dispatch, no **Invoice** exists for it?"
-> **Domain expert:** "Exactly. The **Invoice** lifecycle is tied to the **Fulfillment**, not the **Order**."
+> **Dev:** "When a **Customer** places an **Order**, do we create the
+> **Invoice** immediately?" **Domain expert:** "No — an **Invoice** is only
+> generated once a **Fulfillment** is confirmed. A single **Order** can produce
+> multiple **Invoices** if items ship in separate **Shipments**." **Dev:** "So
+> if a **Shipment** is cancelled before dispatch, no **Invoice** exists for it?"
+> **Domain expert:** "Exactly. The **Invoice** lifecycle is tied to the
+> **Fulfillment**, not the **Order**."
 
 ## Flagged ambiguities
 
-- "account" was used to mean both **Customer** and **User** — these are distinct concepts: a **Customer** places orders, while a **User** is an authentication identity that may or may not represent a **Customer**.
+- "account" was used to mean both **Customer** and **User** — these are distinct
+  concepts: a **Customer** places orders, while a **User** is an authentication
+  identity that may or may not represent a **Customer**.
 ```
 
 ## Quality bar — common failure modes to avoid
@@ -287,8 +294,8 @@ headings below are illustrative.
 - **Wishy-washy on synonyms.** Listing "site, app, project" as three separate
   terms is a failure. Pick one, demote two. Opinion is the deliverable.
 - **Multi-sentence definitions.** A definition that runs to a second sentence of
-  mechanics is doing the relationships' or flows' job. Keep each to one sentence:
-  what an entity *is*, or a module's single defining responsibility.
+  mechanics is doing the relationships' or flows' job. Keep each to one
+  sentence: what an entity _is_, or a module's single defining responsibility.
 - **A dialogue that just lists terms.** The dialogue must turn on a real
   boundary between two confusable concepts, not recite definitions.
 - **The central entity named two ways.** If the doc calls the same core concept
