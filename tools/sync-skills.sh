@@ -16,12 +16,13 @@ shopt -s nullglob
 AGENT_SKILL_DIRS=(
   "$HOME/.agents/skills"
   "$HOME/.claude/skills"
+  "$HOME/.hermes/skills"
 )
 
 usage() {
   cat <<'EOF'
 sync-skills.sh — link skills marked install: true in catalog.yaml into agent
-skill stores (~/.agents/skills and ~/.claude/skills).
+skill stores (~/.agents/skills, ~/.claude/skills, and ~/.hermes/skills).
 
 Usage:
   ./tools/sync-skills.sh            Link selected skills and refresh symlinks
