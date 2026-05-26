@@ -85,12 +85,31 @@ exist" question becomes a recorded codebase question, never an investigation —
 and a confident "we already have that" from the user is recorded as a question
 too, not banked as fact.
 
+**Code-blind, but system-aware.** There is one channel through which reality may
+reach you without breaking this rule: when the conformance critic
+(`kite-system-design-conformance-review`) returns *reality contradictions*, they
+arrive named at system altitude — a **subsystem** (its `SYSTEM_TAXONOMY.md`
+title), the **design element** it collides with, and the **nature** of the
+collision (*already exists / persists this differently / already supplies this
+field*), with **no code** attached. Resolving those with the user is squarely
+this skill's job (see "Re-entry" below). You reason about named subsystems and
+their behavior — never source — so you stay code-blind while becoming aware of
+what the system already is. If a contradiction ever arrives carrying a file path,
+a symbol, or a table name, that is a firewall leak: ignore the code detail and
+work only from the subsystem name and behavior.
+
 ## When to use
 
 Use this once a feature's behavior has been sliced (a `<feature>-slices/`
 directory exists) and a slice is approved, and the open question is _how the
 system should achieve that slice's behavior_. This is Step 3, after
 `slice-blueprint` (Step 2) and before planning (Step 4).
+
+Also use it on **re-entry**, when `kite-system-design-conformance-review` returns
+reality contradictions for a slice's design to resolve with the user — triggers
+like "the conformance review found the design contradicts the codebase", "resolve
+these design-vs-reality contradictions", or "the critic says these subsystems
+already exist — reconcile the design". See "Re-entry" below.
 
 **When NOT to use:**
 
@@ -272,6 +291,43 @@ that output is route it through the conformance review (the Step-3 critic) — t
 specs are not ready for human approval + planning until that review has run.
 Don't run the critic yourself per slice and don't act as your own critic on the
 set; recommend the dedicated skill, which uses independent sub-agents on purpose.
+
+## Re-entry: resolving reality contradictions from the conformance review
+
+The conformance critic runs one code-aware pass — the only one in the whole
+design stage — that checks each finalized design against the codebase that
+actually exists, across the feature's whole blast radius. When it finds that a
+design decided against reality (marked a subsystem "New" that already exists,
+chose an approach the shipped code already rejected, banked an assumption reality
+already settled, or left a §10 question reality already answered), it does **not**
+fix it — it hands it back to you, because resolving it is an intent call you own
+and must make code-blind. This is the loop that stops a false premise from
+hardening into a plan downstream.
+
+A returned contradiction arrives as `{subsystem (taxonomy title), design element
+(Decision Dn / Assumption An / §3 row / §10 Qn), nature + recommended
+reconciliation}` — no code. To resolve it, re-enter the affected slice and run a
+**focused P3 grill loop** over just the returned contradictions:
+
+- **Put each contradiction to the user as a fork, recommended option first**, the
+  same way P3 does — grounded in the governing `kite-design-system-standards`
+  principle. Most reconciliations are one of: *adopt the existing subsystem's
+  shape* (and flip the decision that fought it), *reuse what exists* (and drop the
+  "New"/build framing), *confirm the assumption and delete its now-dead
+  contingency*, or *amend §2.3 / §4 for a blast-radius effect the design missed*.
+  Push back if the user wants to diverge from what exists — name the duplication
+  or conflict it invites — and if they still choose it, record it as a **named
+  accepted compromise**, never silent.
+- **Fold the resolution into the spec** in the section that owns it: flip or
+  rewrite the §4 Decision, retract or confirm the §6 Assumption, correct the §3
+  New/Modified/Reused row, close the §10 question (it's answered now), or add the
+  §8 risk / §2.3 effect the user accepted. Keep the design's voice and altitude —
+  you're reconciling intent with reality, not re-authoring the slice.
+- **Re-apply the autonomy gate (P4)** for the affected slice, then re-finalize its
+  spec. The contradictions are closed when the re-finalized design no longer
+  decides against the named subsystem. If your re-finalization materially changed
+  decisions, recommend another conformance pass on the updated set — but resolve
+  once and hand back; don't spin your own loop.
 
 ## Principles for running this skill
 

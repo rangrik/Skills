@@ -1,15 +1,16 @@
 # System-Design Conformance Defect Taxonomy
 
-The seven recurring ways a per-slice system-design spec
+The recurring ways a per-slice system-design spec
 (`slice-N-<short>-system-design.md`) fails to faithfully achieve its behavior
-slice, or falls short of its own template and autonomy bar. For each: **how to
-detect it**, a **worked example** (drawn from designing a "Growth tab — SEO
-keyword rankings" feature, the same running example the slicing skills use), and
-**what the fix or question looks like**. Read this before the Stage-1 hunt; the
-fidelity modes (2) and the autonomy mode (5) are the ones the designer's own
-checklists never catch.
+slice, falls short of its own template and autonomy bar, or designs against a
+codebase reality it never checked. For each: **how to detect it**, a **worked
+example** (drawn from designing a "Growth tab — SEO keyword rankings" feature,
+the same running example the slicing skills use), and **what the fix or question
+looks like**. Read this before the Stage-1 hunt; the fidelity modes (2) and the
+autonomy mode (5) are the ones the designer's own checklists never catch, and the
+reality family (C1–C5) is the one *no* code-blind reading can catch at all.
 
-A mental model: defects split into two families.
+A mental model: defects split into three families.
 
 - **Slice-fidelity (1–3)** — the design vs the parent slice. Does the design
   actually *achieve* the slice's behavior and *conserve* its guarantees, or did
@@ -22,6 +23,16 @@ A mental model: defects split into two families.
   checklist row real? And — the bright line of this skill — was every
   *user-answerable* unknown actually resolved, or did the design assume its way
   past an intent fork the user had to settle?
+- **Reality contradictions (C1–C5)** — the design vs the actual codebase across
+  the proposed feature's whole **blast radius**. The designer was code-blind on
+  purpose, so it can confidently mark a subsystem "New" that already exists,
+  decide an approach the shipped code already rejected, or leave a §10 question
+  open that reality already answered. These are invisible to families 1–7 because
+  nothing in the slice or the template knows what is built. They are found by the
+  **one code-aware reviewer** this skill is allowed to spawn (Stage 0), and — to
+  keep the designer code-blind — reported back **only in subsystem + behavior
+  terms, never code** (see the firewall below). They route back to the designer's
+  grill loop, not to an inline fix.
 
 A short reminder of the section contract you are auditing against (authority is
 `kite-system-design-blueprint-slices/references/design-doc-template.md`):
@@ -200,6 +211,134 @@ unsupported because it was never really made, that's defect 5 — ask.
 
 ---
 
+## Family C — Reality contradictions *(design vs the actual codebase)*
+
+These are the defects the designer **structurally cannot** see, because designing
+is code-blind. The one code-aware reviewer (Stage 0) maps the **entire blast
+radius** of the proposed design — every subsystem the design marks New, Modified,
+or Reused, plus the existing subsystems that already read or write the same data
+— and checks each against what is actually built. The point is to make the user
+**clarify** each real contradiction now, so a decision built on a false premise
+doesn't flow downstream into planning and code as noise.
+
+### The firewall — how a code-aware finding is allowed to travel
+
+The reviewer reads source; the designer must not. So a Family-C finding crosses
+the boundary **only** as three system-design-altitude facts:
+
+1. **The subsystem** — its canonical `SYSTEM_TAXONOMY.md` name (the title the
+   team and the design doc already use). If the thing isn't in the taxonomy, name
+   it plainly at system altitude *and* flag the taxonomy gap — never reach for a
+   code identifier to name it.
+2. **The design element it collides with** — e.g. "§3 row *DataForSEO adapter =
+   New*", "Decision D1", "Assumption A8", "§10 Q1".
+3. **The nature of the contradiction**, phrased exactly as the design doc itself
+   phrases things — *exists / already supplies this field / already persists this
+   in a different shape / already retries / has a different contract* — plus a
+   recommended reconciliation direction.
+
+What may **never** cross: file paths, symbol or function names, class names,
+table or column names, migration ids, code snippets, line numbers. Those are the
+proof the reviewer used; they stay on the reviewer's side. A finding that can
+only be stated by quoting code is a finding stated at the wrong altitude —
+re-state it as a subsystem behavior, or drop it. This is what keeps the designer
+**code-blind but system-aware**: it learns *which named subsystem* contradicts
+*which decision*, never the source.
+
+### C1. Phantom-new subsystem *(reality — existence)*
+
+**Detect:** A §3 row marks a subsystem **New**, or a §10 question treats a
+capability as possibly-missing, but the subsystem already exists and works.
+
+**Example:** §3 lists "DataForSEO adapter — New (or reuse prototype)" and §10 Q1
+asks whether a ranked-keywords client exists. In reality the provider-call
+subsystem is already built and tested. Every decision premised on *building it
+fresh* (its grammar, its caps, its failure model) is now suspect.
+
+**Disposition — return to designer:** Report as `{subsystem: DataForSEO provider
+adapter; element: §3 New row + §10 Q1; nature: already exists and is exercised —
+reuse, don't build}`. The designer asks the user whether to reuse as-is, and
+revisits any decision that assumed a clean build.
+
+### C2. Decision contradicts an existing subsystem's shape or behavior *(reality — the dangerous one)*
+
+**Detect:** A §4 decision picks an approach that collides with how an existing
+subsystem already stores, moves, or acts on the same data. The design is
+internally coherent and cites a principle — it is *reality*-incoherent. This is
+the Family-C analogue of defect 2: it reads perfectly and only a code-aware pass
+catches it.
+
+**Example:** D1 decides the snapshot is "one JSON document per fetch" and
+explicitly lists "normalized per-keyword child table" as the *rejected*
+alternative. The Ranked Keywords Snapshot subsystem already persists keywords as
+individual per-keyword records — the rejected alternative is the shipped reality.
+Building D1 means either a parallel store or ripping out working persistence.
+
+**Disposition — return to designer:** Report as `{subsystem: Ranked Keywords
+Snapshot; element: Decision D1; nature: already persists per-keyword records, not
+a single document — D1's rejected alternative is what exists; recommend adopting
+the existing shape unless the user has a reason to diverge}`. The designer puts
+the fork to the user; D1 likely flips.
+
+### C3. Assumption already settled by reality *(reality — assumptions)*
+
+**Detect:** A §6 assumption flagged "needs confirmation" (or banked silently) is
+already answered by what is built — and a contingency hanging off it dissolves.
+
+**Example:** A8 assumes the provider "supplies the per-keyword fields incl.
+year-over-year trend — needs confirmation (Q2)", and the design carries a
+contingency to *drop the column or defer YoY to Slice 2 if missing*. Those fields
+are already supplied and persisted. The contingency is dead weight that would
+otherwise survive into the plan as a phantom branch.
+
+**Disposition — return to designer:** Report the assumption as confirmed by
+reality and the contingency as removable. Usually a light touch, but still the
+user's call to confirm before the spec re-finalizes.
+
+### C4. §10 question already answered *(reality — open questions)*
+
+**Detect:** A §10 EXISTS/MISSING question is already settled by the codebase. The
+trap is treating this as a clerical "just fill in the answer": if a decision was
+built around the question's *assumed* answer, that decision is implicated too
+(links straight to C1/C2).
+
+**Example:** §10 Q9 asks the "new table + migration convention." The snapshot
+tables already exist. Answering Q9 isn't enough — D1, which assumed it was
+authoring a fresh table, has to be revisited.
+
+**Disposition — return to designer:** Report the question as answered AND name
+every decision/assumption that leaned on the old answer, so the designer doesn't
+"resolve" the question while leaving a now-false decision standing.
+
+### C5. Unaccounted blast-radius effect *(reality — collateral)*
+
+**Detect:** The design's writes or changes touch a subsystem it marks "Reused"
+(as if read-only), or affect an *existing* downstream consumer the design never
+names. This is the part of "blast radius" beyond the design's own §3 list — what
+else already depends on the data the design moves.
+
+**Example:** The design treats the snapshot store as a fresh write target, but
+existing competitor / target-keyword / draft-page subsystems already read from
+that same store. The design's per-visit writes change what those consumers see —
+an effect §2.3 "Actors & effects" never accounts for.
+
+**Disposition — return to designer:** Report the affected subsystem and the
+unmodelled effect. The designer decides with the user whether that effect is
+acceptable or needs a §2.3 / §4 amendment — it is an intent call, not a fix.
+
+### Adjudicating Family C (still gate it)
+
+Reality contradictions get the **same Stage-2 gate** as everything else — the
+goal is to make the user clarify *real* contradictions, not to flood them. A
+"contradiction" that is actually the design correctly planning to *extend* an
+existing subsystem, or correctly depending on a `Builds on:` capability, is a
+**false positive** — discard it. A trivially-answered §10 fact with no decision
+hanging off it is **real but not meaningful** — note it, don't make the user
+clarify it. Only contradictions that would change a decision, dissolve an
+assumption, or alter the blast radius reach the designer's grill loop.
+
+---
+
 ## Adjudication reference (Stage 2)
 
 Map each candidate gap to a verdict, a meaningfulness call, and a disposition.
@@ -213,6 +352,16 @@ Map each candidate gap to a verdict, a meaningfulness call, and a disposition.
 | 5 Unresolved user unknown | Real | When an implementer would have to return to the user — the autonomy bar is broken. Almost always meaningful. | **Ask the user.** Never invent. |
 | 6 Mis-bucketed question | Real | When a banked "we have X" could send the build down a poisoned path, or a user fork sits where research can't answer it. | Fix the codebase-fact direction; **ask** the user-fork direction. |
 | 7 Unsupported / contradictory decision | Real (contradiction) / often minor (citation) | Contradiction: always. Missing citation: meaningful only if it masks that no decision was really made. | Fix the citation; reconcile the contradiction; **ask** if the right side needs intent. |
+| C1 Phantom-new subsystem | Real | When a decision assumed a clean build of something that exists. | **Return to designer** (reuse decision + revisit dependents). |
+| C2 Decision contradicts existing shape | Real | Almost always — the design would fight or duplicate shipped code. | **Return to designer** (fork to the user; decision likely flips). |
+| C3 Assumption settled by reality | Real | When a contingency or deferral hangs off the now-settled assumption. | **Return to designer** (confirm; drop the dead branch). |
+| C4 §10 question already answered | Real | When a decision leaned on the question's assumed answer. | **Return to designer** (answer it AND flag implicated decisions). |
+| C5 Unaccounted blast-radius effect | Real | When existing consumers would silently see different data/behavior. | **Return to designer** (intent call on §2.3 / §4). |
+
+Note the Family-C disposition is its own routing — **return to designer**, not
+`fix`/`ask`. The conformance critic does not resolve a reality contradiction
+inline, because resolving it is an intent call the *designer* owns and the
+designer must make code-blind, from the named subsystem alone.
 
 Defensible judgment calls that look like defects but are not — record as
 acknowledged divergences, **never act on them**:
