@@ -1,18 +1,20 @@
 ---
 name: kite-implementation
 description:
-  Orchestrates the build of a Kite slice from its researched plan, scenario by
-  scenario, by delegating every step to focused subagents — collate the slice's
-  docs and the feature-wide codebase-research.md into a unified per-scenario
-  brief, implement it as a vertical slice, independently review it, fix what
-  genuinely matters, qualify the fixes, and pass a final adversarial KISS +
-  standards gate before committing each scenario. The orchestrator itself writes
-  no feature code; its job is judgment and sequencing. Use this as the
-  implementation stage of the Kite pipeline, after kite-research, or whenever the
-  user says "implement this slice/plan", "build the feature", "work through the
-  plan file", or "start coding the scenarios". Use it whenever a slice has a
-  researched plan and code needs to be written. Scope is the appsmith-v2 / Kite
-  platform.
+  Orchestrates the build of a Kite slice from its plan, scenario by scenario, by
+  delegating every step to focused subagents. For each slice it first refreshes
+  the codebase research (Step 0, via a kite-research subagent, since earlier
+  slices may have already shipped what this one needs), then per scenario it
+  collates the slice's docs and the feature-wide codebase-research.md into a
+  unified brief, implements it as a vertical slice, independently reviews it,
+  fixes what genuinely matters, qualifies the fixes, and passes a final
+  adversarial KISS + standards gate before committing each scenario. The
+  orchestrator itself writes no feature code; its job is judgment and sequencing.
+  Use this as the implementation stage of the Kite pipeline, after the slice is
+  planned, or whenever the user says "implement this slice/plan", "build the
+  feature", "work through the plan file", or "start coding the scenarios". Use it
+  whenever a slice has a plan and code needs to be written. Scope is the
+  appsmith-v2 / Kite platform.
 ---
 
 # Kite Implementation
@@ -42,7 +44,8 @@ For the slice you are building, gather:
 - The slice's **plan file** (`slice-N-<short>-plan.md`) — scenario order/status
   and the per-scenario plan. This doubles as the resumable **state machine**.
 - The feature-wide **`codebase-research.md`** — what already EXISTS to reuse and
-  the MISSING extension points where new code goes.
+  the MISSING extension points where new code goes. You do not assume this is
+  current; Step 0 below refreshes it for the slice before any building starts.
 - The **codebase** itself.
 
 ## Selecting the slice
@@ -69,11 +72,43 @@ Before delegating any work:
   status. Skip scenarios marked `committed`. Skip scenarios marked `blocked`
   (see "Blocked scenarios"). Start at the first scenario that is neither.
 
+## Step 0 — Refresh the slice's research (once per slice)
+
+Before the per-scenario loop, spawn a subagent that runs the **`kite-research`**
+skill for *this* slice. It reads the slice's consolidated research questions (from
+the plan file, cross-checked against the system design's open questions),
+inspects the **live codebase**, and writes/refreshes the feature-wide
+`codebase-research.md`.
+
+Do this every time you pick up a slice, even if research was run earlier as a
+pipeline stage. The reason is the whole point of the step: the slices are
+stacked, so by the time you reach slice N the earlier slices have already shipped
+code. A capability that was `MISSING` when this slice was first researched may now
+`EXIST` because an earlier slice built it. Research done once upfront for all
+slices goes stale the moment the first slice lands; refreshing it here — against
+the codebase as it actually is right now — is what keeps the reuse-don't-reinvent
+discipline honest. `kite-research` is built to refresh stale findings rather than
+redo everything, so re-running it is cheap insurance, and it is the only
+planning-phase skill permitted to read source — keep that code inspection here,
+delegated, rather than letting downstream subagents re-discover things.
+
+If research returns a **BLOCKING** finding (it invalidates the slice's plan), do
+not start building. Stop and surface it — the slice needs `kite-planner` to
+re-plan first. Building on a plan research has just invalidated is the same
+mistake as implementing a `blocked` scenario.
+
+Once the research doc is current (and not blocking), enter the per-scenario loop.
+
 ## The per-scenario loop
 
 For each scenario in plan order, run these stages. You orchestrate; subagents do
 the work. In brief, the loop and its branches are:
 
+> **Given** a freshly selected slice
+> **When** Step 0 runs a `kite-research` subagent against the live codebase
+> **Then** `codebase-research.md` is refreshed for the slice (or, if research is
+> BLOCKING, the loop stops and the slice goes back to `kite-planner`).
+>
 > **Given** the next uncommitted, unblocked scenario in plan order
 > **When** the loop starts
 > **Then** a collate subagent writes its unified brief to disk.
