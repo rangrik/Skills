@@ -274,6 +274,14 @@ structure to answer a "what shape is X?" question: such a question is itself at
 the wrong altitude (it belongs in the design's §10 as an EXISTS/MISSING research
 item, not the reality check), so answer only the contradiction it implies, if any.
 
+**State severity proportionately — don't inflate.** Describe each contradiction at
+its true weight, not at its most alarming. A benign or equivalent effect is
+"benign" / "equivalent"; reserve charged words — *regression, breaks, corrupts,
+contradicts, poisons* — for effects that genuinely meet that bar (wrong, broken,
+or contractually different behavior). Overstating a mild effect manufactures a
+fork out of nothing and erodes trust in the ones that matter; understating a real
+regression hides it. Precise and proportionate, in both directions.
+
 ### C1. Phantom-new subsystem *(reality — existence)*
 
 **Detect:** A §3 row marks a subsystem **New**, or a §10 question treats a

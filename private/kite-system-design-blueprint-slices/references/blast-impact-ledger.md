@@ -207,10 +207,8 @@ Crucially, the ledger does **not** propagate **past** the design phase. Once an
 effect is recorded (accepted as out-of-scope, or picked up into a slice), the
 design has already decided what happens to it: a picked-up effect becomes ordinary
 in-scope work the design spec describes, and a parked effect is, by definition,
-not the build's concern. So **research, planning, and implementation do not read
-this ledger** — they build what the design spec says, and forwarding the blast
-radius to them would only pollute their context with concerns the design already
-resolved. The ledger's audience is the **user** (awareness, via the closeout) and
-the **design phase itself** — the designer across slices, and its conformance
-critic. Whether the final feature review should also consult it is an open
-question for the user, not a settled role.
+not this slice's concern. So **nothing after the design phase reads this ledger** —
+later work builds from the design spec itself, and forwarding the blast radius
+onward would only pollute it with concerns the design already resolved. The
+ledger's audience is the **user** (awareness, via the closeout) and the **design
+phase itself** — the designer across slices, and its conformance critic.
