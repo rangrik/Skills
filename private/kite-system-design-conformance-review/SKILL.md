@@ -246,6 +246,11 @@ findings; fix nothing; edit no files.
 - Slices directory: <absolute path> (slice-N-*-system-design.md, slice-N-*.md, SLICES.md)
 - System taxonomy: <repo>/SYSTEM_TAXONOMY.md  (use its names for every subsystem)
 - Codebase root: <repo path>
+- Blast-impact ledger: <feature>-slices/BLAST-IMPACT.md (effects the designers
+  already recorded as out-of-scope). Read it first: do NOT re-flag an effect
+  already noted there. You MAY flag a recorded entry if reality shows it is
+  actually a regression that meets the C5 fork bar, not the benign note it was
+  filed as.
 
 Map the FEATURE-WIDE blast radius across all slices: every New/Modified/Reused
 subsystem, the existing subsystems that already touch the same data, and the data
@@ -266,7 +271,15 @@ behavior or drop it. Code stays on your side of the firewall.
 ```
 
 The orchestrator receives only these firewalled findings and carries them into
-the Stage-2 gate alongside the code-blind findings. (If the harness has no
+the Stage-2 gate alongside the code-blind findings. **Route them by the C5 bar:**
+cross-slice collateral that meets the bar (a genuine regression whose remedy a
+slice in this feature owns) is **returned to the designer** to resolve with the
+user (per the designer's Re-entry step); collateral that is below the bar (benign,
+or whose remedy lives outside this feature) is **appended to the BLAST-IMPACT
+ledger** (append-only — never delete another slice's note; schema in
+`kite-system-design-blueprint-slices/references/blast-impact-ledger.md`), not
+forced into any slice. That keeps the whole-set pass from manufacturing per-slice
+forks out of effects no slice should own. (If the harness has no
 sub-agent mechanism, do **not** run this pass inline — as the "no inline
 fallback" rule above requires: skip Stage 0, flag the skip loudly in the report,
 and lean on the per-slice P4a checks already done plus the research stage as the

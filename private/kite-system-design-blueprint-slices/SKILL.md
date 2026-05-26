@@ -169,6 +169,14 @@ already exist — reconcile the design". See "Re-entry" below.
    canonical names for subsystems and concepts — especially for "which
    subsystems act on the data" — so the spec speaks the team's language. If
    absent, proceed and name things plainly; don't block on it.
+6. **The BLAST-IMPACT ledger** (`<feature>-slices/BLAST-IMPACT.md`) — the
+   per-feature, append-only record of cross-boundary effects earlier slices
+   surfaced but did not fix. **You do not read it directly** (its unrelated
+   entries would pollute this slice's context); all reads and writes go through a
+   **ledger-steward subagent**. See `references/blast-impact-ledger.md` for the
+   full schema and protocol, and P1b / P4a / P6 below for when it is read,
+   appended, and closed out. If the file doesn't exist yet (you're the first slice
+   to surface anything), the steward creates it.
 
 ### Precedence & authority
 
@@ -214,6 +222,39 @@ line (names of ancestor capabilities to assume — not their files). Consult
 as the gap-filler. **Read no source code, and read no other slice** — not the
 other blueprints, not their designs, not `SLICES.md`'s bodies (a glance at the
 filenames for stacked order is fine).
+
+### P1b — Reconcile with the BLAST-IMPACT ledger (via the steward subagent)
+
+Earlier slices may have recorded cross-boundary effects they couldn't fix — and
+some of those may now be *this* slice's to handle, because this slice builds the
+subsystem that owns the remedy. So before you design, find out what the ledger
+already holds that is relevant *to this slice* — but **without reading the ledger
+yourself**, because most of its entries are about other slices and would pollute
+your context with concerns that aren't in front of you.
+
+**Skip this step if no `BLAST-IMPACT.md` exists yet** (you're an early slice and
+nothing has been recorded). Otherwise:
+
+1. **Spawn the ledger-steward subagent in FILTER mode** (prompt in
+   `references/blast-impact-ledger.md` §5). Hand it this slice's scope and forming
+   §3 subsystem map; it returns **only** the entries related to — or potentially
+   fixable within — this slice, each as `{BI-id, why relevant, fixable here?,
+   recommended}`. It silently discards everything unrelated, so your context only
+   ever sees the relevant few.
+2. **For each related entry, put it to the user** with `AskUserQuestion`
+   (recommended option first): *pull this fix into this slice's scope now, or leave
+   it parked in the ledger?* Frame the trade-off — pulling it in conserves a known
+   effect early; leaving it parked keeps the slice thin. **Don't decide silently**
+   and don't pull something in just because it's adjacent; relatedness is the
+   subagent's call to *surface* it, but scope is the user's call.
+3. **If the user pulls it in,** it becomes in-scope design for this slice (carry it
+   through P2–P4 like any other requirement), and the steward marks that entry
+   "picked up by slice-N" (status update only — never deleting the original). If
+   left parked, it stays untouched.
+
+This keeps the ledger from being a write-only graveyard: every prior note gets a
+chance to be picked up by the slice that *can* fix it, but only with the user's
+say-so, and only the relevant ones ever reach your context.
 
 ### P2 — Work out how the system achieves the behavior, and map the unknowns
 
@@ -293,7 +334,12 @@ What it checks — Family C of
 this slice's blast radius: C1 phantom-new subsystem, C2 a decision that
 contradicts an existing subsystem's shape/behavior, C3 an assumption reality
 already settled, C4 a forming §10 question reality already answers, and C5 a
-blast-radius effect within this slice's own reach.
+blast-radius effect within this slice's own reach. C5 is the over-firing one:
+sharing a data store with another subsystem is common and usually harmless, so it
+escalates to a fork **only** when this slice's design would cause an existing
+consumer a genuine regression *and* the remedy lives in a subsystem this slice
+owns. A benign/equivalent effect, or one whose fix belongs to a *different*
+feature, is recorded as a note — not a fork (see Family C's C5 escalation bar).
 
 **The firewall keeps you code-blind.** The sub-agent reads source; you must not.
 It returns each contradiction as only three things — the **subsystem** (its
@@ -302,7 +348,14 @@ It returns each contradiction as only three things — the **subsystem** (its
 differently / already supplies this field*) plus a recommended reconciliation.
 **No** file paths, symbols, table/column names, migration ids, snippets, or line
 numbers ever reach you. If one does, it's a leak — ignore the code detail and
-work from the subsystem name alone.
+work from the subsystem name alone. And don't *invite* the leak: when you
+commission the check, ask it for **contradictions against your forming design** —
+not for a description of how an existing subsystem is built. A prompt that asks
+"what is the shape/keying of X?" or "does the field set match?" will get a
+code-level answer back (column names, enum values, record layout) and pull the
+reviewer into a guided tour instead of a contradiction hunt. Keep "what shape is
+X?" where it belongs — a §10 EXISTS/MISSING research question — not in the reality
+check.
 
 **Resolve contradictions in the grill loop, before writing.** Each real
 contradiction is a fork for the user, recommended option first, the same as P3:
@@ -313,7 +366,18 @@ back if the user wants to diverge from what exists; if they still choose to, rec
 it as a **named accepted compromise**. Then fold each resolution into the forming
 design. Adjudicate first so you don't drag the user through noise — a "New"
 subsystem you genuinely intend to *extend*, or a §10 fact with no decision hanging
-off it, isn't a contradiction worth a fork.
+off it, isn't a contradiction worth a fork. **For a C5 blast-radius effect
+specifically**, hold it to the bar before grilling: only put it to the user when
+this slice's design would cause an existing consumer a real regression *and* the
+remedy lives in a subsystem this slice owns. If the consumer ends up reading
+equivalent/fresher data through a path it already supports, or its only fix lives
+in a subsystem another feature owns, **append it to the feature's BLAST-IMPACT
+ledger** (hand the steward subagent a new entry — append-only — per
+`references/blast-impact-ledger.md`; a brief pointer from §8 / §2.3 to the
+`BI-id` is fine) and leave it to the whole-set backstop — do not escalate it to a
+per-slice fork. The slice's design stays about the slice's own functionality; an
+unrelated feature's reaction to a shared store is recorded in the ledger, not
+adopted as this slice's problem.
 
 Spawn the reality check with a prompt like:
 
@@ -335,7 +399,16 @@ nothing.
 - Codebase root: <repo path>
 
 Scope to THIS slice's blast radius: the subsystems in its §3 map and the existing
-codebase subsystems they touch. Hunt C1–C5. Return each contradiction as:
+codebase subsystems they touch. Hunt C1–C5. For C5 (effects on existing consumers
+of shared data), apply Family C's escalation bar: report an effect as a
+contradiction to RESOLVE only when this slice's design would cause an existing
+consumer a genuine regression (wrong / broken / contractually different data — NOT
+merely fresher or equivalent data) AND the remedy lives in a subsystem this slice
+owns. An effect on a consumer that belongs to a DIFFERENT feature, or any benign /
+equivalent-data effect, is reported as a one-line note (affected subsystem +
+effect), explicitly flagged "note, not a fork" — never as a contradiction to
+resolve. Do not pull an unrelated feature into this slice's findings just because
+it reads the same store. Return each contradiction as:
   - subsystem (canonical SYSTEM_TAXONOMY title; if absent, a plain system name + a
     note the taxonomy lacks the term)
   - design element (Decision Dn / Assumption An / §3 row / forming §10 Qn)
@@ -345,6 +418,14 @@ codebase subsystems they touch. Hunt C1–C5. Return each contradiction as:
 ABSOLUTELY DO NOT include file paths, function/class/symbol names, table or column
 names, migration ids, code snippets, or line numbers. If a contradiction can only
 be expressed by quoting code, restate it as a subsystem behavior or drop it.
+Do NOT describe an existing subsystem's internal shape (its tables, columns, enum
+values, or record layout) — not even in prose, and not even to answer a "what
+shape is X?" question. "A summary record plus per-keyword child rows carrying a
+status of owned vs competitor" leaks column names and enum values without quoting
+a symbol — that is still a leak. Return NAMED COLLISIONS between a design element
+and a subsystem's BEHAVIOR, not a tour of how anything is built. Report findings
+only — no preamble, no narration of your investigation, no stray reasoning; if you
+have no contradiction for a subsystem, say nothing about its internals.
 ```
 
 **The reality check must run in a sub-agent — there is no inline fallback.** The
@@ -394,6 +475,21 @@ Deliver a short summary of the slice you just designed. The spec is a deliverabl
 the whole set goes to **human approval** (the pipeline's Step 3 gate), then to
 planning (Step 4) with its codebase questions feeding research (Step 5). Don't
 invoke planning or research here.
+
+**Blast-impact closeout — do this every time, before moving on.** A slice that
+recorded out-of-scope effects must not let them pass silently. Ask the steward
+subagent for the **open / parked** entries, then tell the user plainly, in their
+own words — not buried in the summary:
+
+> "Heads up — these items are recorded in `<feature>-slices/BLAST-IMPACT.md` and
+> **this slice is not fixing them**: [BI-id — one-line each]. Please open the
+> ledger and review it so you're aware of the blast radius we're leaving for
+> [owner / later slice]."
+
+The point is zero surprise: every effect we're deliberately not addressing is
+named out loud and the user is pointed at the ledger to see the full picture. If
+this slice recorded nothing and picked nothing up, say so in one line ("no new
+blast-impact entries this slice"). Then continue.
 
 **If more slices remain, continue straight to the next one** — the
 lowest-numbered `slice-N-*.md` without a design — in stacked order, **without
@@ -448,9 +544,12 @@ reconciliation}` — no code. To resolve it, re-enter the affected slice and run
   shape* (and flip the decision that fought it), *reuse what exists* (and drop the
   "New"/build framing), *confirm the assumption and delete its now-dead
   contingency*, or *amend §2.3 / §4 for a blast-radius effect the design missed*.
-  Push back if the user wants to diverge from what exists — name the duplication
-  or conflict it invites — and if they still choose it, record it as a **named
-  accepted compromise**, never silent.
+  If the returned collateral is genuinely **out of this slice's scope to fix**
+  (the remedy lives in a subsystem another slice or feature owns), don't force it
+  into §2.3 — **append it to the BLAST-IMPACT ledger** via the steward
+  (append-only) and leave it parked. Push back if the user wants to diverge from
+  what exists — name the duplication or conflict it invites — and if they still
+  choose it, record it as a **named accepted compromise**, never silent.
 - **Fold the resolution into the spec** in the section that owns it: flip or
   rewrite the §4 Decision, retract or confirm the §6 Assumption, correct the §3
   New/Modified/Reused row, close the §10 question (it's answered now), or add the
@@ -484,6 +583,12 @@ reconciliation}` — no code. To resolve it, re-enter the affected slice and run
   in front of you; assume its `Builds on:` capabilities by name; never open the
   ancestor or later slice files or their designs. Sequencing is automatic (next
   un-designed slice in order), not a user choice.
+- **The BLAST-IMPACT ledger is append-only and read through the steward.** Record
+  every cross-boundary effect you can't fix here; never read or write the ledger
+  yourself (the steward subagent does, so unrelated entries don't pollute your
+  context); never delete or rewrite a note another slice authored — you may only
+  add, or update the status of an entry this slice is picking up. Close out every
+  slice by telling the user plainly what is *not* being fixed.
 
 ## Output structure
 
@@ -493,6 +598,13 @@ Decisions → Tradeoffs → Assumptions → Scope (In & Out) → Risks → Const
 Dependencies → Open Questions for the Codebase → Decision Coverage Checklist →
 Slice Coverage Checklist → Appendix A: Captured Inputs.
 
+Alongside the per-slice spec, this skill also maintains one **per-feature
+co-output**: the `BLAST-IMPACT.md` ledger (`references/blast-impact-ledger.md`),
+written and read only through the steward subagent, append-only across slices.
+The spec is what this slice *does*; the ledger is what this slice *affects but
+won't fix* — both move forward together to the conformance review, planning, and
+the final review.
+
 ## Gotchas
 
 - **Don't read the code yourself.** If *you* are about to grep or open a file,
@@ -501,6 +613,12 @@ Slice Coverage Checklist → Appendix A: Captured Inputs.
   sub-agent reads the code and hands back only firewalled, code-free findings.
   Commissioning that check is not reading code; opening a file to "just confirm"
   is.
+- **Don't read `BLAST-IMPACT.md` yourself.** Like code, the ledger is read at
+  arm's length — the steward subagent reads it and hands back only the entries
+  relevant to this slice. If you open the file directly to "just check," you pull
+  every other slice's unrelated effects into your context, which is the pollution
+  the steward exists to prevent. Same for writing: hand the steward the entry to
+  append; don't edit the file yourself (and never delete another slice's note).
 - **Don't drop to implementation altitude.** Resist column DDL, migration SQL,
   and function signatures. Decide _what_ and _which subsystem_, not _how to code
   it_. The downstream steps own that.

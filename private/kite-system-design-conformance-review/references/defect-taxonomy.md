@@ -261,6 +261,19 @@ re-state it as a subsystem behavior, or drop it. This is what keeps the designer
 **code-blind but system-aware**: it learns *which named subsystem* contradicts
 *which decision*, never the source.
 
+A subtler leak than a bare identifier is **describing an existing subsystem's
+internal shape** — "a summary record plus per-keyword child rows keyed by domain,
+carrying a status field of *owned* vs *competitor*" smuggles the column names and
+enum values across in prose even though no symbol is quoted verbatim. Don't do it.
+A reality check returns **named collisions between a design element and a
+subsystem's *behavior***, not a tour of how a subsystem is built. The test: if a
+sentence reads as a *description of internal structure* rather than *"this design
+element collides with this subsystem's behavior,"* you have left the altitude —
+restate it as the behavior that collides, or omit it. And don't volunteer
+structure to answer a "what shape is X?" question: such a question is itself at
+the wrong altitude (it belongs in the design's §10 as an EXISTS/MISSING research
+item, not the reality check), so answer only the contradiction it implies, if any.
+
 ### C1. Phantom-new subsystem *(reality — existence)*
 
 **Detect:** A §3 row marks a subsystem **New**, or a §10 question treats a
@@ -338,9 +351,41 @@ existing competitor / target-keyword / draft-page subsystems already read from
 that same store. The design's per-visit writes change what those consumers see —
 an effect §2.3 "Actors & effects" never accounts for.
 
-**Disposition — return to designer:** Report the affected subsystem and the
-unmodelled effect. The designer decides with the user whether that effect is
-acceptable or needs a §2.3 / §4 amendment — it is an intent call, not a fix.
+**The escalation bar — a found effect is not automatically a fork.** Detecting
+that another subsystem reads the same data is the easy part; most such overlaps
+are harmless. A C5 effect is worth the user's attention — and may be returned to
+the designer as a fork — only when **both** of these hold:
+
+1. **It is a regression, not just an effect.** This slice's design would make an
+   existing consumer see *wrong, broken, or contractually different* data or
+   behavior — not merely *fresher* or *equivalent* data through a path the
+   consumer already supports. (Same domain's rankings arriving sooner is an
+   effect; the consumer silently reading the *wrong* domain's rankings, or losing
+   a field it relies on, is a regression.)
+2. **The remedy lives in a subsystem the design under review owns** — this slice
+   at the per-slice P4a gate, the feature's own slices at the whole-set backstop.
+   If the only way to prevent the effect is to change a consumer that belongs to a
+   *different* feature, the contradiction is not this design's to resolve. Forcing
+   it in makes the slice responsible for another feature's design choice — which is
+   the coupling C5 is meant to *surface*, not *create*.
+
+When both hold, route it to the designer as a fork (below). When either fails —
+the effect is benign/equivalent, or the only fix lives in a subsystem outside the
+design's scope — it is **real but not meaningful**: record it as an append-only
+entry in the feature's **BLAST-IMPACT ledger** (`<feature>-slices/BLAST-IMPACT.md`;
+schema and rules in
+`kite-system-design-blueprint-slices/references/blast-impact-ledger.md`) naming
+the affected subsystem and the effect, and leave it to the whole-set backstop and
+the owning subsystem's own future work. Do **not** turn it into a per-slice fork.
+The ledger entry preserves the safety net (the effect isn't lost, and the owner
+can find it) without dragging an unrelated feature into this slice's grill — the
+slice stays focused on designing its own functionality.
+
+**Disposition — return to designer only when the bar is met.** For an effect that
+clears both tests, report the affected subsystem and the unmodelled regression;
+the designer decides with the user whether to accept it or amend §2.3 / §4 — an
+intent call, not a fix. For everything below the bar, report it as a recorded
+note, not a contradiction to resolve.
 
 ### Adjudicating Family C (still gate it)
 
@@ -352,6 +397,16 @@ existing subsystem, or correctly depending on a `Builds on:` capability, is a
 hanging off it is **real but not meaningful** — note it, don't make the user
 clarify it. Only contradictions that would change a decision, dissolve an
 assumption, or alter the blast radius reach the designer's grill loop.
+
+For **C5 specifically**, apply its escalation bar: an effect on an existing
+consumer of shared data reaches the grill loop only when it is a genuine
+*regression* (wrong/broken/contractually different data, not merely fresher or
+equivalent) **and** the remedy lives in a subsystem the design under review owns.
+A benign/equivalent effect, or one whose only fix belongs to an unrelated
+feature's subsystem, is recorded as a one-line note and left to the whole-set
+backstop — it is not a per-slice fork. This is the most over-fired class in the
+family: detecting a shared reader is cheap, so the bar is what keeps the safety
+net from becoming noise that pulls unrelated features into a slice's design.
 
 ---
 
@@ -372,7 +427,7 @@ Map each candidate gap to a verdict, a meaningfulness call, and a disposition.
 | C2 Decision contradicts existing shape | Real | Almost always — the design would fight or duplicate shipped code. | **Return to designer** (fork to the user; decision likely flips). |
 | C3 Assumption settled by reality | Real | When a contingency or deferral hangs off the now-settled assumption. | **Return to designer** (confirm; drop the dead branch). |
 | C4 §10 question already answered | Real | When a decision leaned on the question's assumed answer. | **Return to designer** (answer it AND flag implicated decisions). |
-| C5 Unaccounted blast-radius effect | Real | When existing consumers would silently see different data/behavior. | **Return to designer** (intent call on §2.3 / §4). |
+| C5 Unaccounted blast-radius effect | Real (detection) | When this slice's design would cause an existing consumer a genuine *regression* (wrong/broken/contractually different data) **and** the remedy lives in a subsystem the design owns. A benign/equivalent effect, or one whose fix belongs to an unrelated feature, is real-but-not-meaningful. | **Return to designer** (intent call on §2.3 / §4) only when the bar is met; otherwise **append a note to the BLAST-IMPACT ledger** and leave to the whole-set backstop. |
 
 Note the Family-C disposition is its own routing — **return to designer**, not
 `fix`/`ask`. The conformance critic does not resolve a reality contradiction
