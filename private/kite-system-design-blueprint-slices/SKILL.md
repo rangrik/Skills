@@ -10,10 +10,15 @@ description: >-
   reliability, security, cost, rollout, …), using a data-movement lens as the
   entry point — do we have the data or generate it, how does it travel to the
   product surface, which existing subsystems act on it and with what effect. It
-  is CODE-BLIND: it never reads source; instead it grills the user to resolve
-  the unknowns only the USER can answer (intent, approach, trade-offs) and
-  records the unknowns only the CODEBASE can answer as a separate list of
-  research questions. The output enumerates Decisions, Tradeoffs, Assumptions,
+  is CODE-BLIND: it never reads source itself; instead it grills the user to
+  resolve the unknowns only the USER can answer (intent, approach, trade-offs)
+  and records the unknowns only the CODEBASE can answer as a separate list of
+  research questions. Before each slice's design finalizes it commissions ONE
+  firewalled reality check — a separate code-aware sub-agent that reads the code
+  and returns contradictions in subsystem + behavior terms only (never code), so
+  a decision that fights what already exists is caught and resolved with the user
+  on that slice, not discovered downstream. The output enumerates Decisions,
+  Tradeoffs, Assumptions,
   Scope (in & out), Risks, Constraints, and Dependencies, plus the data-flow
   narrative and the codebase questions. It consults
   `kite-design-system-standards` for the platform's principles and may read the
@@ -85,17 +90,28 @@ exist" question becomes a recorded codebase question, never an investigation —
 and a confident "we already have that" from the user is recorded as a question
 too, not banked as fact.
 
-**Code-blind, but system-aware.** There is one channel through which reality may
-reach you without breaking this rule: when the conformance critic
-(`kite-system-design-conformance-review`) returns *reality contradictions*, they
-arrive named at system altitude — a **subsystem** (its `SYSTEM_TAXONOMY.md`
-title), the **design element** it collides with, and the **nature** of the
-collision (*already exists / persists this differently / already supplies this
-field*), with **no code** attached. Resolving those with the user is squarely
-this skill's job (see "Re-entry" below). You reason about named subsystems and
-their behavior — never source — so you stay code-blind while becoming aware of
-what the system already is. If a contradiction ever arrives carrying a file path,
-a symbol, or a table name, that is a firewall leak: ignore the code detail and
+**Code-blind, but system-aware.** "Code-blind" means *you* never read source —
+not that you design in ignorance of what the system already is. Reality reaches
+you through one firewalled channel, and you stay blind because the code stays on
+the far side of it. That channel appears twice:
+
+- **You commission it, per slice, at P4a** — before each slice's design hardens,
+  a separate code-aware sub-agent reads the codebase and returns contradictions in
+  subsystem + behavior terms only. This is the main event: it catches the false
+  floor on *this* slice before the next one stacks on it.
+- **The conformance critic returns it, once, at the end** —
+  `kite-system-design-conformance-review` runs a whole-set pass for the
+  cross-slice collateral a single slice couldn't see, and hands any of that back
+  for you to resolve on re-entry (see "Re-entry" below).
+
+Either way a contradiction arrives named at system altitude — a **subsystem** (its
+`SYSTEM_TAXONOMY.md` title), the **design element** it collides with, and the
+**nature** of the collision (*already exists / persists this differently / already
+supplies this field*), with **no code** attached. You reason about named
+subsystems and their behavior — never source — so you stay code-blind while
+becoming aware of what the system already is. If a contradiction ever arrives
+carrying a file path, a symbol, or a table name, that is a firewall leak: ignore
+the code detail and
 work only from the subsystem name and behavior.
 
 ## When to use
@@ -122,13 +138,25 @@ already exist — reconcile the design". See "Re-entry" below.
 
 ## Inputs to gather first
 
-1. **The slice.** Read the one `slice-N-<short>.md` you are designing. It is the
-   source of truth for behavior — its scenarios, scope, preconditions, and
-   `Builds on:` line. Never re-derive or change the behavior here. If the user
-   hasn't said which slice, list them and ask (design in stacked order).
-2. **The stack context.** Read `SLICES.md` and the `Builds on:` line so you know
-   which earlier slices' capabilities this one assumes. Reference their designs;
-   don't redesign them.
+1. **The one slice — and only that one.** Read the single `slice-N-<short>.md` you
+   are designing, in full. It is the source of truth for behavior — its scenarios,
+   scope, preconditions, and `Builds on:` line. Never re-derive or change the
+   behavior here. Slices are designed **chronologically, in stacked order, with no
+   user decision about sequencing**: the slice to design is simply the
+   lowest-numbered `slice-N-*.md` that does not yet have a
+   `slice-N-<short>-system-design.md` sibling. Determine that from the filenames
+   alone — don't open the other slice files to choose.
+2. **The `Builds on:` line — names only, not the files.** Use this slice's
+   `Builds on:` line to know which earlier-slice **capabilities** to treat as
+   already available, by name. **Do not open the other slice blueprints or their
+   designs** — not the ancestors, not the later slices, not `SLICES.md`'s bodies.
+   Designing one slice while reading the rest pulls the whole feature into your
+   head at once, which is exactly what we're avoiding: you start optimizing for
+   slices that aren't in front of you and lose the thin-slice focus. Assume the
+   named ancestor capability exists and is sound; if the `Builds on:` line is too
+   thin to design against, that's a gap to flag back to slicing — not a license to
+   go read the ancestor. (You may glance at the bare list of slice *filenames* to
+   confirm stacked order; that's not reading their content.)
 3. **`kite-design-system-standards` (for consideration).** Consult it (Mode A)
    for the platform's engineering principles and its Component Map. It is how
    you keep recommendations conformant and how you _push back_ when the user's
@@ -179,10 +207,13 @@ the rest.
 
 ### P1 — Absorb
 
-Read the slice, the `Builds on:` context, and `SLICES.md`. Consult
+Read **only the one slice** you are designing, in full, plus its `Builds on:`
+line (names of ancestor capabilities to assume — not their files). Consult
 `kite-design-system-standards` for the governing principles. Read
 `SYSTEM_TAXONOMY.md` if present. Internalize `references/design-principles.md`
-as the gap-filler. **Read no source code.**
+as the gap-filler. **Read no source code, and read no other slice** — not the
+other blueprints, not their designs, not `SLICES.md`'s bodies (a glance at the
+filenames for stacked order is fine).
 
 ### P2 — Work out how the system achieves the behavior, and map the unknowns
 
@@ -233,17 +264,114 @@ short.
   questions belong in the blueprint; earlier-slice concerns get referenced, not
   re-decided.
 
-### P4 — Last call & the autonomy check (mandatory gate)
+### P4 — Pre-write gate: reality check, last call, autonomy (mandatory)
 
-Before writing, ask explicitly:
+Three things stand between a drafted design and a written spec. Do them in order;
+none is skippable.
+
+#### P4a — Reality check (the one code-aware step, firewalled)
+
+This is the gate that stops you from finalizing a slice that decided *against*
+what is already built. You stay code-blind — but before this slice's design
+hardens, you **commission** one reality check: spawn a separate sub-agent that
+**is** allowed to read the codebase, hand it this slice's forming decisions and
+its §3 subsystem map (New / Modified / Reused) plus the **names** of the
+`Builds on:` capabilities it assumes, and have it check that map against what
+actually exists. (You pass names, not ancestor files — you haven't read those,
+and the sub-agent doesn't need them; its job is design-vs-codebase, not
+design-vs-other-slice.)
+
+Why per-slice, and why here: slices stack. If this slice marks a subsystem "New"
+that already exists, or decides an approach the shipped code already rejected, and
+that goes unnoticed, the *next* slice builds on the false floor — and the user,
+who has by now formed a whole-feature mental model, gets tripped at the very end
+when it's most expensive to unwind. Catching it on *this* slice lets the user
+recalibrate (or go do more research and come back) while the model is still small.
+
+What it checks — Family C of
+`kite-system-design-conformance-review/references/defect-taxonomy.md`, scoped to
+this slice's blast radius: C1 phantom-new subsystem, C2 a decision that
+contradicts an existing subsystem's shape/behavior, C3 an assumption reality
+already settled, C4 a forming §10 question reality already answers, and C5 a
+blast-radius effect within this slice's own reach.
+
+**The firewall keeps you code-blind.** The sub-agent reads source; you must not.
+It returns each contradiction as only three things — the **subsystem** (its
+`SYSTEM_TAXONOMY.md` title), the **design element** it collides with, and the
+**nature** of the collision at design altitude (*exists / persists this
+differently / already supplies this field*) plus a recommended reconciliation.
+**No** file paths, symbols, table/column names, migration ids, snippets, or line
+numbers ever reach you. If one does, it's a leak — ignore the code detail and
+work from the subsystem name alone.
+
+**Resolve contradictions in the grill loop, before writing.** Each real
+contradiction is a fork for the user, recommended option first, the same as P3:
+adopt the existing subsystem's shape (and flip the decision that fought it), reuse
+what exists (drop the "New"/build framing), confirm the assumption and delete its
+dead contingency, or accept a blast-radius effect with a §8/§2.3 amendment. Push
+back if the user wants to diverge from what exists; if they still choose to, record
+it as a **named accepted compromise**. Then fold each resolution into the forming
+design. Adjudicate first so you don't drag the user through noise — a "New"
+subsystem you genuinely intend to *extend*, or a §10 fact with no decision hanging
+off it, isn't a contradiction worth a fork.
+
+Spawn the reality check with a prompt like:
+
+```
+You are a code-aware reality checker for ONE system-design slice that is still
+being finalized. You MAY read the codebase. Check the design's forming decisions
+and subsystem map against what actually exists — and report contradictions
+WITHOUT leaking any code back.
+
+Read and follow Family C of <path>/kite-system-design-conformance-review/
+references/defect-taxonomy.md, especially the firewall rule. Report only; edit
+nothing.
+
+- Slice: <absolute path to slice-N-*.md>
+- Forming design (decisions + §3 New/Modified/Reused subsystem map): <pasted below>
+- Builds-on capabilities this slice assumes: <names only — the ancestor files are
+  out of scope; treat these as available>
+- System taxonomy: <repo>/SYSTEM_TAXONOMY.md  (name every subsystem from it)
+- Codebase root: <repo path>
+
+Scope to THIS slice's blast radius: the subsystems in its §3 map and the existing
+codebase subsystems they touch. Hunt C1–C5. Return each contradiction as:
+  - subsystem (canonical SYSTEM_TAXONOMY title; if absent, a plain system name + a
+    note the taxonomy lacks the term)
+  - design element (Decision Dn / Assumption An / §3 row / forming §10 Qn)
+  - nature (the collision at design altitude + a recommended reconciliation)
+  - proposed verdict (real / false-positive / defensible) + meaningfulness.
+
+ABSOLUTELY DO NOT include file paths, function/class/symbol names, table or column
+names, migration ids, code snippets, or line numbers. If a contradiction can only
+be expressed by quoting code, restate it as a subsystem behavior or drop it.
+```
+
+**The reality check must run in a sub-agent — there is no inline fallback.** The
+firewall only works if the agent that reads code is *not* you: you cannot unsee
+source you've read, so "do it yourself and then ignore the code" is not a real
+option for a skill whose whole identity is code-blindness. If the harness has no
+sub-agent mechanism, do **not** read code here. Instead, leave the relevant
+"does X already exist / is its shape Y?" items as §10 codebase questions (the
+skill's normal code-blind behavior) and note in the spec that the P4a reality
+check was skipped for lack of a sub-agent — the conformance review's whole-set
+backstop and the research stage then become the catch. Losing the early catch is
+the acceptable cost; letting the designer read code is not.
+
+#### P4b — Last call
+
+Ask explicitly:
 
 > "Before I write this up — is there anything we've missed for this slice? Any
 > concern, constraint, side-effect, or intent not yet captured?"
 
-Then apply the **autonomy test**: _could an implementer with this spec, the
-codebase, and good engineering principles now build the slice without asking the
-user anything more?_ If a user-answerable unknown is still open, loop back into
-P3. Whatever remains open must be a codebase question. Don't skip this gate.
+#### P4c — Autonomy test
+
+_Could an implementer with this spec, the codebase, and good engineering
+principles now build the slice without asking the user anything more?_ If a
+user-answerable unknown is still open — including a reality contradiction P4a
+surfaced but didn't resolve — loop back into P3. Whatever remains open must be a
+codebase question. Don't skip this gate.
 
 ### P5 — Write the spec
 
@@ -260,16 +388,21 @@ altitude:
 - two coverage checklists (decision-taxonomy dimensions; the slice's scenarios);
 - an appendix faithfully capturing the interview.
 
-### P6 — Stop and hand off
+### P6 — Continue to the next slice, or hand off
 
-Deliver a short summary and stop. The spec is the deliverable; it goes to
-**human approval** (the pipeline's Step 3 gate), then to planning (Step 4) with
-its codebase questions feeding research (Step 5). Don't invoke planning or
-research here.
+Deliver a short summary of the slice you just designed. The spec is a deliverable;
+the whole set goes to **human approval** (the pipeline's Step 3 gate), then to
+planning (Step 4) with its codebase questions feeding research (Step 5). Don't
+invoke planning or research here.
 
-**If more slices remain, offer the next one** (in stacked order), each its own
-file — don't review yet. The conformance critic runs over the *whole set*, so it
-only makes sense once every slice has a design.
+**If more slices remain, continue straight to the next one** — the
+lowest-numbered `slice-N-*.md` without a design — in stacked order, **without
+asking the user which slice to do next.** Sequencing is not the user's decision;
+the order is fixed by the stack, and you just walk it. (The user's involvement is
+the per-slice design conversation — the P3 grill and the P4a contradiction forks —
+not picking the next slice.) Open only that next slice's file, run P1–P5 for it,
+and keep going. Don't review yet: the conformance critic runs over the *whole
+set*, so it only makes sense once every slice has a design.
 
 **When the slice you just designed was the last one — every `slice-N-*.md` in
 the directory now has a `slice-N-<short>-system-design.md` sibling — hand off to
@@ -292,17 +425,17 @@ specs are not ready for human approval + planning until that review has run.
 Don't run the critic yourself per slice and don't act as your own critic on the
 set; recommend the dedicated skill, which uses independent sub-agents on purpose.
 
-## Re-entry: resolving reality contradictions from the conformance review
+## Re-entry: resolving cross-slice contradictions from the conformance review
 
-The conformance critic runs one code-aware pass — the only one in the whole
-design stage — that checks each finalized design against the codebase that
-actually exists, across the feature's whole blast radius. When it finds that a
-design decided against reality (marked a subsystem "New" that already exists,
-chose an approach the shipped code already rejected, banked an assumption reality
-already settled, or left a §10 question reality already answered), it does **not**
-fix it — it hands it back to you, because resolving it is an intent call you own
-and must make code-blind. This is the loop that stops a false premise from
-hardening into a plan downstream.
+Most reality contradictions are already caught and resolved per slice at P4a,
+before each spec finalizes — that's the point of the hybrid. But one class
+survives: **cross-slice collateral** a single slice structurally couldn't see —
+an effect this slice's design has on a subsystem that an *earlier* or *later*
+slice owns, visible only when the whole set is viewed at once. The conformance
+critic's whole-set pass exists to catch exactly that, and when it does, it does
+**not** fix it — it hands it back to you, because resolving it is an intent call
+you own and must make code-blind. This is the backstop that keeps a false premise
+the per-slice check couldn't reach from hardening into a plan downstream.
 
 A returned contradiction arrives as `{subsystem (taxonomy title), design element
 (Decision Dn / Assumption An / §3 row / §10 Qn), nature + recommended
@@ -323,7 +456,7 @@ reconciliation}` — no code. To resolve it, re-enter the affected slice and run
   New/Modified/Reused row, close the §10 question (it's answered now), or add the
   §8 risk / §2.3 effect the user accepted. Keep the design's voice and altitude —
   you're reconciling intent with reality, not re-authoring the slice.
-- **Re-apply the autonomy gate (P4)** for the affected slice, then re-finalize its
+- **Re-apply the autonomy test (P4c)** for the affected slice, then re-finalize its
   spec. The contradictions are closed when the re-finalized design no longer
   decides against the named subsystem. If your re-finalization materially changed
   decisions, recommend another conformance pass on the updated set — but resolve
@@ -347,8 +480,10 @@ reconciliation}` — no code. To resolve it, re-enter the affected slice and run
   named and recorded, never silent.
 - **Recommendation discipline.** Every question carries a recommendation with a
   principle-grounded reason; the user can always override.
-- **One slice, one file, stacked.** Design the slice in front of you; lean on
-  the designs it builds on; leave later slices to their own files.
+- **One slice, one file, stacked — and don't read the others.** Design the slice
+  in front of you; assume its `Builds on:` capabilities by name; never open the
+  ancestor or later slice files or their designs. Sequencing is automatic (next
+  un-designed slice in order), not a user choice.
 
 ## Output structure
 
@@ -360,8 +495,12 @@ Slice Coverage Checklist → Appendix A: Captured Inputs.
 
 ## Gotchas
 
-- **Don't read the code.** If you're about to grep or open a file, stop — that's
-  a codebase question, not a design step.
+- **Don't read the code yourself.** If *you* are about to grep or open a file,
+  stop — that's a codebase question, not a design step. The one sanctioned look at
+  reality is the P4a reality check, and it happens at arm's length: a separate
+  sub-agent reads the code and hands back only firewalled, code-free findings.
+  Commissioning that check is not reading code; opening a file to "just confirm"
+  is.
 - **Don't drop to implementation altitude.** Resist column DDL, migration SQL,
   and function signatures. Decide _what_ and _which subsystem_, not _how to code
   it_. The downstream steps own that.
@@ -370,9 +509,13 @@ Slice Coverage Checklist → Appendix A: Captured Inputs.
   cost, and rollout still get walked.
 - **Don't redefine product behavior.** Behavior belongs to the slice/blueprint.
   A behavior gap is a finding to flag back, not something to invent here.
-- **Don't design the whole feature at once.** One slice, one spec. Designing all
-  slices together loses the one-to-one mapping the pipeline relies on.
-- **Don't redesign earlier slices.** Reference what a `Builds on:` slice
-  established. If it's actually wrong, flag it — don't quietly fork it.
+- **Don't design the whole feature at once, or even read it.** One slice, one
+  spec, and you only ever open the one slice's file. Reading the whole set loses
+  the one-to-one mapping and quietly drags the entire feature into your head,
+  which is what makes designs drift toward slices that aren't in front of you.
+- **Don't redesign — or read — earlier slices.** Assume what a `Builds on:` line
+  names, by name; don't open the ancestor's blueprint or design. If the named
+  capability is too thin to design against, flag it back to slicing — don't go
+  read the ancestor to fill the gap, and don't quietly fork it.
 - **"We already have X" is a codebase question, not a fact.** However confident
   the user is, a claim about what exists is unverified until research checks it.

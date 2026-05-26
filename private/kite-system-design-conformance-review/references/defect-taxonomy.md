@@ -213,13 +213,29 @@ unsupported because it was never really made, that's defect 5 — ask.
 
 ## Family C — Reality contradictions *(design vs the actual codebase)*
 
-These are the defects the designer **structurally cannot** see, because designing
-is code-blind. The one code-aware reviewer (Stage 0) maps the **entire blast
-radius** of the proposed design — every subsystem the design marks New, Modified,
-or Reused, plus the existing subsystems that already read or write the same data
-— and checks each against what is actually built. The point is to make the user
-**clarify** each real contradiction now, so a decision built on a false premise
-doesn't flow downstream into planning and code as noise.
+These are the defects a code-blind designer **structurally cannot** see on its
+own. They are caught by a code-aware reviewer mapping the **blast radius** of the
+design — every subsystem it marks New, Modified, or Reused, plus the existing
+subsystems that already read or write the same data — and checking each against
+what is actually built. The point is to make the user **clarify** each real
+contradiction now, so a decision built on a false premise doesn't flow downstream
+into planning and code as noise.
+
+This family is hunted in **two places**, both governed by this same definition and
+firewall:
+
+- **Per slice, at the designer's P4a gate** (`kite-system-design-blueprint-slices`)
+  — the primary catch. Before each slice's spec finalizes, the designer commissions
+  a reality check scoped to *that slice's* blast radius (its subsystems + its
+  `Builds on:` ancestors). This is where C1–C4 and a slice's own C5 are normally
+  found and resolved with the user, so the false floor never reaches the next
+  slice.
+- **Whole-set, at this skill's Stage 0** — the backstop. Once every slice is
+  designed, one pass over *all* designs together catches the **cross-slice
+  collateral** a single slice couldn't see (C5 where one slice's design affects a
+  subsystem another slice owns) and nets anything the per-slice checks missed.
+
+The firewall and the dispositions below apply identically in both places.
 
 ### The firewall — how a code-aware finding is allowed to travel
 

@@ -12,14 +12,14 @@ description: >-
   fix it applies to the spec, a question it asks the USER interactively (folding
   the answer back in), a contradiction it returns to the designer to resolve, or
   a note it merely reports — and verifies every applied change landed with a
-  fresh sub-agent. It ALSO runs the one code-aware pass the design stage is
-  otherwise forbidden: a single carved-out sub-agent reads the actual codebase
-  and checks the design's whole blast radius for contradictions with what is
-  already built (a "New" subsystem that already exists, a decision the shipped
-  code already rejected, a §10 question reality already answered), reporting them
-  back in subsystem + behavior terms only — never code — so the code-blind
-  designer can resolve them with the user before the specs finalize. This is the
-  critic stage AFTER
+  fresh sub-agent. It ALSO runs a whole-set code-aware backstop: a single
+  carved-out sub-agent reads the actual codebase and checks the feature's
+  cross-slice blast radius for contradictions a single slice's own reality check
+  (run earlier, per slice, by the designer) structurally couldn't see — chiefly
+  collateral where one slice's design affects a subsystem another slice owns —
+  reporting them back in subsystem + behavior terms only, never code, so the
+  code-blind designer can resolve them with the user before the specs finalize.
+  This is the critic stage AFTER
   `kite-system-design-blueprint-slices`, run ONCE every slice in a
   `<feature>-slices/` directory has a system-design spec. Reach for it whenever
   such specs exist and the user says "review the system designs", "check the
@@ -39,12 +39,13 @@ You take a `<feature>-slices/` directory in which every behavior slice
 (`slice-N-<short>.md`) now has a system-design spec
 (`slice-N-<short>-system-design.md`), and you find every place a design failed
 to faithfully achieve the behavior its slice committed to, or fell short of its
-own completeness and autonomy bar. You **also** run the one code-aware pass the
-design stage forbids itself — checking each design's whole blast radius against
-the codebase that actually exists. Then you resolve the gaps that are *real and
-meaningful* — fixing what you can fix, asking the user what only they can answer,
-and **returning reality contradictions to the designer** to resolve in its grill
-loop — and verify your changes landed. You stop there.
+own completeness and autonomy bar. You **also** run a whole-set code-aware
+backstop — checking the feature's *cross-slice* blast radius against the codebase
+that actually exists, for the collateral a single slice's own reality check (run
+earlier, per slice, by the designer) couldn't see. Then you resolve the gaps that
+are *real and meaningful* — fixing what you can fix, asking the user what only
+they can answer, and **returning reality contradictions to the designer** to
+resolve in its grill loop — and verify your changes landed. You stop there.
 
 This is the **Step-3 critic**: it sits to `kite-system-design-blueprint-slices`
 exactly as `slice-conformance-review` sits to `slice-blueprint`. Run it once,
@@ -119,12 +120,14 @@ produces a report dominated by "not designed yet," which is noise, not findings.
    design's intent, you don't re-author it.
 3. **A verification summary** — at the end of the report: each applied change,
    and a PASS/FAIL that it actually landed.
-4. **A reality-contradiction handoff to the designer** — when the code-aware pass
-   finds real contradictions, a section listing each one in subsystem + behavior
-   terms (no code), and a recommendation to re-run
-   `kite-system-design-blueprint-slices` on the affected slice(s) to resolve them
-   with the user. These are *not* fixed inline — resolving them is the designer's
-   code-blind, user-facing job.
+4. **A cross-slice reality-contradiction handoff to the designer** — when the
+   whole-set code-aware backstop finds collateral the per-slice checks couldn't
+   see, a section listing each one in subsystem + behavior terms (no code), and a
+   recommendation to re-run `kite-system-design-blueprint-slices` on the affected
+   slice(s) to resolve them with the user. These are *not* fixed inline —
+   resolving them is the designer's code-blind, user-facing job. (Most reality
+   contradictions are already resolved upstream, per slice, at the designer's P4a;
+   this backstop exists for what a single slice structurally couldn't see.)
 
 ## How this runs: four roles, three of them sub-agents
 
@@ -134,12 +137,15 @@ them delegated to fresh sub-agents on purpose:
 
 - **The reality reviewer sub-agent** (Stage 0) — *the one code-aware role.* Spawn
   a sub-agent that **is** allowed to read the codebase (the single carved-out
-  exception in this otherwise code-blind skill). Give it the design specs, the
-  `SYSTEM_TAXONOMY.md`, and the defect taxonomy's Family C. It maps each design's
-  whole blast radius and finds contradictions with what is actually built, then
-  returns them **through the firewall**: subsystem name + design element + the
-  contradiction's nature, with *no* code artifacts (Family C in
-  `references/defect-taxonomy.md` defines the firewall precisely). It is a
+  exception in this otherwise code-blind skill). Give it *all* the design specs at
+  once, the `SYSTEM_TAXONOMY.md`, and the defect taxonomy's Family C. Its job is
+  the **whole-set, cross-slice** view: it looks across every slice's design
+  together for collateral a single slice couldn't see — one slice's design
+  affecting a subsystem an earlier or later slice owns (C5 across slices) — and
+  acts as a safety net for any per-slice contradiction (C1–C4) the designer's P4a
+  check missed. It returns findings **through the firewall**: subsystem name +
+  design element + the contradiction's nature, with *no* code artifacts (Family C
+  in `references/defect-taxonomy.md` defines the firewall precisely). It is a
   separate sub-agent from the code-blind reviewer below precisely so code never
   leaks into the rest of the skill or into the designer.
 - **The review sub-agent** (Stage 1) — code-blind. Spawn a sub-agent whose only
@@ -165,14 +171,19 @@ them delegated to fresh sub-agents on purpose:
   self-confirmation trap this whole skill exists to break.
 
 Delegate via whatever sub-agent mechanism the harness provides; prompt templates
-are at the end of Stages 0, 1 and 4. If there are many slices (say more than
-four), prefer spawning one reality reviewer and one code-blind review sub-agent
-**per slice** in parallel — sharper focus, smaller context — and merge their
-findings. If the harness genuinely has no sub-agents, run the reality pass, the
-code-blind review, and the verification as deliberately separate, fresh passes
-— and still firewall: when you do the reality pass yourself, write down only the
-subsystem-level findings and work the rest of the skill from those, not from the
-code you saw. The independence and the firewall are the point.
+are at the end of Stages 0, 1 and 4. The reality reviewer takes the **whole set
+at once** (its value is the cross-slice view, so don't split it per slice); the
+code-blind review sub-agent can still be split per slice if there are many.
+
+The **reality pass (Stage 0) must run in a sub-agent — there is no inline
+fallback.** The firewall only holds if the agent reading code is not you: you
+cannot unsee source, so "read it yourself and then ignore the code" defeats the
+code-blindness the rest of this skill depends on. If the harness has no sub-agent
+mechanism, do **not** read code — skip Stage 0, say so loudly in the report, and
+lean on the per-slice P4a checks (already done) plus the research stage as the
+catch. The code-blind stages (1 and 4) *may* be run as separate fresh inline
+passes if there are no sub-agents, since they never touch source — but prefer real
+sub-agents: the independence is the point.
 
 ## The five stages — in order, and do not skip the gate
 
@@ -185,22 +196,26 @@ fixes phantom defects; fixing without verifying claims changes that never landed
 autonomy bar the design exists to protect; and **fixing a reality contradiction
 inline** usurps the intent call the designer owns and breaks the firewall.
 
-### Stage 0 — Reality check: the design vs the codebase (the one code-aware pass)
+### Stage 0 — Reality check: cross-slice backstop (this skill's one code-aware pass)
 
-This is the step this skill adds on top of the code-blind audit, and it answers
-the failure that motivated it: a designer working code-blind will confidently
-mark a subsystem "New" that already exists, decide an approach the shipped code
-already rejected, or leave open a §10 question reality already settled — and none
-of that surfaces until research, far downstream, after the decision has hardened
-into a plan.
+The bulk of design-vs-reality contradictions are already caught and resolved
+upstream, **per slice**, at the designer's P4a gate — before each spec finalizes,
+the designer commissions its own firewalled reality check. This stage is the
+**whole-set backstop** for what a single slice structurally couldn't see: the
+*cross-slice collateral* where one slice's design touches a subsystem an earlier
+or later slice owns, plus a safety net for any per-slice contradiction the upstream
+check missed. Without it, a contradiction that only appears when all slices are
+viewed together would slip straight into planning.
 
-The reality reviewer sub-agent maps the **entire blast radius** of each design —
-every subsystem the §3 view marks New / Modified / Reused, *plus* the existing
-subsystems that already read or write the same data — and checks each against
-what is actually built, hunting Family C (C1 phantom-new subsystem, C2 decision
-contradicts existing shape, C3 assumption settled by reality, C4 §10 already
-answered, C5 unaccounted blast-radius effect). Read Family C in
-`references/defect-taxonomy.md` before running it.
+The reality reviewer sub-agent reads **all** the designs together and maps the
+**feature-wide** blast radius — every subsystem any slice marks New / Modified /
+Reused, *plus* the existing subsystems that already read or write the same data,
+*plus* the data each slice's writes feed into that another slice consumes — and
+checks against what is actually built, hunting Family C (C1 phantom-new subsystem,
+C2 decision contradicts existing shape, C3 assumption settled by reality, C4 §10
+already answered, C5 unaccounted blast-radius effect — C5 across slices is the one
+this stage is really here for). Read Family C in `references/defect-taxonomy.md`
+before running it.
 
 **The firewall is the whole trick.** The reviewer reads source; the designer must
 never. So every finding crosses back as exactly three things — the **subsystem**
@@ -217,9 +232,12 @@ like:
 
 ```
 You are the ONE code-aware reviewer in an otherwise code-blind design review. You
-MAY read the codebase. Your job: check a set of system-design specs against what
-the codebase actually contains, across each design's whole blast radius, and
-report contradictions — WITHOUT leaking any code back.
+MAY read the codebase. Your job: take ALL of a feature's system-design specs
+together and find contradictions with what the codebase actually contains —
+focusing on CROSS-SLICE collateral that no single slice could see on its own (one
+slice's design affecting a subsystem another slice owns), and acting as a safety
+net for any per-slice contradiction an upstream check missed. Report WITHOUT
+leaking any code back.
 
 Read and follow Family C of <path>/kite-system-design-conformance-review/
 references/defect-taxonomy.md, especially the firewall rule. STOP after producing
@@ -229,12 +247,13 @@ findings; fix nothing; edit no files.
 - System taxonomy: <repo>/SYSTEM_TAXONOMY.md  (use its names for every subsystem)
 - Codebase root: <repo path>
 
-For each design: list the blast radius (every New/Modified/Reused subsystem in §3
-plus existing subsystems that already touch the same data), then check each for
-C1–C5 against the real code. Return every contradiction as:
+Map the FEATURE-WIDE blast radius across all slices: every New/Modified/Reused
+subsystem, the existing subsystems that already touch the same data, and the data
+one slice writes that another slice reads. Then check for C1–C5 against the real
+code, prioritizing cross-slice C5. Return every contradiction as:
   - subsystem: <canonical SYSTEM_TAXONOMY title; if absent, a plain system-level
     name + a note that the taxonomy lacks the term>
-  - design element: <Decision Dn / Assumption An / §3 row / §10 Qn>
+  - design element: <which slice + Decision Dn / Assumption An / §3 row / §10 Qn>
   - nature: <the contradiction at design altitude, as the design doc would phrase
     it — exists / already supplies X / persists differently / already retries /
     different contract — plus a recommended reconciliation direction>
@@ -248,9 +267,11 @@ behavior or drop it. Code stays on your side of the firewall.
 
 The orchestrator receives only these firewalled findings and carries them into
 the Stage-2 gate alongside the code-blind findings. (If the harness has no
-sub-agents and you must do this pass yourself, immediately write the findings in
-the firewalled form and work only from those for the rest of the skill — do not
-let the code you saw inform your fixes or the designer handoff.)
+sub-agent mechanism, do **not** run this pass inline — as the "no inline
+fallback" rule above requires: skip Stage 0, flag the skip loudly in the report,
+and lean on the per-slice P4a checks already done plus the research stage as the
+catch. You cannot unsee source, so reading it yourself would break the
+code-blindness the rest of this skill depends on.)
 
 ### Stage 1 — Review: re-derive, then hunt
 
