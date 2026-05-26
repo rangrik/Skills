@@ -41,19 +41,27 @@ Then <...>
 - RQ1: <specific, answerable question for kite-research>
 - RQ2: <...>
 
-### Research findings          (written by kite-research)
-- RQ1 → EXISTS: <name> at <file:line> — <how to reuse>
-- RQ2 → MISSING: ADD at <location> — <what to add>
-- Reuse constraints: <caveats on anything marked EXISTS>
-- BLOCKING: <only present if research invalidates the plan>
+### Research questions reference (written by kite-planner)
+- Consolidated, slice-level research questions for kite-research to answer.
 
 ### Implementation record      (written by kite-implementation)
+- Unified brief: <path to slice-N-<short>-S<ID>-unified.md>
 - Changed files: <...>
 - Tests added: <...>
-- Architecture check (kite-design-system-standards): pass | <issues found and fixed>
-- Scenario check verdict: pass
-- Commit: <hash / message>
+- Scenario-check review verdict: <meaningful findings, or clean>
+- Final adversarial gate (KISS + kite-design-system-standards): pass | <issues found and fixed>
+- Commit: <hash / message, prefixed with the slice>
 ```
+
+### Where research findings live
+
+In the current pipeline, `kite-research` writes findings into a single,
+**feature-wide `codebase-research.md`** rather than inlining them per scenario in
+the plan file. The plan file carries the consolidated research *questions*; the
+*answers* (EXISTS reuse points and MISSING extension points) live in
+`codebase-research.md`. The implementation loop's collate step pulls the relevant
+findings from there into each scenario's unified brief. (Older plan fixtures that
+inline findings still work — the collator reconciles whatever layout it is given.)
 
 ### Ownership and status flow
 
