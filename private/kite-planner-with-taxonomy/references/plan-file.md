@@ -65,10 +65,10 @@ surfaced. Each is answerable EXISTS / MISSING and names the scenarios it blocks.
 | RQ2 | <...>                                                     | <...>                  | <...>                 | S2        | planning     |
 
 ## Research findings             (written by kite-research)
-- RQ1 → EXISTS: <name> at <file:line> — <how to reuse>
-- RQ2 → MISSING: ADD at <location> — <what to add>
-- Reuse constraints: <caveats on anything marked EXISTS>
-- BLOCKING: <only present if research invalidates the plan>
+Research answers are not stored here — they live in the feature-wide
+`codebase-research.md`. This line points to this slice's section there.
+- → See codebase-research.md › "Slice N — research iteration".
+- BLOCKING: <only present if research invalidates the plan; slice status → blocked>
 
 ## Conformance & coverage review (written by kite-plan-conformance-review)
 - Verdict: clean | fixed-and-clean | human-input-needed
@@ -83,8 +83,9 @@ surfaced. Each is answerable EXISTS / MISSING and names the scenarios it blocks.
   questions → slice + scenario status `planned`. It then runs the review.
 - **kite-plan-conformance-review** writes the Conformance & coverage review
   section and applies safe fixes in place; it does not change the status.
-- **kite-research** writes Research findings → slice status `researched`, or
-  `blocked` if it finds a BLOCKING issue.
+- **kite-research** answers the slice's research questions into the feature-wide
+  `codebase-research.md`, points the Research findings line there, and sets the
+  slice status `researched`, or `blocked` if it finds a BLOCKING issue.
 - **kite-implementation** writes each scenario's Implementation record →
   scenario status `in_progress`, then `committed`.
 - **kite-feature-review** only reads the plan file; its output is the separate
