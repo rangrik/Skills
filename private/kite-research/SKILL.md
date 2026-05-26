@@ -1,22 +1,20 @@
 ---
 name: kite-research
 description: >-
-  Inspects the actual codebase to answer the research questions for ONE planned
-  Kite slice — finding what already exists to reuse, what is missing, and where
-  new code should go — and records the answers in a universal, feature-wide
-  `codebase-research.md`. It gathers the slice's questions from the slice plan
-  (its consolidated "Slice research questions") cross-checked against the slice's
-  system-design spec ("Open Questions for the Codebase"), then answers each
-  against the real code. Because the codebase changes as each slice ships, on
-  every iteration it ALSO refreshes the research doc: it finds prior findings
-  whose code area overlaps this slice's questions, re-inspects that code, and
-  updates any answer that went stale (most often a capability that was MISSING in
-  an earlier slice and now EXISTS because that slice built it). Use this as the
-  SECOND stage of the Kite pipeline, immediately after kite-planner-with-taxonomy,
-  or whenever the user says "research the codebase for this slice", "find what we
-  already have", "check what exists before we build", "do the codebase research",
-  or "refresh the research doc for the next slice". This is the only Kite
-  planning-phase skill permitted to read source code. Scope is the appsmith-v2 /
+  Inspects the actual codebase to answer the research questions for ONE
+  planned Kite slice — what already exists to reuse, what is missing, and
+  where new code should go — and records the answers in a feature-wide
+  `codebase-research.md`. It gathers the slice's questions from the slice
+  plan ("Slice research questions") cross-checked against the system-design
+  spec's "Open Questions for the Codebase", then answers each against the
+  real code. On every iteration it ALSO refreshes the research doc:
+  re-inspects prior findings whose code area overlaps this slice and updates
+  any answer that went stale (e.g. a capability that was MISSING earlier and
+  now EXISTS because a prior slice built it). Use as the stage immediately
+  after kite-planner-with-taxonomy, or when the user says "research the
+  codebase for this slice", "find what we already have", "check what exists
+  before we build", or "refresh the research doc". The only Kite
+  planning-phase skill permitted to read source code. Scope: appsmith-v2 /
   Kite platform.
 ---
 

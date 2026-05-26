@@ -5,17 +5,16 @@ description: >-
   behavior blueprint they were cut from, to find what the slicing silently
   dropped, weakened, duplicated, or left unbuildable — then fixes only the gaps
   that are real AND meaningful and verifies each fix landed. This is the critic
-  stage AFTER slice-blueprint: it re-derives coverage from the source instead of
-  trusting the slices' own SLICES.md ledger, because a generator that wrote its
-  own ledger believes it. Reach for it whenever a `<feature>-slices/` directory
-  exists and the user says "review the slices", "check the slices against the
-  blueprint", "did we miss anything in the slices", "are the slices faithful to
-  the blueprint", "audit the slice conformance", "check what's missing in the
-  slices vs the original", or has just sliced a blueprint and wants the cut
-  verified before building — even if they never say "conformance" or "review".
-  NOT for reviewing an implemented feature against its blueprint (that is
-  kite-feature-review), reviewing a PR diff, or critiquing the source blueprint
-  itself.
+  stage AFTER slice-blueprint: it re-derives coverage from the source instead
+  of trusting the slices' own SLICES.md ledger. Reach for it whenever a
+  `<feature>-slices/` directory exists and the user says "review the slices",
+  "check the slices against the blueprint", "did we miss anything in the
+  slices",   "are the slices faithful to the blueprint", "audit the slice
+  conformance", "check what's missing in the slices vs the original", or
+  has just sliced a blueprint and wants the cut verified before building —
+  even if they never say "conformance" or "review". NOT for
+  reviewing an implemented feature against its blueprint (kite-feature-review),
+  reviewing a PR diff, or critiquing the source blueprint itself.
 ---
 
 # Slice Conformance Review

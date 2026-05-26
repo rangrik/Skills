@@ -2,35 +2,20 @@
 name: kite-system-design-conformance-review
 description: >-
   Adversarially audits the per-slice system-design specs
-  (`slice-N-<short>-system-design.md`) produced by
-  `kite-system-design-blueprint-slices` against (a) the behavior slice each was
-  derived from and (b) each spec's own template + autonomy bar — finding
-  scenarios left undesigned, guarantees the design would silently weaken, scope
-  that drifted past the slice, hollow or placeholder template sections, and
-  user-answerable unknowns left unresolved (the autonomy failure). It then
-  triages only the real AND meaningful findings into dispositions — a
-  fix it applies to the spec, a question it asks the USER interactively (folding
-  the answer back in), a contradiction it returns to the designer to resolve, or
-  a note it merely reports — and verifies every applied change landed with a
-  fresh sub-agent. It ALSO runs a whole-set code-aware backstop: a single
-  carved-out sub-agent reads the actual codebase and checks the feature's
-  cross-slice blast radius for contradictions a single slice's own reality check
-  (run earlier, per slice, by the designer) structurally couldn't see — chiefly
-  collateral where one slice's design affects a subsystem another slice owns —
-  reporting them back in subsystem + behavior terms only, never code, so the
-  code-blind designer can resolve them with the user before the specs finalize.
-  This is the critic stage AFTER
-  `kite-system-design-blueprint-slices`, run ONCE every slice in a
-  `<feature>-slices/` directory has a system-design spec. Reach for it whenever
-  such specs exist and the user says "review the system designs", "check the
-  designs against the slices", "did the design miss anything", "audit the
-  system-design conformance", "are the solution designs faithful to the slices",
-  or has just finished designing all the slices and wants the designs checked
-  before planning and implementation — even if they never say "conformance".
-  NOT for reviewing behavior slices against the blueprint (that is
-  `slice-conformance-review`), reviewing an implemented feature (that is
-  `kite-feature-review`), or critiquing the slice's product behavior (that is
-  the blueprint's job).
+  (`slice-N-<short>-system-design.md`) from
+  kite-system-design-blueprint-slices against the behavior slice each was
+  derived from and each spec's template + autonomy bar — catching
+  scenarios undesigned, guarantees weakened, scope drift, hollow template
+  sections, and user-answerable unknowns left unresolved. Triages findings
+  into fix-in-spec, ask-the-USER, return-to-designer, or report-only, and
+  verifies every fix landed. Also runs a code-aware backstop for
+  cross-slice contradictions a single slice couldn't see. Critic stage
+  AFTER kite-system-design-blueprint-slices. Triggers on "review the system
+  designs", "check the designs against the slices", "did the design miss
+  anything", "audit the system-design conformance", or "are the designs
+  faithful to the slices" — even when "conformance" is never said. NOT for
+  behavior slices (slice-conformance-review), implemented features
+  (kite-feature-review), or product behavior (the blueprint).
 ---
 
 # Kite System-Design Conformance Review

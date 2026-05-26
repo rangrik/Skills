@@ -1,35 +1,22 @@
 ---
 name: kite-system-design-blueprint-slices
 description: >-
-  Takes one approved behavior slice (a `slice-N-*.md` from a `<feature>-slices/`
-  directory produced by slice-blueprint) and works out HOW the system should
-  achieve that behavior, at a high-level system-design altitude (NOT
-  implementation detail). Works one slice at a time and writes one spec per
-  slice as a sibling (`slice-N-<short>-system-design.md`). It reasons like a
-  senior architect across every concern (data shape & integrity, performance,
-  reliability, security, cost, rollout, …), using a data-movement lens as the
-  entry point — do we have the data or generate it, how does it travel to the
-  product surface, which existing subsystems act on it and with what effect. It
-  is CODE-BLIND: it never reads source itself; instead it grills the user to
-  resolve the unknowns only the USER can answer (intent, approach, trade-offs)
-  and records the unknowns only the CODEBASE can answer as a separate list of
-  research questions. Before each slice's design finalizes it commissions ONE
-  firewalled reality check — a separate code-aware sub-agent that reads the code
-  and returns contradictions in subsystem + behavior terms only (never code), so
-  a decision that fights what already exists is caught and resolved with the user
-  on that slice, not discovered downstream. The output enumerates Decisions,
-  Tradeoffs, Assumptions,
-  Scope (in & out), Risks, Constraints, and Dependencies, plus the data-flow
-  narrative and the codebase questions. It consults
-  `kite-design-system-standards` for the platform's principles and may read the
-  repo's `SYSTEM_TAXONOMY.md` to name subsystems. Fires on "design the system
-  for this slice", "solution design for slice N", "how should the system achieve
-  this", "grill me on the design for this slice", or whenever an approved slice
-  exists and the next job is its technical design — even when the user only says
-  "design this slice". Not for product behavior (blueprint, then slice, first).
-  Not for reading the codebase (that is the research stage). Not for
-  step-by-step implementation tasks (that is planning). Scope is the appsmith-v2
-  / Kite platform.
+  Takes one approved behavior slice (`slice-N-*.md` from a
+  `<feature>-slices/` dir) and works out HOW the system should achieve that
+  behavior at high-level system-design altitude (NOT implementation detail).
+  One slice at a time; writes one spec per slice
+  (`slice-N-<short>-system-design.md`). Reasons across data integrity,
+  performance, reliability, security, cost, and rollout via a data-movement
+  lens. CODE-BLIND: never reads source; grills the user to resolve unknowns
+  only the USER can answer and records the rest as research questions.
+  Before each spec finalizes, a firewalled code-aware reality check returns
+  contradictions in subsystem + behavior terms only. Fires on "design the
+  system for this slice", "solution design for slice N", "how should the
+  system achieve this", or "grill me on the design" — even when the user
+  only says "design this slice". Not for
+  product behavior (slice-blueprint), reading the codebase (kite-research),
+  or implementation tasks (kite-planner-with-taxonomy). Scope: appsmith-v2
+  / Kite.
 ---
 
 # Kite Slice System Design

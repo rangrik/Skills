@@ -2,22 +2,20 @@
 name: system-taxonomy
 description: >-
   Extract the ubiquitous language of a code repository — the shared vocabulary
-  of domain concepts AND named subsystems that a team actually uses to discuss
-  the product and its architecture — and write it to SYSTEM_TAXONOMY.md: an
-  opinionated, grouped glossary with tight definitions, aliases to avoid,
-  relationships with cardinality, an example dialogue, and flagged ambiguities.
-  The result is a communication contract: reading it lets one engineer (or an
-  agent) name a concept and have everyone land on exactly the right module, then
-  explain a feature's flow or point out a bug using only those terms. Use this
-  whenever the user wants to map, document, agree on, or align an agent to the
-  vocabulary / terminology / concepts / taxonomy / domain language of a codebase
-  or product. Triggers on "what are the core concepts here", "build a glossary",
-  "define our domain language", "create a ubiquitous language", "what should we
-  call X", "map the taxonomy of this repo", "I want one shared vocabulary for
-  the system so we stop calling the same thing different names", or onboarding a
-  person or agent into speaking about the system consistently. Fire even when
-  the user says only "taxonomy", "domain model", "shared vocabulary", or
-  "terminology" and never says "ubiquitous language".
+  of domain concepts AND named subsystems used to discuss the product and its
+  architecture — and write it to SYSTEM_TAXONOMY.md: a grouped glossary with
+  tight definitions, aliases to avoid, relationships with cardinality, an
+  example dialogue, and flagged ambiguities. The result is a communication
+  contract: a person or agent can name a concept and have everyone land on the
+  right module, then explain a flow or bug using only those terms. Use when
+  the user wants to map, document, or align an agent to the vocabulary /
+  terminology / concepts / taxonomy / domain language of a codebase. Triggers
+  on "what are the core concepts here", "build a glossary", "define our domain
+  language", "create a ubiquitous language", "what should we call X", "map
+  the taxonomy of this repo", or onboarding a person or agent to speak
+  about the system consistently.
+  Fire even when the user only says "taxonomy", "domain model", "shared
+  vocabulary", or "terminology".
 ---
 
 # System Taxonomy

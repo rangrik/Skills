@@ -1,26 +1,21 @@
 ---
 name: kite-planner-with-taxonomy
 description: >-
-  Turns ONE approved system-design slice (a `slice-N-<short>-system-design.md`
-  produced by kite-system-design-blueprint-slices) into an ordered,
-  scenario-by-scenario implementation plan for that slice — CODE-BLIND, grounded
-  in the slice's design decisions, the platform's `SYSTEM_TAXONOMY.md`
-  vocabulary, and the `kite-design-system-standards` engineering principles. It
-  works one slice at a time and stops; it does not advance to the next slice. It
-  produces a per-slice plan file, orders the slice's scenarios for maximum reuse,
-  plans each scenario, and emits ONE consolidated set of slice-level research
-  questions for the codebase. When the plan is written it auto-spawns a
-  conformance/coverage review subagent (kite-plan-conformance-review) that checks
-  the plan against the slice's design and fixes what it can. This is Step 4 of
-  the Kite pipeline (after solution-design, before research). Use it whenever a
-  slice's system-design spec exists and the next job is to plan its build —
-  triggers on "plan this slice", "create the implementation plan for slice N",
-  "turn this system design into a plan", "order the scenarios for this slice", or
-  whenever an approved `*-system-design.md` slice is in hand and building is about
-  to start, even when the word "plan" is never said. Not for product behavior
-  (blueprint/slice first). Not for the system design itself (that is Step 3). Not
-  for reading the codebase (that is research, Step 5). Scope is the appsmith-v2 /
-  Kite platform.
+  Turns ONE approved system-design slice (`slice-N-<short>-system-design.md`
+  from kite-system-design-blueprint-slices) into an ordered,
+  scenario-by-scenario implementation plan — CODE-BLIND, grounded in the
+  slice's design decisions, the platform's `SYSTEM_TAXONOMY.md`, and
+  `kite-design-system-standards`. One slice at a time. Orders the slice's
+  scenarios for maximum reuse, plans each, and emits one consolidated set
+  of slice-level research questions. Auto-spawns kite-plan-conformance-review
+  to check the plan against the design and fix what it can. Step 4 of the
+  Kite pipeline (after solution-design, before research). Triggers on "plan
+  this slice", "create the implementation plan for slice N", "turn this
+  system design into a plan", or "order the scenarios for this slice" —
+  even when the word "plan" is never said. Not for product behavior
+  (slice-blueprint), the system design itself
+  (kite-system-design-blueprint-slices), or reading the codebase
+  (kite-research). Scope: appsmith-v2 / Kite.
 ---
 
 # Kite Planner (with taxonomy)
