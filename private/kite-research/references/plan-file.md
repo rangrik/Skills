@@ -1,67 +1,56 @@
 # Plan file
 
-The plan file is a single Markdown document. It doubles as the pipeline's
-**state machine**: because every scenario carries a status, any phase can be
-interrupted and resumed by reading the file.
+The plan file is a single Markdown document, **one per slice**, written next to
+the slice as `slice-N-<short>-plan.md` by `kite-planner-with-taxonomy`. It
+doubles as the pipeline's **state machine**: the slice carries a status, every
+scenario carries a status.
 
-### Template
+Research questions live at the **slice level** (one consolidated list), not per
+scenario. Research **findings** are not stored here — they live in the
+feature-wide `codebase-research.md` (see `references/codebase-research.md`); the
+plan's `Research findings` line is a pointer to this slice's section there.
+
+### Template (the parts research reads / touches)
 
 ```
-# Implementation Plan: <feature name>
+# Implementation Plan — <feature name> · Slice N: <slice title>
 
-## Feature
-- Blueprint: <path>
-- System design: <path>
+## Slice
+- Behavior slice: <path to slice-N-<short>.md>
+- System design: <path to slice-N-<short>-system-design.md>
+- Builds on: <earlier slices this one assumes, or "—">
 - Summary: <one paragraph>
 
 ## Scenario order & status
-| # | ID | Title              | Status     |
-|---|----|--------------------|------------|
-| 1 | S1 | <title>            | committed  |
-| 2 | S2 | <title>            | researched |
+| # | ID | Title | Type | Status |
 
 ## Scenario S1 — <title>
-- Order: 1
-- Type: happy_path | edge_case | corner_case
-- Status: planned | researched | blocked | in_progress | committed
-- Design references: <relevant decisions / sections of the system design doc>
-
+- Order / Type / Status / Design references
 ### Gherkin
-Given <...>
-When <...>
-Then <...>
-
-### Code-blind plan            (written by kite-planner)
-- Preconditions: <what must be true before this scenario can be built>
-- Required capabilities: <concrete things the scenario needs to exist>
-- Postconditions: <what is true once it is built>
-- Risks / assumptions: <...>
-
-### Research questions         (written by kite-planner)
-- RQ1: <specific, answerable question for kite-research>
-- RQ2: <...>
-
-### Research findings          (written by kite-research)
-- RQ1 → EXISTS: <name> at <file:line> — <how to reuse>
-- RQ2 → MISSING: ADD at <location> — <what to add>
-- Reuse constraints: <caveats on anything marked EXISTS>
-- BLOCKING: <only present if research invalidates the plan>
-
+### Code-blind plan            (written by kite-planner-with-taxonomy)
 ### Implementation record      (written by kite-implementation)
-- Changed files: <...>
-- Tests added: <...>
-- Architecture check (kite-design-system-standards): pass | <issues found and fixed>
-- Scenario check verdict: pass
-- Commit: <hash / message>
+
+## Slice research questions      (written by kite-planner-with-taxonomy)
+| #   | Question (EXISTS / MISSING + location) | Why | Capability if MISSING | Blocks | Source |
+| RQ1 | ...                                    | ... | ...                   | S1, S4 | §10 Q1 |
+
+## Research findings             (written by kite-research)
+→ See codebase-research.md › "Slice N — research iteration".
+- Status set to `researched`, or `blocked` (with the BLOCKING reason) if research
+  contradicts the slice's plan/design.
+
+## Conformance & coverage review (written by kite-plan-conformance-review)
 ```
 
 ### Ownership and status flow
 
-- **kite-planner** writes the Feature block, the order/status table, Gherkin,
-  Code-blind plan, and Research questions → status `planned`.
-- **kite-research** writes Research findings → status `researched`, or `blocked`
-  if it finds a BLOCKING issue.
-- **kite-implementation** writes the Implementation record → status
-  `in_progress`, then `committed`.
+- **kite-planner-with-taxonomy** writes the Slice block, the order/status table,
+  each scenario's Code-blind plan, and the slice-level Research questions →
+  status `planned`.
+- **kite-research** answers the slice's research questions into
+  `codebase-research.md`, points the plan's Research findings line there, and sets
+  the slice status to `researched`, or `blocked` if it finds a BLOCKING issue.
+- **kite-implementation** writes each scenario's Implementation record → scenario
+  status `in_progress`, then `committed`.
 - **kite-feature-review** only reads the plan file; its output is the separate
   review report document.
