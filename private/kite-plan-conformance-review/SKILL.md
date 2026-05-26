@@ -90,12 +90,21 @@ Walk both lenses. For each item, decide: **pass**, **auto-fixable**, or
   scenario is full-stack end-to-end.
 - **Faithful to the design.** The plan respects the design's decisions, accepted
   compromises, constraints, and quality expectations — it does not quietly
-  re-architect. A required capability that contradicts a Decision is a defect.
+  re-architect. A required capability or a prescribed hand-off that contradicts a
+  Decision is a defect.
 - **Plan completeness per scenario.** Each scenario has Design references,
-  Preconditions, Required capabilities, Postconditions, and Risks / assumptions;
-  required capabilities are concrete-but-abstract (no file/symbol names).
+  Preconditions, Required capabilities, a Subsystem collaboration block,
+  Postconditions, and Risks / assumptions. Required capabilities are
+  concrete-but-abstract (no file/symbol names). The Subsystem collaboration is an
+  ordered hand-off in `SYSTEM_TAXONOMY.md` names, names the roles that apply (who
+  receives / owns the decision / writes / handles the failure branch — every
+  deviation scenario names a failure-branch owner), is marked prescriptive-to-be-
+  verified, and names no files or symbols.
 - **Answerable research questions.** Each slice research question is specific and
-  EXISTS/MISSING-answerable, and notes the scenarios it blocks.
+  EXISTS/MISSING-answerable, and notes the scenarios it blocks. Every gap in a
+  scenario's collaboration — an unverified collaborator, an unproven hand-off
+  seam, an unowned failure branch — is covered by a question (or by a
+  carried-forward §-Open-Question).
 - **Vocabulary.** Subsystems/concepts are named in `SYSTEM_TAXONOMY.md` terms,
   not invented synonyms; principle citations (`[P#]`) are plausible.
 

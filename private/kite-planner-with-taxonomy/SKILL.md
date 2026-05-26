@@ -71,15 +71,21 @@ next one — don't start it.
    one assumes (reference them; don't replan them). **If an addendum contradicts
    the original tables, the addendum wins** — plan to the corrected facts.
 4. **`SYSTEM_TAXONOMY.md`** (the `system-taxonomy` skill's output, at the repo
-   root). Use its canonical names for subsystems and concepts so the plan speaks
-   the team's language — "the **Snapshot** store", "the **domains** subsystem" —
-   not invented names. If absent, name things plainly and don't block on it.
+   root). This is the **source of names for every Subsystem collaboration** (see
+   below): its canonical subsystem and concept names are how the plan speaks the
+   team's language — "the **Snapshot** store", "the **domains** subsystem" —
+   instead of inventing synonyms. It needs to be good enough to name every
+   collaborator a scenario relies on; when it isn't, **Step 3's "When the taxonomy
+   can't name a collaborator"** tells you how to enrich it rather than invent a
+   name. If it is absent entirely, name things plainly and don't block on it.
 5. **`kite-design-system-standards`** (Mode A — guidance lookup). The platform's
-   engineering principles and Component Map. Use it to keep each scenario's plan
-   conformant and to cite the governing principle when a required capability or
-   ordering choice rests on one. You don't need to understand the skill's
-   internals — consult it the way its own instructions describe, pull only the
-   principles your scenario touches, and cite them by number (e.g. `[P15]`).
+   engineering principles and Component Map. Use it to keep each scenario's
+   collaboration conformant: its **Component Map and layering principles decide
+   which subsystem may own each role** in the hand-off — routes don't write to the
+   DB, a service does `[P1]` — and you cite the governing principle when a role
+   assignment or ordering choice rests on one. You don't need to understand the
+   skill's internals — consult it the way its own instructions describe, pull only
+   the principles your scenario touches, and cite them by number (e.g. `[P15]`).
 
 Treat the design spec and the behavior slice as fixed. If they genuinely
 contradict each other or leave a gap an implementer couldn't close, say so
@@ -144,7 +150,12 @@ taxonomy, and standards, write:
   domain"). Describe the capability in taxonomy vocabulary; **do not assert
   whether it already exists** and do not name a file or symbol. Where a
   capability is shaped by a principle, cite it (`[P18]` for the migration
-  convention, `[P1]` for layering).
+  convention, `[P1]` for layering). This is the scenario's **parts list** — what
+  must be true — not yet how the parts are wired.
+- **Subsystem collaboration (how to achieve it)** — the new heart of the plan,
+  described in full below. The capabilities say *what* must exist; this says
+  *who does what, in what order* — the ordered hand-off between named subsystems
+  that actually delivers the behavior. Write it for every scenario.
 - **Postconditions** — what is true once the scenario is implemented.
 - **Risks / assumptions** — anything uncertain, and which design-spec decisions,
   accepted compromises, or quality expectations apply.
@@ -155,6 +166,77 @@ existing auth middleware" or a path. Preserve the design's named decisions,
 constraints, accepted compromises, and quality expectations; if you find
 yourself wanting a different architecture because it feels convenient, that's a
 finding to flag, not a change to make.
+
+### The Subsystem collaboration — how the scenario gets achieved
+
+A list of required capabilities is a parts list: it tells the implementer what
+must exist, but not how the pieces fit. The question the next stages actually
+need answered is **how would this be implemented** — and the honest, code-blind
+way to answer it is to name the **subsystems** that collaborate and the **order**
+in which they hand off to each other. So each scenario also carries a
+**Subsystem collaboration**: an ordered hand-off, written entirely in
+`SYSTEM_TAXONOMY.md` names, that makes four roles explicit —
+
+- **who receives** — the entry point that takes the request or the incoming data;
+- **who owns the decision** — the subsystem that makes the scenario's key branch
+  or choice (resolve which domain, accept or reject, success vs. failure);
+- **who writes** — the subsystem that persists or produces the result;
+- **who handles the failure branch** — for every deviation / edge / corner
+  scenario, the subsystem that owns the error path (a happy-path scenario may
+  legitimately have none yet — say so).
+
+Read it as a choreography: subsystem A receives, passes to B, B decides, C
+writes, D catches the failure. Order it the way the data actually moves — the
+design spec's data-flow narrative is your guide — and let the **standards'
+Component Map and layering principles decide which subsystem may own each role**
+(routes don't write to the DB, a Service does `[P1]`), citing the principle that
+places it. Where the hand-off reuses a path an earlier scenario laid down, say so
+("reuses S1's DataForSEO-adapter → Snapshot-store seam") — that is the same reuse
+relationship your ordering claimed in Step 2, now made concrete.
+
+Because you are **code-blind**, you cannot know these subsystems exist or own
+these responsibilities today — you are *prescribing* the collaboration from the
+taxonomy, the design, and the standards, not reporting it from the code. So mark
+the whole block **prescriptive — to be verified by research**. That label is not
+a hedge; it is the hinge of Step 4: every place the prescribed hand-off might not
+hold becomes a research question.
+
+The distinction to hold onto: the **taxonomy gives you the cast and their general
+roles** (the noun — "the Snapshot store persists snapshots"); you **prescribe the
+specific choreography** for this scenario (the verb — "persists one row per fetch,
+keyed by normalized domain, all-or-nothing"); and whether that specific
+choreography holds in the code is **research's** job, never yours and never the
+taxonomy's.
+
+### When the taxonomy can't name a collaborator
+
+The collaboration only works if you can put a real, shared name on each role.
+When you can't — the taxonomy has no term for the subsystem that would own a
+hand-off — resolve it cheapest-first, and never by reading code yourself:
+
+1. **Check the standards' Component Map first.** `kite-design-system-standards`
+   names the platform's components; the owner you're missing is often already
+   there. Use that name and cite the principle that places it. This needs no code
+   and no subagent.
+2. **If it's still unnamed, enrich the taxonomy — via a subagent, not yourself.**
+   Spawn a small subagent that runs the `system-taxonomy` skill, scoped to *just*
+   the missing subsystem(s): "discover and add the subsystem that owns
+   <responsibility> — its canonical name, its responsibility, and its
+   relationships to <neighbors> — and write it into `SYSTEM_TAXONOMY.md`." The
+   subagent may read source code, because that is the taxonomy skill's job; it
+   works for the **taxonomy document**, not for you.
+
+   Two boundaries keep you code-blind, and they are not optional:
+   - The subagent returns **only** the taxonomy names it added (and that it
+     updated the doc). It must **not** report files, symbols, paths, line
+     numbers, or "this already exists at…" — nothing about the code. If it tries
+     to hand you code facts, ignore them.
+   - You then **re-read `SYSTEM_TAXONOMY.md`** and take the new names from there.
+     You learn *vocabulary*, never *implementation*.
+
+   Enriching the taxonomy gives you a name to write the hand-off with; it never
+   lets you assert the hand-off is real. The block stays prescriptive-to-be-
+   verified, and its gaps still become Step 4 research questions.
 
 ## Step 4 — Consolidate the slice-level research questions
 
@@ -168,9 +250,24 @@ Build the list in two moves:
 1. **Carry forward** every question from the design spec's **§ Open Questions for
    the Codebase**. Those were authored at design altitude and are still owed;
    bring them in verbatim, preserving their original IDs as the source.
-2. **Augment** with any _new_ question the act of planning the scenarios
-   surfaced — a capability you described in Step 3 whose existence/shape is
-   unknown and isn't already covered by a carried-forward question.
+2. **Augment** with the _new_ questions that planning the scenarios surfaced. The
+   richest source is now the **gaps in each scenario's Subsystem collaboration** —
+   because that block is prescriptive-to-be-verified, every place the prescribed
+   hand-off might not hold is a question:
+   - **Existence of a named collaborator** — you named a subsystem from the
+     taxonomy, but code-blind you can't know it exists or owns that role: "Does
+     <subsystem> exist and own <responsibility> as prescribed? (Blocks S#.)"
+   - **A hand-off seam** — does a path already connect two subsystems, or must one
+     be created: "Is there an existing path from <A> to <B>, or must a seam be
+     added? (Blocks S#.)"
+   - **The failure-branch owner** — who handles <deviation> today, if anyone:
+     "Does any subsystem already own <failure>, or is it unhandled? (Blocks S#.)"
+   - **A still-unnamed role** — if even after the Component Map and a taxonomy
+     enrichment a role has no clear owner: "What subsystem, if any, owns
+     <responsibility> today? (Blocks S#.)"
+
+   Also add any required capability whose existence/shape is unknown and isn't
+   already covered by a collaboration-gap or a carried-forward question.
 
 Then **dedupe and consolidate** into one ordered list. Each question must be
 specific and answerable EXISTS / MISSING:
@@ -195,13 +292,17 @@ Before finishing, audit the plan:
   order/status table.
 - The order is justified by reuse or dependency, not by backend/frontend/database
   layers.
-- Every scenario has Design references, Preconditions, Required capabilities,
-  Postconditions, and Risks / assumptions.
+- Every scenario has Design references, Preconditions, Required capabilities, a
+  **Subsystem collaboration** block, Postconditions, and Risks / assumptions.
+- Each Subsystem collaboration is an ordered hand-off in `SYSTEM_TAXONOMY.md`
+  names, makes the roles that apply explicit (who receives / owns the decision /
+  writes / handles the failure branch — every deviation scenario names a
+  failure-branch owner), and is marked **prescriptive — to be verified**.
 - The slice-level research questions carry forward every §-Open-Question and add
-  the ones planning surfaced — deduped, each EXISTS/MISSING-answerable, each
-  noting the scenarios it blocks.
+  one for each collaboration gap (plus any unknown capability) — deduped, each
+  EXISTS/MISSING-answerable, each noting the scenarios it blocks.
 - The plan contains no source-code paths, grep/search results, or claims that a
-  capability already exists.
+  capability or collaborator already exists.
 
 ## Step 6 — Auto-review, then hand off
 
@@ -233,10 +334,18 @@ You remain the orchestrator: do Steps 1–2 and Step 4 yourself (ordering and th
 consolidated research questions are slice-wide, not per scenario), then merge the
 per-scenario plans into the one ordered plan file before the Step 6 review.
 
+Resolve any **taxonomy gaps before you fan out** — run the "When the taxonomy
+can't name a collaborator" enrichment first, so every parallel scenario-planner
+reads one complete `SYSTEM_TAXONOMY.md` and names collaborators consistently.
+Two subagents enriching the taxonomy at once would race on the same file.
+
 ## Staying in your lane
 
-Do not write code. Do not read code. Do not skip the ordering step. Do not plan
-a scenario as horizontal layers. Do not re-decide the design — if a decision
-looks wrong, flag it, don't fork it. Do not declare what already exists — if you
-catch yourself writing "this already exists in…", stop: that is a research
+Do not write code. Do not read code — not even through the taxonomy-enrichment
+subagent: it works for the taxonomy doc and returns only names, never files or
+symbols, and you take new names by re-reading `SYSTEM_TAXONOMY.md`. Do not skip
+the ordering step. Do not plan a scenario as horizontal layers. Do not re-decide
+the design — if a decision looks wrong, flag it, don't fork it. Do not declare
+what already exists, and do not assert a prescribed collaboration is real — if
+you catch yourself writing "this already exists in…", stop: that is a research
 finding, not a plan. Do not roll on to the next slice.

@@ -44,6 +44,16 @@ Then <...>
 - Preconditions: <what must be true before this scenario can be built>
 - Required capabilities: <concrete-but-abstract things the scenario needs to
   exist, in SYSTEM_TAXONOMY vocabulary; cite [P#] where a principle shapes it>
+- Subsystem collaboration (how to achieve it; prescriptive — to be verified):
+  an ordered hand-off in SYSTEM_TAXONOMY names; name the roles that apply and
+  cite [P#] where a standard places an owner.
+  1. Receives: <Subsystem> — <what it takes in / entry point>
+  2. <Subsystem> — <what it does, what it passes on>
+  3. Owns the decision: <Subsystem> — <the branch/choice it owns> [P#]
+  4. Writes: <Subsystem> — <what it persists or produces> [P#]
+  5. Failure branch: <Subsystem> — <which deviation it owns and how>
+     (a pure happy-path scenario may have none yet — say so)
+  (Reuses: <earlier scenario's hand-off this builds on, if any>)
 - Postconditions: <what is true once it is built>
 - Risks / assumptions: <uncertainties; which design decisions/compromises apply>
 
@@ -56,8 +66,10 @@ Then <...>
 
 ## Slice research questions      (written by kite-planner-with-taxonomy)
 One consolidated list for the whole slice. Carries forward every question from
-the system-design spec's "Open Questions for the Codebase", plus any the planning
-surfaced. Each is answerable EXISTS / MISSING and names the scenarios it blocks.
+the system-design spec's "Open Questions for the Codebase", plus one for each gap
+in the scenarios' Subsystem collaborations (an unverified collaborator, an
+unproven hand-off seam, an unowned failure branch) and any still-unknown
+capability. Each is answerable EXISTS / MISSING and names the scenarios it blocks.
 
 | #   | Question (answerable EXISTS / MISSING + location)        | Why the slice needs it | Capability if MISSING | Blocks    | Source       |
 |-----|----------------------------------------------------------|------------------------|-----------------------|-----------|--------------|
