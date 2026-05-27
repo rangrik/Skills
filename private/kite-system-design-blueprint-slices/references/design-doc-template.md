@@ -142,11 +142,11 @@ Replace every `<…>` placeholder. Delete this instruction block from the final 
 | B8 Error handling | … | … |
 
 ## 12. Slice Coverage Checklist
-<Every scenario, edge case, and deviation in *this slice*, mapped to where this design handles it. §11 proves the architectural dimensions were considered; this proves the slice's behavior was. If an item needs no system-design treatment, mark N/A with a reason.>
+<Every scenario, edge case, and deviation in *this slice*, mapped to where this design handles it. §11 proves the architectural dimensions were considered; this proves the slice's behavior was. Identify each scenario by its **stable ID** (`HP-1`, `DEV-7.3a`) — do not re-quote or paraphrase the Gherkin; the slice file is its authoritative home. If an item needs no system-design treatment, mark N/A with a reason.>
 
-| Slice item | Type | Handled in | Note |
+| Scenario (ID) | Type | Handled in | Note |
 |---|---|---|---|
-| <scenario — quoted or paraphrased> | Happy-path / Edge case / Deviation / Adversarial | §<n> / D<n> / Q<n> | <how it's handled, or N/A + why> |
+| <HP-1 / DEV-7.3a> | Happy-path / Edge case / Deviation / Adversarial | §<n> / D<n> / Q<n> | <how it's handled, or N/A + why> |
 
 ---
 

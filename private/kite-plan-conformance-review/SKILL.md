@@ -62,9 +62,11 @@ Walk both lenses. For each item, decide: **pass**, **auto-fixable**, or
 ### Coverage — did the plan capture everything the slice owns?
 
 - **Scenario completeness.** Every scenario the behavior slice owns (and every
-  item in the design spec's Slice Coverage Checklist) appears in the plan as a
-  scenario with Gherkin and a type tag, and is in the order/status table. A
-  dropped deviation or boundary case is the most common and most dangerous gap.
+  item in the design spec's Slice Coverage Checklist) appears in the plan,
+  referenced by its stable ID (a `→ slice-N-<short>.md › <ID>` pointer, **not**
+  re-copied Gherkin) with a type tag, and is in the order/status table. A dropped deviation
+  or boundary case is the most common and most dangerous gap. (The Gherkin itself
+  lives only in the slice file; the plan pointing at it by ID is correct, not a gap.)
 - **No invention, no scope creep.** No scenario in the plan that the slice
   doesn't own; nothing the design marked out-of-scope has been planned in.
 - **Decision coverage.** Every Decision (D#) in the design spec is reflected by

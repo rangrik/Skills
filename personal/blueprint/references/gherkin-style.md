@@ -114,6 +114,33 @@ Scenario: Submitting input containing a script payload
   ...
 ```
 
+## Stable scenario IDs
+
+Every scenario also carries a **stable ID tag** — `@HP-1`, `@HP-2`, … for happy paths;
+`@DEV-<category>.<n>` for deviations, where `<category>` is the scenario's
+deviation-taxonomy category number (the same numbering as the Coverage Checklist) and
+`<n>` distinguishes deviations within that category — so `@DEV-3.1` is the first deviation
+in category 3 (rate limits). This ID is the scenario's permanent name for the rest of the
+pipeline. Downstream artifacts — slice files,
+implementation plans, the per-scenario briefs — **reference a scenario by its ID rather
+than re-copying its `Given / When / Then`**, so the Gherkin is authored once, here, and
+never duplicated. That is what keeps a scenario's behavior in exactly one place: change
+the Gherkin and every reference still points at the right thing, with nothing stale to
+chase down.
+
+Assign IDs in document order, and never renumber an existing one — a stable ID is only
+worth anything if it keeps pointing at the same behavior across every later stage.
+
+```gherkin
+@happy-path @HP-1
+Scenario: <primary success path>
+  ...
+
+@deviation @rate-limit @DEV-3.1
+Scenario: Exceeding the hourly send limit
+  ...
+```
+
 ## Comments
 
 A line starting with `#` is a comment. Use it sparingly: for the mandatory

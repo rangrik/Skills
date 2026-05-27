@@ -67,10 +67,15 @@ Five phases. Do them in order. Phases 1–2 involve the user; Phases 3–5 do no
 
 ### Phase 1 — Intake the problem
 
-Get the problem statement. It may already be in the conversation, in an uploaded PRD or
-doc (read it fully), or you may need to ask for it. Extract: the problem being solved
-(the *why*), the feature concept (the *what*), the actors involved, and any constraints
-already stated.
+Your primary intake is **`kite-conductor/<project-title>/main.md`** — the seed the
+`grill-me` skill writes at the start of the pipeline, capturing the user's problem and the
+decisions already resolved. If it exists, read it fully and treat it as the problem
+statement; you are building the blueprint *into the same project directory* alongside it.
+If there is no `main.md` (the user came straight here), fall back to the problem statement
+in the conversation or an uploaded PRD/doc — read it fully — or ask for it.
+
+Extract: the problem being solved (the *why*), the feature concept (the *what*), the
+actors involved, and any constraints already stated.
 
 Do not over-interrogate here. The *why* is usually fine as prose, and the PRD-style
 framing is rarely the weak point. Save your interview energy for the happy path. If there
@@ -179,10 +184,15 @@ Derive a short kebab-case feature name for the filename. Produce one deliverable
 
 The happy-path and deviation scenarios are written as Gherkin inside the blueprint
 (sections 6 and 7), in fenced `gherkin` code blocks, tagged (`@happy-path`, `@deviation`,
-`@assumption`, plus a category tag such as `@rate-limit`). The skill does not emit a
+`@assumption`, plus a category tag such as `@rate-limit`). Each scenario also gets a
+**stable ID tag** — `@HP-1`, `@HP-2`, … for happy paths and `@DEV-<category>.<n>` for
+deviations (see `references/gherkin-style.md` › "Stable scenario IDs"). This ID is the
+scenario's permanent name: every later stage references scenarios by it instead of
+re-copying the Gherkin, so the behavior is authored once, here. The skill does not emit a
 separate `.feature` file; the Gherkin lives only in the blueprint, where it can be
-extracted into one later if test automation is wanted. Save the blueprint to the folder
-the user is working in.
+extracted into one later if test automation is wanted. Save the blueprint as
+`<feature-name>-blueprint.md` inside **`kite-conductor/<project-title>/`** (next to the
+`main.md` it was built from), so the whole pipeline's docs stay in one place.
 
 ### Phase 5 — Deliver and summarize
 

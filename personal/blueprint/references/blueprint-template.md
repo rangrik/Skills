@@ -61,12 +61,16 @@ Feature: <Feature Name>
   Background:
     Given <a precondition shared by every scenario>
 
-  @happy-path
+  @happy-path @HP-1
   Scenario: <primary success path>
     Given <context>
     When <the action>
     Then <the observable outcome>
 ```
+
+_Each scenario carries a **stable ID tag** (`@HP-1`, `@HP-2`, …) — see `gherkin-style.md`
+› "Stable scenario IDs." Every later stage references scenarios by this ID instead of
+re-copying the Gherkin, so author it carefully and never renumber._
 
 ### 7. Deviation Scenarios
 
@@ -79,7 +83,7 @@ graceful behavior was a choice rather than a given._
 Example shape:
 
 ```gherkin
-@deviation @invalid-input
+@deviation @invalid-input @DEV-1.1
 Scenario: <specific deviation>
   Given <context>
   When <the action>

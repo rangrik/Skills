@@ -27,9 +27,7 @@ interrupted and resumed by reading the file.
 - Design references: <relevant decisions / sections of the system design doc>
 
 ### Gherkin
-Given <...>
-When <...>
-Then <...>
+→ slice-N-<short>.md › <stable ID, e.g. HP-1>   (authoritative Gherkin; not re-copied here)
 
 ### Code-blind plan            (written by kite-planner)
 - Preconditions: <what must be true before this scenario can be built>
@@ -57,8 +55,9 @@ Then <...>
 
 ### Ownership and status flow
 
-- **kite-planner** writes the Feature block, the order/status table, Gherkin,
-  Code-blind plan, and Research questions → status `planned`.
+- **kite-planner** writes the Feature block, the order/status table, scenario
+  references (Gherkin by stable ID), Code-blind plan, and Research questions →
+  status `planned`.
 - **kite-research** writes Research findings → status `researched`, or `blocked`
   if it finds a BLOCKING issue.
 - **kite-implementation** writes the Implementation record → status

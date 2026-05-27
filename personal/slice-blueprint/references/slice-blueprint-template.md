@@ -66,15 +66,17 @@ only as far as the narrower scope requires — e.g. a `Background` precondition 
 capability an earlier slice built. Apply the realizability check: a step that references a
 control or state this slice does not build yet (a "refresh" action, a "previous snapshot")
 must be rewritten to this slice's reality or the scenario moved to the slice that builds it —
-never pasted through unchanged. Keep the `@happy-path` tags. Use the same fenced `gherkin`
-block format as the source._
+never pasted through unchanged. Keep the `@happy-path` tag **and the scenario's stable ID
+tag** (`@HP-1`) — this file is the authoritative home of the scenario, referenced downstream
+by that ID. Use the same fenced `gherkin` block format as the source._
 
 ### 7. Deviation Scenarios
 
 _The deviation Gherkin assigned to this slice, grouped by category with the category headings
 (7.1, 7.2, …). Include only the categories that produced scenarios **for this slice**;
 categories with no scenarios in this slice are recorded in section 9, not here. Keep the
-`@deviation`, category, and `@assumption` tags exactly as in the source._
+`@deviation`, category, `@assumption`, **and stable ID** (`@DEV-7.3a`) tags exactly as in the
+source — the ID is how the plan and briefs reference this scenario without re-copying it._
 
 ### 8. Flagged Assumptions
 

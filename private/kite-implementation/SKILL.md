@@ -143,29 +143,38 @@ the work. In brief, the loop and its branches are:
 
 The stages below expand each step and explain why it exists.
 
-### 1. Collate → unified scenario brief
+### 1. Collate → unified scenario brief (a pointer list, not a transcript)
 
-Spawn a subagent whose only job is to **collate everything about the next
-scenario into one unified brief** and write it to disk as a sibling of the slice
-docs: `slice-N-<short>-S<ID>-unified.md`. Persisting it as a file matters — every
-later subagent (implement, review, qualify) re-reads the *exact* same brief
-instead of a paraphrase, the loop survives an interruption, and you keep an audit
-trail of what each scenario was actually built against.
+Spawn a subagent whose only job is to **work out everything that bears on the next
+scenario and record it as a brief of references**, written to disk as a sibling of the
+slice docs: `slice-N-<short>-S<ID>-unified.md`. Persisting it as a file still matters: it
+freezes *which* decisions, findings, and behavior this scenario depends on — the
+collator's judgment, made once — so the loop survives an interruption and you keep an
+audit trail of what each scenario was built against.
 
-Give the collator the four input docs and tell it to produce a brief containing:
+The brief **points at the source docs; it does not re-copy them.** This is deliberate.
+The scenario's Gherkin, the design decisions, and the research findings each already live
+in exactly one authoritative place; re-transcribing them into a brief per scenario is the
+duplicated writing this pipeline exists to avoid, and a copy goes stale the moment its
+source changes. A later subagent follows a pointer and reads the few lines it needs from
+the source — it is reading those docs anyway.
 
-- The scenario's **Gherkin** (every given/when/then) verbatim.
-- The **design decisions and constraints** from the system-design spec that bear
-  on this scenario — and only this scenario.
-- The **plan steps** for this scenario from the plan file.
-- The relevant **research findings** from `codebase-research.md`: which EXISTS
-  capabilities to reuse and at what file:symbol, and which MISSING extension
-  points to add code at. Pull only what this scenario touches.
-- **Risks, assumptions, and reuse constraints** that apply.
-- A crisp statement of **what "done" looks like** for this scenario.
+Give the collator the four input docs and tell it to produce a brief of references:
 
-The collator does not write code and does not re-research the codebase — it
-reconciles what the docs already say into a single actionable brief.
+- **Scenario:** the stable ID and a pointer to its Gherkin —
+  `→ slice-N-<short>.md › <ID>` (the authoritative Given/When/Then; do not paste it in).
+- **Design decisions & constraints** that bear on this scenario, and only this scenario:
+  cite them by ID — `D2, D5, §2.2, C1` — into the system-design spec.
+- **Plan steps:** a pointer to this scenario's block in the plan file.
+- **Research findings** this scenario touches: cite them by ID — `F4 (EXISTS), F7
+  (MISSING)` — into `codebase-research.md`, where the file:symbol locations live. Pull
+  only the IDs this scenario touches, not the findings text.
+- **Risks, assumptions, and reuse constraints** that apply (by reference where they have one).
+- A crisp statement of **what "done" looks like** for this scenario — write this one out,
+  since it is the collator's own synthesis and exists nowhere else.
+
+The collator does not write code, does not re-research the codebase, and does not
+re-transcribe the docs — it decides what this scenario depends on and records the pointers.
 
 ### 2. Implement the scenario
 

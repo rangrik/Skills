@@ -12,6 +12,12 @@ whole slice, because the codebase truths an implementer needs are shared across
 the slice's scenarios. Implementation, by contrast, is recorded **per scenario**,
 because each scenario is a vertical slice that is built and committed on its own.
 
+The plan **references each scenario's Gherkin by its stable ID** (`HP-1`, `DEV-7.3a`)
+into the slice file — it never re-copies the `Given / When / Then`. The slice file is the
+single authoritative home of the scenario's behavior; duplicating it here only creates a
+second copy to keep in sync. An implementer or reviewer resolves the Gherkin from the
+slice by ID when they need it (they are reading the slice anyway).
+
 ### Template
 
 ```
@@ -33,12 +39,8 @@ because each scenario is a vertical slice that is built and committed on its own
 - Order: 1  — <one-line reuse/dependency reason for this position>
 - Type: happy_path | edge_case | corner_case
 - Status: planned | in_progress | committed
+- Gherkin: → slice-N-<short>.md › <stable ID, e.g. HP-1>
 - Design references: <D#, §-refs, Risk/Constraint from the system-design spec>
-
-### Gherkin
-Given <...>
-When <...>
-Then <...>
 
 ### Code-blind plan            (written by kite-planner-with-taxonomy)
 - Preconditions: <what must be true before this scenario can be built>

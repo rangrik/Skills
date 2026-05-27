@@ -104,7 +104,11 @@ Read the source blueprint end to end. Then build two inventories.
 
 **The scenario inventory** — a numbered list of every scenario in the blueprint:
 every `@happy-path`, every `@deviation`, every row of every `Scenario Outline`.
-Give each a stable ID (e.g. `HP-1`, `DEV-7.3a`).
+Use the **stable ID tag each scenario already carries** from the blueprint (`@HP-1`,
+`@DEV-7.3a` — see `gherkin-style.md`); that ID is the join key every later stage uses to
+reference the scenario instead of re-copying its Gherkin, so carry it through unchanged.
+(If you are slicing an older blueprint whose scenarios have no ID tags, mint them now in
+document order — `HP-1`, `DEV-7.3a` — and they become the canonical IDs.)
 
 This inventory is your coverage ledger. The cardinal sin of slicing is losing a
 scenario — an edge case that quietly falls between two slices becomes the
@@ -299,7 +303,10 @@ identical format, with every section scoped to the slice:
   more (or less) than the slice gives.
 - **Happy-path & deviation scenarios** — the Gherkin assigned to this slice,
   lifted from the source blueprint and adapted only as far as the narrower scope
-  requires. Keep the tags. When you lift a scenario, apply the realizability
+  requires. Keep the tags, **including each scenario's stable ID tag** (`@HP-1`,
+  `@DEV-7.3a`): the slice file is now the authoritative home of that scenario's
+  Gherkin, and the plan and implementation briefs reference it by ID rather than
+  re-copying it. When you lift a scenario, apply the realizability
   check from Phase 4: if a step names a control or state this slice does not
   build (the source said "offers a way to refresh" but manual refresh is a later
   slice), either move the scenario or rewrite that step to what this slice

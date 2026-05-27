@@ -25,8 +25,7 @@ plan's `Research findings` line is a pointer to this slice's section there.
 | # | ID | Title | Type | Status |
 
 ## Scenario S1 — <title>
-- Order / Type / Status / Design references
-### Gherkin
+- Order / Type / Status / Gherkin (→ slice-N-<short>.md › <ID>) / Design references
 ### Code-blind plan            (written by kite-planner-with-taxonomy)
 ### Implementation record      (written by kite-implementation)
 

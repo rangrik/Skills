@@ -99,8 +99,10 @@ the output contract shared with `kite-research` and `kite-implementation`.
 Pull every scenario this slice owns from the behavior slice: happy paths,
 deviations, edge and corner cases alike. Cross-check against the design spec's
 **Slice Coverage Checklist** so nothing the design accounted for is dropped.
-Capture each as Gherkin (given / when / then) and tag its type
-(`happy_path | edge_case | corner_case`).
+**Reference each scenario by its stable ID** (`HP-1`, `DEV-7.3a`) into the slice file
+and tag its type (`happy_path | edge_case | corner_case`) — do **not** re-copy the
+`Given / When / Then` into the plan. The slice file is the authoritative Gherkin; the
+plan points at it by ID so the behavior lives in exactly one place.
 
 A corner case dropped here becomes a production incident later, so the inventory
 is your guardrail against accidentally planning only the happy path. If two
@@ -283,8 +285,9 @@ Set the slice and every scenario to status `planned`.
 
 Before finishing, audit the plan:
 
-- Every scenario the slice owns appears as Gherkin with a type tag and is in the
-  order/status table.
+- Every scenario the slice owns is referenced by its stable ID (a
+  `→ slice-N-<short>.md › <ID>` pointer, not re-copied Gherkin), carries a type tag, and
+  is in the order/status table.
 - The order is justified by reuse or dependency, not by backend/frontend/database
   layers.
 - Every scenario has Design references, Preconditions, Required capabilities, a
