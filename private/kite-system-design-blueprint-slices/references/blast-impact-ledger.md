@@ -70,7 +70,7 @@ system-design altitude.
 | **Why out of scope here** | The remedy owner — which feature / later slice / shared subsystem would have to act. |
 | **Recommended action + owner** | What should happen and who owns it; or "monitor only — no action needed." |
 | **Severity / blocking?** | Does a downstream owner need to act, and is it blocking for them (before/after this feature ships)? |
-| **Status** | `open` · `routed to <owner>` · `accepted (no fix)` · `picked up by slice-N` · `resolved by slice-N`. |
+| **Status** | Exactly **one** of `open` · `routed to <owner>` · `accepted (no fix)` · `picked up by slice-N` · `resolved by slice-N` · `withdrawn (superseded — see History)`. Never combine values (write `picked up by slice-2`, not `open (picked up…)`); the prior state belongs in History. |
 | **History** | Append-only log of which slice touched the entry and how (never overwrite — see §4). |
 
 ## 4. The cardinal rule — append-only across slices
@@ -85,11 +85,16 @@ Permitted:
   acting on* — e.g. mark `BI-3` "picked up by slice-2" after the user agreed to
   pull it into slice 2's scope. The original author, effect text, and earlier
   history stay intact; you append, you don't overwrite.
+- **Withdraw** an id you assigned *this slice* but no longer need (it was folded
+  into a decision or proved not real): set `Status: withdrawn` and append a
+  History line with why. Keep the id — never just drop it, because a missing id
+  reads as a bug, not a withdrawal.
 
 Forbidden:
 - Deleting any entry, editing another slice's `Effect`/`Why`/`Recommended` text,
-  renumbering ids, or "cleaning up" entries you didn't author. If you think an
-  entry is wrong, append a `History` line saying so and why — don't erase it.
+  renumbering ids, leaving a gap in the id sequence, or "cleaning up" entries you
+  didn't author. If you think an entry is wrong, append a `History` line saying so
+  and why — don't erase it.
 
 ## 5. Reading the ledger without polluting your context — the steward subagent
 
@@ -99,7 +104,11 @@ whole file, all that unrelated detail would flood its working context and pull
 concerns that aren't in front of it into the design — the pollution we avoid.
 
 So **the design skill does not read or write `BLAST-IMPACT.md` itself.** All
-ledger I/O is delegated to a **ledger-steward subagent**, which has two jobs:
+ledger I/O is delegated to a **ledger-steward subagent**. Under the
+`kite-solution-design` orchestrator (the normal case), the design worker does not
+spawn the steward — it **yields a `LEDGER_OP` packet** (mode `FILTER` or `APPEND`)
+and the orchestrator runs the steward with the prompt below and returns the
+result. The steward's two jobs are the same either way:
 
 - **Filter (read):** given the *current slice* (its behavior, scope, and §3
   subsystem map) and the ledger, return **only the entries related to — or
@@ -145,23 +154,24 @@ migration ids, snippets). Behavior only, in SYSTEM_TAXONOMY terms.
 ## 6. Per-slice lifecycle (what the designer does)
 
 1. **Reconcile on entry (only if the ledger exists).** After absorbing the slice
-   (P1) and before finalizing the design, spawn the steward to **FILTER**. For
-   each related entry it returns, put it to the user with `AskUserQuestion`
-   (recommended option first): *pull this fix into the current slice's scope, or
-   leave it parked in the ledger?* If pulled in, it becomes in-scope design for
-   this slice and the steward marks the entry "picked up by slice-N." If left
-   parked, it stays as-is. (Slice 1 normally has no ledger yet — skip.)
+   (P1) and before finalizing the design, **yield a `LEDGER_OP` (FILTER)**. For
+   each related entry the orchestrator returns, **yield a `FORK`** (recommended
+   option first): *pull this fix into the current slice's scope, or leave it
+   parked in the ledger?* If pulled in, it becomes in-scope design for this slice
+   and the steward marks the entry "picked up by slice-N." If left parked, it
+   stays as-is. (Slice 1 normally has no ledger yet — skip.)
 2. **Append as you design.** Whenever the design surfaces a C5 / out-of-scope
-   effect (typically at the P4a reality check, but anywhere), hand the steward a
-   new entry to **APPEND**. Don't escalate it to the user as a fork — it's a
-   recorded note (that's the whole "record, never grill" disposition).
+   effect (typically at the P4a reality check, but anywhere), **yield a
+   `LEDGER_OP` (APPEND)** with the new entry. Don't escalate it to the user as a
+   fork — it's a recorded note (that's the whole "record, never grill"
+   disposition).
 3. **Closeout every run (§6.1).** When the slice's design is finished, do the
    awareness handoff below — every time, without being asked.
 
 ### 6.1 Closeout — tell the user plainly what is *not* being fixed
 
-After the spec is written, ask the steward for the **open / parked** entries, then
-tell the user, in plain words:
+After the spec is written, yield a `LEDGER_OP` (FILTER) for the **open / parked**
+entries, then tell the user (through the orchestrator), in plain words:
 
 > "Heads up — these items are recorded in `<feature>-slices/BLAST-IMPACT.md` and
 > **this slice is not fixing them**: [BI-id — one-line each]. Please open the
@@ -189,8 +199,10 @@ notes). Schema + rules:
 
 ## 8. Who owns the ledger
 
-The ledger belongs to the **design phase**, and only the design phase. Two skills
-touch it:
+The ledger belongs to the **design phase**, and only the design phase. The
+`kite-solution-design` orchestrator runs the ledger-steward subagent on behalf of
+its workers (which yield `LEDGER_OP` packets rather than spawning the steward
+themselves). Two skills' work touches it:
 
 - **`kite-system-design-blueprint-slices`** (the designer, this skill's owner) —
   reads it via the steward at **P1b** to reconcile (letting the slice that *can*

@@ -1,22 +1,23 @@
 ---
 name: kite-system-design-blueprint-slices
 description: >-
-  Takes one approved behavior slice (`slice-N-*.md` from a
-  `<feature>-slices/` dir) and works out HOW the system should achieve that
-  behavior at high-level system-design altitude (NOT implementation detail).
-  One slice at a time; writes one spec per slice
-  (`slice-N-<short>-system-design.md`). Reasons across data integrity,
-  performance, reliability, security, cost, and rollout via a data-movement
-  lens. CODE-BLIND: never reads source; grills the user to resolve unknowns
-  only the USER can answer and records the rest as research questions.
-  Before each spec finalizes, a firewalled code-aware reality check returns
-  contradictions in subsystem + behavior terms only. Fires on "design the
-  system for this slice", "solution design for slice N", "how should the
-  system achieve this", or "grill me on the design" — even when the user
-  only says "design this slice". Not for
-  product behavior (slice-blueprint), reading the codebase (kite-research),
-  or implementation tasks (kite-planner-with-taxonomy). Scope: appsmith-v2
-  / Kite.
+  The DESIGN WORKER of the kite-solution-design phase: takes one approved
+  behavior slice (`slice-N-*.md` from a `<feature>-slices/` dir) and works out
+  HOW the system should achieve that behavior at high-level system-design
+  altitude (NOT implementation detail), then YIELDS. Designs exactly one slice
+  per run and writes one spec (`slice-N-<short>-system-design.md`). Reasons
+  across data integrity, performance, reliability, security, cost, and rollout
+  via a data-movement lens. CODE-BLIND: never reads source and never spawns
+  sub-agents; it resolves the unknowns only the USER can answer by yielding
+  FORK packets to the orchestrator (which relays them to the user), records the
+  rest as research questions, and yields a reality-check request so the
+  orchestrator can run the firewalled code-aware check that returns
+  contradictions in subsystem + behavior terms only. Invoked BY
+  kite-solution-design, not standalone — it owns the slice loop, the user
+  interaction, and the end-of-feature critic. Also runs in re-entry mode to
+  resolve reality contradictions the conformance review returns. Not for
+  product behavior (slice-blueprint), reading the codebase (kite-research), or
+  implementation (kite-planner-with-taxonomy). Scope: appsmith-v2 / Kite.
 ---
 
 # Kite Slice System Design
@@ -29,14 +30,43 @@ trade-offs, risks, and constraints that shape the build — reasoning like a
 senior architect and grilling the user to resolve every unknown that only they
 can answer.
 
-You work **one slice at a time** and produce a **one-to-one** output: for
-`slice-2-refresh.md` you write `slice-2-refresh-system-design.md` next to it.
-The spec, the slice, and a list of codebase questions are the artifact this step
-hands forward — but not straight to planning. Once **every** slice has a design,
-the full set goes to a fresh-eyes critic, **`kite-system-design-conformance-review`**,
-which audits each design against its slice before the specs proceed to human
-approval and planning (Step 4). See **P6 — Stop and hand off** for exactly when
-and how to make that handoff.
+You work on **exactly one slice per run** and produce a **one-to-one** output:
+for `slice-2-refresh.md` you write `slice-2-refresh-system-design.md` next to it,
+then **yield**. The spec, the slice, and a list of codebase questions are the
+artifact this run hands forward. You do **not** pick the next slice, loop, or run
+the critic — the **`kite-solution-design` orchestrator** owns sequencing across
+slices and, once every slice has a design, routes the whole set to the fresh-eyes
+critic (**`kite-system-design-conformance-review`**). Your job is one slice, well
+designed, then a clean yield. See **P6 — Finish the slice and yield**.
+
+## How this skill runs: you are the design worker for `kite-solution-design`
+
+You are spawned as a **worker** by the `kite-solution-design` orchestrator, which
+is the only agent that talks to the user and the only one that spawns sub-agents.
+That changes three mechanics throughout this skill — the *reasoning* below is
+unchanged, but **how you act on it is always by yielding a packet to the
+orchestrator, never by doing it yourself**:
+
+- **Where a step says to "ask" or "grill" the user** (P1b reconcile, P3 grill,
+  P4a contradiction resolution, P4b last call) → **yield a `FORK` packet**: the
+  question, your recommended option *first*, the governing principle, and any
+  push-back. The orchestrator relays it to the user and resumes you with the
+  answer. You never call `AskUserQuestion` yourself and never invent the answer.
+- **Where a step says to spawn the reality-check sub-agent** (P4a) → **yield a
+  `REALITY_CHECK_REQUEST` packet** (forming decisions + §3 map + `Builds on:`
+  names). The orchestrator owns that code-aware spawn and returns the firewalled
+  findings to you. This is what keeps you code-blind by construction.
+- **Where a step says to read or write the ledger via the steward** (P1b, P4a,
+  P6) → **yield a `LEDGER_OP` packet** (FILTER or APPEND). The orchestrator runs
+  the steward and returns the result.
+
+Packet shapes and the yield/resume mechanism are defined in
+`kite-solution-design/references/orchestration-protocol.md`. When you finish the
+spec, emit `SPEC_WRITTEN` and stop — do not continue to another slice.
+
+(If you are ever invoked directly without an orchestrator, say so and ask the
+user to run `kite-solution-design` instead; this skill is designed to run as its
+worker and assumes packets are relayed for it.)
 
 ## What this skill is really for: resolve the unknowns
 
@@ -222,18 +252,18 @@ your context with concerns that aren't in front of you.
 **Skip this step if no `BLAST-IMPACT.md` exists yet** (you're an early slice and
 nothing has been recorded). Otherwise:
 
-1. **Spawn the ledger-steward subagent in FILTER mode** (prompt in
-   `references/blast-impact-ledger.md` §5). Hand it this slice's scope and forming
-   §3 subsystem map; it returns **only** the entries related to — or potentially
-   fixable within — this slice, each as `{BI-id, why relevant, fixable here?,
-   recommended}`. It silently discards everything unrelated, so your context only
-   ever sees the relevant few.
-2. **For each related entry, put it to the user** with `AskUserQuestion`
-   (recommended option first): *pull this fix into this slice's scope now, or leave
-   it parked in the ledger?* Frame the trade-off — pulling it in conserves a known
-   effect early; leaving it parked keeps the slice thin. **Don't decide silently**
-   and don't pull something in just because it's adjacent; relatedness is the
-   subagent's call to *surface* it, but scope is the user's call.
+1. **Yield a `LEDGER_OP` (FILTER)** with this slice's scope and forming §3
+   subsystem map (the orchestrator runs the steward, prompt in
+   `references/blast-impact-ledger.md` §5). It returns **only** the entries related
+   to — or potentially fixable within — this slice, each as `{BI-id, why relevant,
+   fixable here?, recommended}`; everything unrelated is silently discarded, so
+   your context only ever sees the relevant few.
+2. **For each related entry, yield a `FORK`** (recommended option first): *pull
+   this fix into this slice's scope now, or leave it parked in the ledger?* Frame
+   the trade-off — pulling it in conserves a known effect early; leaving it parked
+   keeps the slice thin. **Don't decide silently** and don't pull something in just
+   because it's adjacent; relatedness is the steward's call to *surface* it, but
+   scope is the user's call (which the orchestrator relays).
 3. **If the user pulls it in,** it becomes in-scope design for this slice (carry it
    through P2–P4 like any other requirement), and the steward marks that entry
    "picked up by slice-N" (status update only — never deleting the original). If
@@ -267,10 +297,11 @@ N/A. This lets them correct a miscategorization while it's cheap.
 
 ### P3 — Grill the user (resolve the user-answerable unknowns)
 
-Drive the queued unknowns (bucket b) to resolution in **dependency order**,
-using `AskUserQuestion` with the **recommended option first**. Resolve linked
-decisions one at a time; group genuinely independent ones to keep the interview
-short.
+Drive the queued unknowns (bucket b) to resolution in **dependency order**, by
+**yielding a `FORK`** per unknown with the **recommended option first** (the
+orchestrator relays it and resumes you with the answer). Resolve linked decisions
+one at a time; you may batch genuinely independent ones into a single yield to keep
+the interview short.
 
 - **Every recommendation cites a principle.** Ground it in the governing Kite
   principle (look up the number in `kite-design-system-standards`); where the
@@ -301,12 +332,13 @@ none is skippable.
 
 This is the gate that stops you from finalizing a slice that decided *against*
 what is already built. You stay code-blind — but before this slice's design
-hardens, you **commission** one reality check: spawn a separate sub-agent that
-**is** allowed to read the codebase, hand it this slice's forming decisions and
+hardens, one reality check must run, and you commission it by **yielding a
+`REALITY_CHECK_REQUEST`**: hand the orchestrator this slice's forming decisions and
 its §3 subsystem map (New / Modified / Reused) plus the **names** of the
-`Builds on:` capabilities it assumes, and have it check that map against what
-actually exists. (You pass names, not ancestor files — you haven't read those,
-and the sub-agent doesn't need them; its job is design-vs-codebase, not
+`Builds on:` capabilities it assumes. The orchestrator spawns the separate
+code-aware sub-agent (the one allowed to read the codebase) and returns its
+firewalled findings to you. (You pass names, not ancestor files — you haven't read
+those, and the sub-agent doesn't need them; its job is design-vs-codebase, not
 design-vs-other-slice.)
 
 Why per-slice, and why here: slices stack. If this slice marks a subsystem "New"
@@ -366,7 +398,7 @@ per-slice fork. The slice's design stays about the slice's own functionality; an
 unrelated feature's reaction to a shared store is recorded in the ledger, not
 adopted as this slice's problem.
 
-Spawn the reality check with a prompt like:
+The orchestrator spawns the reality check (you don't) with a prompt like:
 
 ```
 You are a code-aware reality checker for ONE system-design slice that is still
@@ -415,16 +447,20 @@ only — no preamble, no narration of your investigation, no stray reasoning; if
 have no contradiction for a subsystem, say nothing about its internals.
 ```
 
-**The reality check must run in a sub-agent — there is no inline fallback.** The
-firewall only works if the agent that reads code is *not* you: you cannot unsee
-source you've read, so "do it yourself and then ignore the code" is not a real
-option for a skill whose whole identity is code-blindness. If the harness has no
-sub-agent mechanism, do **not** read code here. Instead, leave the relevant
-"does X already exist / is its shape Y?" items as §10 codebase questions (the
-skill's normal code-blind behavior) and note in the spec that the P4a reality
-check was skipped for lack of a sub-agent — the conformance review's whole-set
-backstop and the research stage then become the catch. Losing the early catch is
-the acceptable cost; letting the designer read code is not.
+**You do not spawn the reality check — you yield a `REALITY_CHECK_REQUEST` and the
+orchestrator runs it.** The firewall only works if the agent that reads code is
+*not* you: you cannot unsee source you've read, so "do it yourself and then ignore
+the code" is not a real option for a skill whose whole identity is code-blindness.
+So hand the orchestrator your forming decisions, your §3 New/Modified/Reused map,
+and the `Builds on:` names; it owns the code-aware spawn (using the prompt above)
+and returns the firewalled contradictions to you to resolve. Because the
+orchestrator guarantees this step, there is no "skipped for lack of a sub-agent"
+fallback to design around — the early catch always runs. (If you were somehow
+invoked with no orchestrator and no way to commission a separate code-aware agent,
+do **not** read code: leave the relevant "does X already exist / is its shape Y?"
+items as §10 codebase questions and note in the spec that P4a was not run, so the
+research stage becomes the catch. Losing the early catch is the acceptable cost;
+letting the designer read code is not.)
 
 #### P4b — Last call
 
@@ -456,17 +492,19 @@ altitude:
 - two coverage checklists (decision-taxonomy dimensions; the slice's scenarios);
 - an appendix faithfully capturing the interview.
 
-### P6 — Continue to the next slice, or hand off
+### P6 — Finish the slice and yield
 
-Deliver a short summary of the slice you just designed. The spec is a deliverable;
-the whole set goes to **human approval** (the pipeline's Step 3 gate), then to
-planning (Step 4) with its codebase questions feeding research (Step 5). Don't
-invoke planning or research here.
+Deliver a short summary of the slice you just designed, then **yield**. You design
+**one slice per run** — you do not pick the next slice, loop, or run the critic.
+The orchestrator owns sequencing across slices and, once every slice has a design,
+routes the whole set to `kite-system-design-conformance-review`. Don't invoke
+planning, research, or the critic here.
 
-**Blast-impact closeout — do this every time, before moving on.** A slice that
-recorded out-of-scope effects must not let them pass silently. Ask the steward
-subagent for the **open / parked** entries, then tell the user plainly, in their
-own words — not buried in the summary:
+**Blast-impact closeout — do this every time, before yielding.** A slice that
+recorded out-of-scope effects must not let them pass silently. Yield a
+`LEDGER_OP` (FILTER) for this slice's **open / parked** entries, then tell the
+user — through the orchestrator — plainly and in their own words, not buried in
+the summary:
 
 > "Heads up — these items are recorded in `<feature>-slices/BLAST-IMPACT.md` and
 > **this slice is not fixing them**: [BI-id — one-line each]. Please open the
@@ -476,37 +514,15 @@ own words — not buried in the summary:
 The point is zero surprise: every effect we're deliberately not addressing is
 named out loud and the user is pointed at the ledger to see the full picture. If
 this slice recorded nothing and picked nothing up, say so in one line ("no new
-blast-impact entries this slice"). Then continue.
+blast-impact entries this slice").
 
-**If more slices remain, continue straight to the next one** — the
-lowest-numbered `slice-N-*.md` without a design — in stacked order, **without
-asking the user which slice to do next.** Sequencing is not the user's decision;
-the order is fixed by the stack, and you just walk it. (The user's involvement is
-the per-slice design conversation — the P3 grill and the P4a contradiction forks —
-not picking the next slice.) Open only that next slice's file, run P1–P5 for it,
-and keep going. Don't review yet: the conformance critic runs over the *whole
-set*, so it only makes sense once every slice has a design.
-
-**When the slice you just designed was the last one — every `slice-N-*.md` in
-the directory now has a `slice-N-<short>-system-design.md` sibling — hand off to
-the critic before these specs go to planning.** Recommend running
-**`kite-system-design-conformance-review`** on the `<feature>-slices/` directory.
-That skill is to this one what `slice-conformance-review` is to `slice-blueprint`:
-a fresh-eyes critic that re-derives each design's obligations from its slice and
-the design-doc template, rather than trusting the §11/§12 coverage checklists
-*this* skill wrote. It exists precisely because a generator grades its own
-homework — it will tick "scenario handled" against a section that doesn't handle
-it, mark a taxonomy dimension "Resolved" with a pointer that doesn't resolve it,
-or quietly bank an intent fork as a §6 assumption that an implementer would
-actually have to take back to the user. The critic catches those, fixes the
-mechanical gaps, surfaces the ones only the user can settle, and verifies its
-fixes landed.
-
-So the deliverable of *this* skill is "all slices designed," and what you do with
-that output is route it through the conformance review (the Step-3 critic) — the
-specs are not ready for human approval + planning until that review has run.
-Don't run the critic yourself per slice and don't act as your own critic on the
-set; recommend the dedicated skill, which uses independent sub-agents on purpose.
+Then **emit `SPEC_WRITTEN` and stop.** The orchestrator advances to the next
+un-designed slice (a fresh design worker, so the next slice doesn't inherit this
+one's context), and runs the conformance critic over the whole set only once every
+slice has a design — because that critic re-derives each design's obligations from
+its slice and the template rather than trusting the §11/§12 checklists *this* run
+wrote, and that whole-set, fresh-eyes view is exactly why it isn't your job. One
+slice, well designed, then a clean yield.
 
 ## Re-entry: resolving cross-slice contradictions from the conformance review
 
@@ -520,10 +536,12 @@ critic's whole-set pass exists to catch exactly that, and when it does, it does
 you own and must make code-blind. This is the backstop that keeps a false premise
 the per-slice check couldn't reach from hardening into a plan downstream.
 
-A returned contradiction arrives as `{subsystem (taxonomy title), design element
-(Decision Dn / Assumption An / §3 row / §10 Qn), nature + recommended
-reconciliation}` — no code. To resolve it, re-enter the affected slice and run a
-**focused P3 grill loop** over just the returned contradictions:
+The orchestrator drives this: it spawns you in **re-entry mode** for the affected
+slice with just that slice's returned contradictions, and relays your forks to the
+user exactly as in a normal run. A returned contradiction arrives as `{subsystem
+(taxonomy title), design element (Decision Dn / Assumption An / §3 row / §10 Qn),
+nature + recommended reconciliation}` — no code. Run a **focused P3 grill loop**
+over just the returned contradictions (yielding a `FORK` per contradiction):
 
 - **Put each contradiction to the user as a fork, recommended option first**, the
   same way P3 does — grounded in the governing `kite-design-system-standards`

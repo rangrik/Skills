@@ -119,6 +119,15 @@ skills:
       suite: private/_evals/kite-feature-review/suite
       results: private/_evals/kite-feature-review/results
 
+  - id: kite-solution-design
+    name: kite-solution-design
+    bucket: private
+    path: private/kite-solution-design
+    install: true
+    evals:
+      suite: private/_evals/kite-solution-design/suite
+      results: private/_evals/kite-solution-design/results
+
   - id: kite-system-design-blueprint-slices
     name: kite-system-design-blueprint-slices
     bucket: private

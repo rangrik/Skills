@@ -1,19 +1,19 @@
 ---
 name: kite-system-design-conformance-review
 description: >-
-  Adversarially audits the per-slice system-design specs
-  (`slice-N-<short>-system-design.md`) from
-  kite-system-design-blueprint-slices against the behavior slice each was
-  derived from and each spec's template + autonomy bar — catching
-  scenarios undesigned, guarantees weakened, scope drift, hollow template
-  sections, and user-answerable unknowns left unresolved. Triages findings
-  into fix-in-spec, ask-the-USER, return-to-designer, or report-only, and
-  verifies every fix landed. Also runs a code-aware backstop for
-  cross-slice contradictions a single slice couldn't see. Critic stage
-  AFTER kite-system-design-blueprint-slices. Triggers on "review the system
-  designs", "check the designs against the slices", "did the design miss
-  anything", "audit the system-design conformance", or "are the designs
-  faithful to the slices" — even when "conformance" is never said. NOT for
+  The end-of-feature CRITIC WORKER of the kite-solution-design phase: a
+  fresh-eyes, code-blind audit of the per-slice system-design specs
+  (`slice-N-<short>-system-design.md`) from kite-system-design-blueprint-slices
+  against the behavior slice each was derived from and each spec's template +
+  autonomy bar — catching scenarios undesigned, guarantees weakened, scope
+  drift, hollow template sections, and user-answerable unknowns left
+  unresolved. Re-derives coverage rather than trusting the designer's own
+  checklists, applies the fixes it owns to the specs, and YIELDS its other
+  dispositions to the orchestrator: ask-the-USER (FORK), return-to-designer
+  (a Family-C reality contradiction), or report-only. The orchestrator supplies
+  the firewalled whole-set code-aware backstop findings (this worker does not
+  read code or spawn sub-agents) and spawns a fresh verifier afterward. Invoked
+  BY kite-solution-design once every slice has a design, not standalone. NOT for
   behavior slices (slice-conformance-review), implemented features
   (kite-feature-review), or product behavior (the blueprint).
 ---
@@ -24,17 +24,46 @@ You take a `<feature>-slices/` directory in which every behavior slice
 (`slice-N-<short>.md`) now has a system-design spec
 (`slice-N-<short>-system-design.md`), and you find every place a design failed
 to faithfully achieve the behavior its slice committed to, or fell short of its
-own completeness and autonomy bar. You **also** run a whole-set code-aware
-backstop — checking the feature's *cross-slice* blast radius against the codebase
-that actually exists, for the collateral a single slice's own reality check (run
-earlier, per slice, by the designer) couldn't see. Then you resolve the gaps that
-are *real and meaningful* — fixing what you can fix, asking the user what only
-they can answer, and **returning reality contradictions to the designer** to
-resolve in its grill loop — and verify your changes landed. You stop there.
+own completeness and autonomy bar. The orchestrator hands you the **firewalled
+findings of a whole-set code-aware backstop** it ran — the feature's *cross-slice*
+blast radius checked against the codebase, for collateral a single slice's own
+reality check (run earlier, per slice) couldn't see. Then you resolve the gaps
+that are *real and meaningful*: you **fix what you can fix** directly in the specs,
+and for the rest you **yield to the orchestrator** — a `FORK` for what only the
+user can answer, a `RETURN_TO_DESIGNER` for each reality contradiction (resolved
+in the designer's grill loop, never by you). You do **not** read code, spawn
+sub-agents, or run the verification yourself.
 
 This is the **Step-3 critic**: it sits to `kite-system-design-blueprint-slices`
-exactly as `slice-conformance-review` sits to `slice-blueprint`. Run it once,
-**after every slice has a design**, before planning (Step 4) consumes the specs.
+exactly as `slice-conformance-review` sits to `slice-blueprint`. The
+`kite-solution-design` orchestrator runs it once, **after every slice has a
+design**, before planning (Step 4) consumes the specs.
+
+## How this skill runs: you are the critic worker for `kite-solution-design`
+
+You are spawned as a **fresh-eyes, code-blind worker** by the
+`kite-solution-design` orchestrator — the only agent that talks to the user and
+the only one that spawns sub-agents. The "don't grade your own homework" logic
+that separates you from the designer is preserved by the orchestrator's
+single-level structure, but two mechanics move out of this skill:
+
+- **You do not run the code-aware backstop (old Stage 0).** The orchestrator runs
+  it and hands you its **firewalled** findings (subsystem + behavior, never code)
+  as input. You reason from them; you never read source.
+- **You do not spawn the verification sub-agent (Stage 4).** A verifier must not
+  be the agent that applied the fixes — so you **yield the list of applied
+  changes** and the orchestrator spawns a fresh verifier. You also do Stage 1's
+  re-derivation and hunt **inline** (you were spawned fresh and code-blind for
+  exactly that), rather than spawning a nested review sub-agent.
+
+And the dispositions you used to resolve directly now route through the
+orchestrator: **fix** you apply yourself to the spec; **ask the user** → yield a
+`FORK` (recommendation first, principle-grounded); **return to designer** → yield
+a `RETURN_TO_DESIGNER` packet; **report only** stays in your report. Packet shapes
+are in `kite-solution-design/references/orchestration-protocol.md`.
+
+(If you are ever invoked directly without an orchestrator, say so and ask the user
+to run `kite-solution-design`; this skill is designed to run as its worker.)
 
 ## Why this is a separate skill from the designer
 
@@ -114,61 +143,46 @@ produces a report dominated by "not designed yet," which is noise, not findings.
    contradictions are already resolved upstream, per slice, at the designer's P4a;
    this backstop exists for what a single slice structurally couldn't see.)
 
-## How this runs: four roles, three of them sub-agents
+## How the work is split: three roles, the firewall held by the orchestrator
 
 The same "don't grade your own homework" logic that separates this skill from the
-designer also applies *inside* it. The work is split across four roles, three of
-them delegated to fresh sub-agents on purpose:
+designer is preserved by the orchestrator's single-level structure. Three roles:
 
-- **The reality reviewer sub-agent** (Stage 0) — *the one code-aware role.* Spawn
-  a sub-agent that **is** allowed to read the codebase (the single carved-out
-  exception in this otherwise code-blind skill). Give it *all* the design specs at
-  once, the `SYSTEM_TAXONOMY.md`, and the defect taxonomy's Family C. Its job is
-  the **whole-set, cross-slice** view: it looks across every slice's design
-  together for collateral a single slice couldn't see — one slice's design
-  affecting a subsystem an earlier or later slice owns (C5 across slices) — and
-  acts as a safety net for any per-slice contradiction (C1–C4) the designer's P4a
-  check missed. It returns findings **through the firewall**: subsystem name +
-  design element + the contradiction's nature, with *no* code artifacts (Family C
-  in `references/defect-taxonomy.md` defines the firewall precisely). It is a
-  separate sub-agent from the code-blind reviewer below precisely so code never
-  leaks into the rest of the skill or into the designer.
-- **The review sub-agent** (Stage 1) — code-blind. Spawn a sub-agent whose only
-  context is the slices, their design specs, the template contract, and the
-  defect taxonomy — *not* your reasoning, not the designer's, *not* the reality
-  reviewer's code findings. It re-derives, per slice, what the design must achieve
-  (from the slice) and must contain (from the template), hunts defect classes 1–7,
-  and returns candidate findings each with a proposed verdict, meaningfulness, and
-  disposition. Fresh eyes are the entire value: an agent that already "knows" how
-  a design was reasoned will rationalize a weakened guarantee as "a reasonable
-  simplification."
-- **You, the orchestrator** (Stages 2–3). You take both sub-agents' findings,
-  critically evaluate them, confirm the real-and-meaningful ones, reject false
-  positives, leave defensible calls alone — then **resolve** the survivors: fix
-  what you can fix, **ask the user directly** for the gaps that need their intent
-  and fold the answer back into the spec, and **route reality contradictions back
-  to the designer** (Family C never gets fixed inline). You own the edits because
-  you own the report. You stay code-blind: you only ever see the reality
-  reviewer's firewalled findings, never the code behind them.
-- **The verification sub-agent** (Stage 4). Spawn a *different* sub-agent, given
-  only the list of changes claimed and the files, to confirm each one landed. It
-  must not be the agent that applied them — a fixer checking its own work is the
-  self-confirmation trap this whole skill exists to break.
+- **The whole-set backstop** (Stage 0) — *the one code-aware role, and the
+  orchestrator owns it.* The orchestrator spawns a sub-agent that **is** allowed to
+  read the codebase, gives it *all* the design specs at once, the
+  `SYSTEM_TAXONOMY.md`, and the defect taxonomy's Family C, and gets back the
+  **whole-set, cross-slice** view: collateral a single slice couldn't see — one
+  slice's design affecting a subsystem an earlier or later slice owns (C5 across
+  slices) — plus a safety net for any per-slice contradiction (C1–C4) the
+  designer's P4a check missed. It returns findings **through the firewall**:
+  subsystem name + design element + the contradiction's nature, with *no* code
+  artifacts (Family C in `references/defect-taxonomy.md` defines the firewall
+  precisely). The orchestrator hands **you** only those firewalled findings — so
+  code never leaks into you or, later, into the designer. The Stage-0 prompt below
+  is what the orchestrator uses; you don't run it.
+- **You, the critic worker** (Stages 1–3) — code-blind, fresh eyes. You were
+  spawned with only the slices, their design specs, the template contract, the
+  defect taxonomy, and the firewalled backstop findings — *not* the designer's
+  reasoning. So you do Stage 1's re-derivation and hunt **inline**: re-derive, per
+  slice, what the design must achieve (from the slice) and must contain (from the
+  template), hunt defect classes 1–7, then adjudicate (Stage 2) and resolve
+  (Stage 3). Fresh eyes are the entire value: an agent that already "knows" how a
+  design was reasoned will rationalize a weakened guarantee as "a reasonable
+  simplification" — and you don't, because you weren't there. You **fix what you
+  own** directly in the specs; you **yield a `FORK`** for what needs the user, a
+  **`RETURN_TO_DESIGNER`** for each reality contradiction, and below-bar collateral
+  as a **`LEDGER_OP`/APPEND**. You stay code-blind: you only ever see the
+  firewalled findings, never the code behind them.
+- **The verifier** (Stage 4) — *the orchestrator owns this too.* It must not be the
+  agent that applied the changes — a fixer checking its own work is the
+  self-confirmation trap this whole skill exists to break. So you **yield the list
+  of applied changes** and the orchestrator spawns a fresh verifier with the
+  Stage-4 prompt below.
 
-Delegate via whatever sub-agent mechanism the harness provides; prompt templates
-are at the end of Stages 0, 1 and 4. The reality reviewer takes the **whole set
-at once** (its value is the cross-slice view, so don't split it per slice); the
-code-blind review sub-agent can still be split per slice if there are many.
-
-The **reality pass (Stage 0) must run in a sub-agent — there is no inline
-fallback.** The firewall only holds if the agent reading code is not you: you
-cannot unsee source, so "read it yourself and then ignore the code" defeats the
-code-blindness the rest of this skill depends on. If the harness has no sub-agent
-mechanism, do **not** read code — skip Stage 0, say so loudly in the report, and
-lean on the per-slice P4a checks (already done) plus the research stage as the
-catch. The code-blind stages (1 and 4) *may* be run as separate fresh inline
-passes if there are no sub-agents, since they never touch source — but prefer real
-sub-agents: the independence is the point.
+The firewall is non-negotiable and structural: the only code-aware role (Stage 0)
+is run by the orchestrator, and you — code-blind — receive only its firewalled
+output. You never read source, and you never spawn a sub-agent yourself.
 
 ## The five stages — in order, and do not skip the gate
 
@@ -181,18 +195,24 @@ fixes phantom defects; fixing without verifying claims changes that never landed
 autonomy bar the design exists to protect; and **fixing a reality contradiction
 inline** usurps the intent call the designer owns and breaks the firewall.
 
-### Stage 0 — Reality check: cross-slice backstop (this skill's one code-aware pass)
+### Stage 0 — Reality check: cross-slice backstop (orchestrator-run; you receive its findings)
 
 The bulk of design-vs-reality contradictions are already caught and resolved
 upstream, **per slice**, at the designer's P4a gate — before each spec finalizes,
-the designer commissions its own firewalled reality check. This stage is the
+the orchestrator runs that slice's firewalled reality check. This stage is the
 **whole-set backstop** for what a single slice structurally couldn't see: the
 *cross-slice collateral* where one slice's design touches a subsystem an earlier
 or later slice owns, plus a safety net for any per-slice contradiction the upstream
 check missed. Without it, a contradiction that only appears when all slices are
 viewed together would slip straight into planning.
 
-The reality reviewer sub-agent reads **all** the designs together and maps the
+**The orchestrator runs this pass before it spawns you, and hands you the
+firewalled findings as input** — you do not read code or spawn this sub-agent. The
+prompt below is the one the orchestrator uses; it is documented here because this
+skill owns the defect taxonomy and the firewall contract the pass must obey. Read
+the findings, carry them into the Stage-2 gate, and route them per the C5 bar.
+
+The whole-set backstop sub-agent reads **all** the designs together and maps the
 **feature-wide** blast radius — every subsystem any slice marks New / Modified /
 Reused, *plus* the existing subsystems that already read or write the same data,
 *plus* the data each slice's writes feed into that another slice consumes — and
@@ -212,8 +232,7 @@ recommended reconciliation. **No** file paths, symbols, table or column names,
 migration ids, snippets, or line numbers — ever. That is what lets the
 contradiction reach the code-blind designer without dragging code into it.
 
-**This stage is the reality reviewer sub-agent's job.** Spawn it with a prompt
-like:
+**The orchestrator spawns this sub-agent** (you do not) with a prompt like:
 
 ```
 You are the ONE code-aware reviewer in an otherwise code-blind design review. You
@@ -255,21 +274,17 @@ contradiction can only be expressed by quoting code, restate it as a subsystem
 behavior or drop it. Code stays on your side of the firewall.
 ```
 
-The orchestrator receives only these firewalled findings and carries them into
-the Stage-2 gate alongside the code-blind findings. **Route them by the C5 bar:**
-cross-slice collateral that meets the bar (a genuine regression whose remedy a
-slice in this feature owns) is **returned to the designer** to resolve with the
-user (per the designer's Re-entry step); collateral that is below the bar (benign,
-or whose remedy lives outside this feature) is **appended to the BLAST-IMPACT
-ledger** (append-only — never delete another slice's note; schema in
+You receive only these firewalled findings from the orchestrator and carry them
+into the Stage-2 gate alongside your own code-blind findings. **Route them by the
+C5 bar:** cross-slice collateral that meets the bar (a genuine regression whose
+remedy a slice in this feature owns) is **returned to the designer** — yield a
+`RETURN_TO_DESIGNER` packet so the orchestrator re-enters that slice's designer to
+resolve it with the user; collateral that is below the bar (benign, or whose remedy
+lives outside this feature) is **appended to the BLAST-IMPACT ledger** — yield a
+`LEDGER_OP`/APPEND (append-only — never delete another slice's note; schema in
 `kite-system-design-blueprint-slices/references/blast-impact-ledger.md`), not
 forced into any slice. That keeps the whole-set pass from manufacturing per-slice
-forks out of effects no slice should own. (If the harness has no
-sub-agent mechanism, do **not** run this pass inline — as the "no inline
-fallback" rule above requires: skip Stage 0, flag the skip loudly in the report,
-and lean on the per-slice P4a checks already done plus the research stage as the
-catch. You cannot unsee source, so reading it yourself would break the
-code-blindness the rest of this skill depends on.)
+forks out of effects no slice should own.
 
 ### Stage 1 — Review: re-derive, then hunt
 
@@ -319,10 +334,13 @@ hunting.** In brief, two families:
 
 Record every candidate gap with the slice (or template) evidence and the design
 evidence side by side. Hunt first, judge second — surface every candidate before
-talking yourself out of any — but return a *proposed* verdict, meaningfulness,
-and disposition for each, so the orchestrator has something concrete to evaluate.
+talking yourself out of any — but record a *proposed* verdict, meaningfulness,
+and disposition for each, so the Stage-2 gate has something concrete to evaluate.
 
-**This stage is the review sub-agent's job.** Spawn it with a prompt like:
+**You do this stage inline** — you were spawned fresh and code-blind precisely so
+that the agent hunting defects isn't the one that reasoned the design. Work to the
+brief below (it is also the contract the orchestrator could hand a helper if the
+hunt is split per slice across many slices):
 
 ```
 Adversarially review per-slice system-design specs against the behavior slices
@@ -349,8 +367,8 @@ slice, the design spec, the template, and the standards. Codebase contradictions
 
 ### Stage 2 — Adjudicate: the gate
 
-Turn the same adversarial scrutiny on the sub-agent's findings. For each
-candidate gap write three things:
+Turn the same adversarial scrutiny on your Stage-1 candidates and the firewalled
+backstop findings. For each candidate gap write three things:
 
 - **Evidence** — the exact slice/template clause and the exact design clause (or
   its absence). A gap you can't quote both sides of is usually a false positive.
@@ -407,8 +425,10 @@ for:
 
 Do the asking first, because a user's answer may change what you fix.
 
-**Ask the user (the queued unknowns).** Drive them to resolution with
-`AskUserQuestion`, in dependency order, **recommended option first**:
+**Ask the user (the queued unknowns).** For each, **yield a `FORK` packet** to the
+orchestrator — in dependency order, **recommended option first** — and resume when
+it returns the user's answer. You never call `AskUserQuestion` yourself and never
+invent the answer:
 
 - **Ground every recommendation in a principle.** Cite the governing Kite
   principle number from `kite-design-system-standards` where applicable; where the
@@ -432,16 +452,16 @@ re-authoring.
 
 **Return reality contradictions to the designer (do not resolve them here).**
 Family-C survivors are *not* yours to fix or to put to the user — the designer
-owns that, in its own grill loop, code-blind. Assemble them into the handoff
-section of the report: each as `{subsystem, design element, nature +
-recommendation}`, grouped by the slice whose design they belong to. Then recommend
-re-running `kite-system-design-blueprint-slices` on the affected slice(s), which
-will put each contradiction to the user, resolve it, and re-finalize the spec —
-flipping a decision, dropping a dead assumption/contingency, or amending the data
-flow as the user decides. Do not edit the spec for these yourself; the designer's
-re-finalization is what closes them. (If the designer's re-finalized spec then
-needs another conformance pass, that is a fresh run of this skill on the updated
-set — not a loop you spin here.)
+owns that, in its own grill loop, code-blind. For each, **yield a
+`RETURN_TO_DESIGNER` packet** — `{slice, subsystem, design element, nature +
+recommendation}` — and also record it in the handoff section of the report,
+grouped by slice. The orchestrator re-enters that slice's designer, which puts each
+contradiction to the user, resolves it, and re-finalizes the spec — flipping a
+decision, dropping a dead assumption/contingency, or amending the data flow as the
+user decides. Do not edit the spec for these yourself; the designer's
+re-finalization is what closes them. (If a re-finalized spec then needs another
+whole-set conformance pass, that is the user's call, made through the orchestrator
+— not a loop you spin here.)
 
 ### Stage 4 — Verify: targeted re-check of just the changes
 
@@ -456,8 +476,9 @@ This is a bounded check, not a loop. Do not re-run the full Stage-1 hunt and do
 not iterate until "clean" — a fresh full hunt surfaces new low-priority
 observations forever. Resolve the meaningful gaps once, confirm they landed, stop.
 
-**This stage is the verification sub-agent's job, and it must not be the agent
-that applied the changes.** Spawn a fresh sub-agent with a prompt like:
+**The verifier must not be the agent that applied the changes — so you do not run
+it. Yield the list of applied changes to the orchestrator** (as part of your
+`DONE`), and it spawns a fresh verifier with the prompt below:
 
 ```
 Independently verify that a set of changes was actually applied to some
@@ -476,9 +497,10 @@ they are in.
   ...
 ```
 
-Fold its PASS/FAIL verbatim into the report's Verification section. A FAIL means
-that change did not land — re-apply it (Stage 3) and re-verify just that one; do
-not expand scope.
+The orchestrator folds the verifier's PASS/FAIL verbatim into the report's
+Verification section. A FAIL means that change did not land — the orchestrator
+re-engages you to re-apply that one change (Stage 3) and has it re-verified; do not
+expand scope, and do not re-run the full Stage-1 hunt.
 
 ## Report format
 
@@ -540,13 +562,14 @@ reason it was left alone. This section is why the report is trustworthy.>
   user-answerable answer goes to the user, not into a fabricated assumption.
   Inventing the answer is precisely the autonomy failure the design exists to
   prevent — and it is why this skill *asks* rather than only fixing.
-- **Code-blind everywhere but the one carved-out reviewer.** You — the
-  orchestrator — and the Stage-1 reviewer verify the design's *reasoning*, not the
-  codebase, and you only ever see the reality reviewer's firewalled findings. The
-  Stage-0 reality reviewer is the single exception: it reads code, and it pays for
-  that privilege by returning findings stripped to subsystem + behavior, never
-  code. The firewall is load-bearing — it is what lets a real contradiction reach
-  the code-blind designer without making the designer code-aware.
+- **Code-blind everywhere but the one carved-out reviewer.** You — the critic
+  worker — verify the design's *reasoning*, not the codebase, and you only ever see
+  the orchestrator-run backstop's firewalled findings. The Stage-0 whole-set
+  backstop is the single code-aware exception, and the orchestrator owns it: it
+  reads code, and it pays for that privilege by returning findings stripped to
+  subsystem + behavior, never code. The firewall is load-bearing — it is what lets
+  a real contradiction reach the code-blind designer without making the designer
+  code-aware.
 - **Don't fix what the designer must own.** A reality contradiction is resolved by
   the designer's grill loop with the user, not by your edit and not by your
   question. You surface it, named at system altitude, and hand it back. Fixing it
