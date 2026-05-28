@@ -146,6 +146,15 @@ skills:
       suite: private/_evals/kite-system-design-conformance-review/suite
       results: private/_evals/kite-system-design-conformance-review/results
 
+  - id: kite-conductor
+    name: kite-conductor
+    bucket: private
+    path: private/kite-conductor
+    install: true
+    evals:
+      suite: private/_evals/kite-conductor/suite
+      results: private/_evals/kite-conductor/results
+
   - id: vendor-anthropic-skill-creator
     name: skill-creator
     bucket: vendor
