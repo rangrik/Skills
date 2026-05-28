@@ -1,18 +1,18 @@
 ---
 name: blueprint
 description: >-
-  Turn a loosely-stated product problem or feature idea into a complete, unambiguous
-  behavior specification. Interviews the user about the intended happy path(s), then
-  autonomously enumerates every plausible deviation and edge case — invalid input,
-  retries, rate limits, lost connectivity, abandoned sessions, out-of-order actions,
-  expired sessions, concurrency, boundary states, external failures — and proposes
-  graceful product behavior for each, writing it up as a single markdown behavior
-  blueprint. Use whenever someone has a feature idea, problem statement,
-  or PRD to pin down into concrete behavior; asks for a behavior blueprint, behavior
-  spec, interaction spec, acceptance criteria, or Gherkin/Cucumber scenarios; asks
-  what the edge cases are or what could go wrong with a feature; or describes a
-  feature loosely and wants it made rigorous and complete — even if they never say
-  the words 'behavior spec'.
+  Turn a loosely-stated product problem or feature idea into a complete,
+  unambiguous behavior specification. Interviews the user about the intended
+  happy path(s), then autonomously enumerates every plausible deviation and
+  edge case — invalid input, retries, rate limits, lost connectivity,
+  abandoned sessions, out-of-order actions, expired sessions, concurrency,
+  boundary states, external failures — and proposes graceful product behavior
+  for each, writing it up as a single markdown behavior blueprint. Use
+  whenever someone has a feature idea, problem statement, or PRD to pin down
+  into concrete behavior; asks for a behavior blueprint, interaction spec,
+  acceptance criteria, or Gherkin/Cucumber scenarios; asks what could go wrong
+  with a feature; or describes a feature loosely and wants it made rigorous
+  and complete — even if they never say "behavior spec".
 ---
 
 # Blueprint

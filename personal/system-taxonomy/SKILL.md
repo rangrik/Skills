@@ -2,20 +2,17 @@
 name: system-taxonomy
 description: >-
   Extract the ubiquitous language of a code repository — the shared vocabulary
-  of domain concepts AND named subsystems used to discuss the product and its
+  of domain concepts and named subsystems used to discuss the product and its
   architecture — and write it to SYSTEM_TAXONOMY.md: a grouped glossary with
   tight definitions, aliases to avoid, relationships with cardinality, an
   example dialogue, and flagged ambiguities. The result is a communication
-  contract: a person or agent can name a concept and have everyone land on the
-  right module, then explain a flow or bug using only those terms. Use when
-  the user wants to map, document, or align an agent to the vocabulary /
-  terminology / concepts / taxonomy / domain language of a codebase. Triggers
-  on "what are the core concepts here", "build a glossary", "define our domain
-  language", "create a ubiquitous language", "what should we call X", "map
-  the taxonomy of this repo", or onboarding a person or agent to speak
-  about the system consistently.
-  Fire even when the user only says "taxonomy", "domain model", "shared
-  vocabulary", or "terminology".
+  contract: anyone can name a concept and land on the right module, then
+  explain a flow using only those terms. Use when the user wants to map,
+  document, or align an agent to the vocabulary / terminology / domain
+  language of a codebase. Triggers on "what are the core concepts here",
+  "build a glossary", "define our domain language", or "map the taxonomy of
+  this repo" — even when they only say "taxonomy", "domain model", or "shared
+  vocabulary".
 ---
 
 # System Taxonomy

@@ -1,21 +1,19 @@
 ---
 name: kite-plan-conformance-review
 description: >-
-  CODE-BLIND review of ONE slice implementation plan
+  Code-blind review of ONE slice implementation plan
   (`slice-N-<short>-plan.md` from kite-planner-with-taxonomy) against the
-  slice's system-design spec and behavior slice, checking COVERAGE (every
-  scenario and design decision planned, every "Open Question for the
-  Codebase" carried into research questions, nothing out-of-scope or
-  invented) and CONFORMANCE (vertical-slice ordering, design respected,
-  EXISTS/MISSING-style research questions). Fixes mechanical gaps; surfaces
-  only items that need a human. Runs auto after kite-planner-with-taxonomy
-  writes a plan, and directly when the user says "review this plan", "check the
-  plan against the design slice", "did the plan miss anything", "audit the
-  plan's coverage", or "is this plan faithful to the system design" — even
-  when "conformance" is never said. Not for implemented code
-  (kite-feature-review / kite-scenario-check), the system design itself
-  (kite-system-design-conformance-review), or reading the codebase
-  (kite-research). Scope: appsmith-v2 / Kite.
+  slice's system-design spec and behavior slice, checking coverage (every
+  scenario and design decision planned, every "Open Question for the Codebase"
+  carried into research questions, nothing out-of-scope) and conformance
+  (vertical-slice ordering, design respected, EXISTS/MISSING research
+  questions). Fixes mechanical gaps; surfaces only what needs a human. Runs
+  automatically after kite-planner-with-taxonomy writes a plan, and directly
+  when the user says "review this plan", "check the plan against the design
+  slice", "did the plan miss anything", or "is this plan faithful to the
+  system design". Not for implemented code (kite-feature-review), the system
+  design itself (kite-system-design-conformance-review), or reading the
+  codebase (kite-research). Scope: appsmith-v2/Kite.
 ---
 
 # Kite Plan Conformance & Coverage Review

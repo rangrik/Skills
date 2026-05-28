@@ -2,18 +2,16 @@
 name: slice-blueprint
 description: >-
   Cuts one large behavior blueprint into a stacked sequence of smaller
-  blueprints, each a thin but FULL-STACK, end-to-end shippable vertical slice —
-  DB, backend, API, and UI together, never one layer in isolation. Each slice
-  builds on the slices before it (a walking skeleton first, then capability
-  layered on top), and is written in the exact same section format as the source
-  blueprint, with its Gherkin and every other section narrowed to that slice's
-  scope. Use this as the stage immediately AFTER a behavior blueprint exists and
-  the feature is too big to ship in one go. Reach for it whenever the user says
-  "slice this blueprint", "break this feature into slices", "split this into
-  deliverable increments", "how should we phase / stack this build", "cut this
-  into vertical slices", or has a finished blueprint and is about to start
-  building something too big to ship in one go — even if they never say the word
-  "slice".
+  blueprints, each a thin but FULL-STACK, end-to-end shippable vertical slice
+  — DB, backend, API, and UI together, never one layer in isolation. Each
+  slice builds on the ones before it (a walking skeleton first, then
+  capability layered on top) and is written in the same section format as the
+  source blueprint, with its Gherkin and every other section narrowed to that
+  slice's scope. Use immediately after a behavior blueprint exists and the
+  feature is too big to ship in one go. Reach for it when the user says "slice
+  this blueprint", "break this feature into slices", "split this into
+  deliverable increments", "how should we phase this build", or "cut this into
+  vertical slices" — even if they never say "slice".
 ---
 
 # Slice Blueprint

@@ -1,20 +1,18 @@
 ---
 name: kite-implementation
-description:
-  Orchestrates the build of a Kite slice from its plan, scenario by scenario, by
-  delegating every step to focused subagents. For each slice it first refreshes
-  the codebase research (Step 0, via a kite-research subagent, since earlier
-  slices may have already shipped what this one needs), then per scenario it
+description: >-
+  Orchestrates the build of a Kite slice from its plan, scenario by scenario,
+  delegating every step to focused subagents. For each slice it first
+  refreshes the codebase research (Step 0, via kite-research, since earlier
+  slices may already have shipped what this one needs), then per scenario
   collates the slice's docs and the feature-wide codebase-research.md into a
-  unified brief, implements it as a vertical slice, independently reviews it,
-  fixes what genuinely matters, qualifies the fixes, and passes a final
-  adversarial KISS + standards gate before committing each scenario. The
-  orchestrator itself writes no feature code; its job is judgment and sequencing.
-  Use this as the implementation stage of the Kite pipeline, after the slice is
-  planned, or whenever the user says "implement this slice/plan", "build the
-  feature", "work through the plan file", or "start coding the scenarios". Use it
-  whenever a slice has a plan and code needs to be written. Scope is the
-  appsmith-v2 / Kite platform.
+  brief, implements it as a vertical slice, independently reviews it, fixes
+  what genuinely matters, and passes a final adversarial KISS + standards gate
+  before committing. The orchestrator writes no feature code itself; its job
+  is judgment and sequencing. Use as the implementation stage after a slice is
+  planned, or when the user says "implement this slice/plan", "build the
+  feature", "work through the plan file", or "start coding the scenarios".
+  Scope: appsmith-v2/Kite.
 ---
 
 # Kite Implementation

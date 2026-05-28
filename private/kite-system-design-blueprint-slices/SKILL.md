@@ -1,23 +1,17 @@
 ---
 name: kite-system-design-blueprint-slices
 description: >-
-  The DESIGN WORKER of the kite-solution-design phase: takes one approved
+  The design worker of the kite-solution-design phase: takes one approved
   behavior slice (`slice-N-*.md` from a `<feature>-slices/` dir) and works out
-  HOW the system should achieve that behavior at high-level system-design
-  altitude (NOT implementation detail), then YIELDS. Designs exactly one slice
-  per run and writes one spec (`slice-N-<short>-system-design.md`). Reasons
-  across data integrity, performance, reliability, security, cost, and rollout
-  via a data-movement lens. CODE-BLIND: never reads source and never spawns
-  sub-agents; it resolves the unknowns only the USER can answer by yielding
-  FORK packets to the orchestrator (which relays them to the user), records the
-  rest as research questions, and yields a reality-check request so the
-  orchestrator can run the firewalled code-aware check that returns
-  contradictions in subsystem + behavior terms only. Invoked BY
-  kite-solution-design, not standalone — it owns the slice loop, the user
-  interaction, and the end-of-feature critic. Also runs in re-entry mode to
-  resolve reality contradictions the conformance review returns. Not for
-  product behavior (slice-blueprint), reading the codebase (kite-research), or
-  implementation (kite-planner-with-taxonomy). Scope: appsmith-v2 / Kite.
+  HOW the system should achieve it at system-design altitude (not
+  implementation detail), writing one `slice-N-<short>-system-design.md` per
+  run. Reasons across data integrity, performance, reliability, security,
+  cost, and rollout. Code-blind — never reads source; surfaces user-only
+  unknowns to the orchestrator and records the rest as research questions.
+  Invoked by kite-solution-design, not standalone; also re-runs to resolve
+  contradictions the conformance review returns. Not for product behavior
+  (slice-blueprint), reading the codebase (kite-research), or implementation
+  (kite-planner-with-taxonomy). Scope: appsmith-v2/Kite.
 ---
 
 # Kite Slice System Design

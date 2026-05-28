@@ -3,19 +3,17 @@ name: kite-planner-with-taxonomy
 description: >-
   Turns ONE approved system-design slice (`slice-N-<short>-system-design.md`
   from kite-system-design-blueprint-slices) into an ordered,
-  scenario-by-scenario implementation plan — CODE-BLIND, grounded in the
+  scenario-by-scenario implementation plan — code-blind, grounded in the
   slice's design decisions, the platform's `SYSTEM_TAXONOMY.md`, and
-  `kite-design-system-standards`. One slice at a time. Orders the slice's
-  scenarios for maximum reuse, plans each, and emits one consolidated set
-  of slice-level research questions. Auto-spawns kite-plan-conformance-review
-  to check the plan against the design and fix what it can. Step 4 of the
+  kite-design-system-standards. Orders the slice's scenarios for maximum
+  reuse, plans each, and emits one consolidated set of research questions,
+  then auto-spawns kite-plan-conformance-review to check it. Step 4 of the
   Kite pipeline (after solution-design, before research). Triggers on "plan
-  this slice", "create the implementation plan for slice N", "turn this
-  system design into a plan", or "order the scenarios for this slice" —
-  even when the word "plan" is never said. Not for product behavior
-  (slice-blueprint), the system design itself
-  (kite-system-design-blueprint-slices), or reading the codebase
-  (kite-research). Scope: appsmith-v2 / Kite.
+  this slice", "create the implementation plan for slice N", "turn this system
+  design into a plan", or "order the scenarios for this slice" — even when the
+  word "plan" is never said. Not for product behavior (slice-blueprint), the
+  system design itself (kite-system-design-blueprint-slices), or reading the
+  codebase (kite-research). Scope: appsmith-v2/Kite.
 ---
 
 # Kite Planner (with taxonomy)

@@ -1,25 +1,17 @@
 ---
 name: kite-solution-design
 description: >-
-  Drives the entire Solution-Design phase (Step 3) for a `<feature>-slices/`
-  directory: designs every behavior slice into a
-  `slice-N-<short>-system-design.md`, one slice after another, each in a fresh
-  code-blind subagent — surfacing EVERY design question the subagent raises to
-  the user with a recommendation and justification (never answering on the
-  user's behalf) — then runs the whole-set conformance review and gives a
-  blast-impact readout before handing off to planning. It writes no spec and
-  reads no code itself; it sequences, relays, and spawns. Use whenever the user
-  has a sliced feature and says "design the system for this feature", "run
-  solution design over all the slices", "drive the design phase", "design and
-  review all the slices", "do the system design for <feature>", or points at a
-  `<feature>-slices/` directory and asks to turn the behavior slices into
-  system-design specs — even when they don't say "orchestrate". This is the
-  ONLY entry point for the design phase: it owns the per-slice designer
-  (kite-system-design-blueprint-slices) and the critic
-  (kite-system-design-conformance-review), which are its workers and are not
-  run standalone. NOT for product behavior (blueprint / slice-blueprint),
-  reading the codebase (kite-research), planning (kite-planner-with-taxonomy),
-  or implementation (kite-implementation). Scope: appsmith-v2 / Kite.
+  Orchestrates the whole Solution-Design phase (Step 3) for a
+  `<feature>-slices/` directory: turns every behavior slice into a
+  `slice-N-<short>-system-design.md`, relaying each design question to the
+  user, then runs the conformance review before handing off to planning. The
+  single entry point for the design phase — it owns the per-slice designer and
+  critic, which aren't run standalone. Use when the user has a sliced feature
+  and says "design the system for this feature", "run solution design over the
+  slices", "drive the design phase", or points at a `<feature>-slices/` dir to
+  turn behavior slices into system-design specs. Not for product behavior
+  (slice-blueprint), reading code (kite-research), planning
+  (kite-planner-with-taxonomy), or implementation. Scope: appsmith-v2/Kite.
 ---
 
 # Kite Solution Design (orchestrator)

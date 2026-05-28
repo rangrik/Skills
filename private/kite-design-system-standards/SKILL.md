@@ -2,17 +2,17 @@
 name: kite-design-system-standards
 description: >-
   The authoritative reference for the architecture, design principles, and
-  engineering standards of the appsmith-v2 (Kite) platform. Consult it whenever
-  working in the appsmith-v2 repository — before or while adding or changing a
-  route, service, schema, model, migration, agent, tool, skill, queue or worker,
-  event flow, billing path, deployment flow, or frontend module — and whenever
-  reviewing, refactoring, or making an architectural or design decision in that
-  repo. Use it in two ways: look up the recommended standard before you build,
-  or test an existing implementation against the standards and flag deviations.
-  Reach for it whenever you are unsure whether an approach matches how this
-  codebase is meant to be built, even if "architecture", "standards", or
-  "conformance" are never said explicitly. Scope is strictly the appsmith-v2 /
-  Kite platform — do not apply these standards to any other project or repo.
+  engineering standards of the appsmith-v2 (Kite) platform. Consult it
+  whenever working in the appsmith-v2 repository — before or while adding or
+  changing a route, service, schema, model, migration, agent, tool, skill,
+  queue or worker, event flow, billing path, deployment flow, or frontend
+  module — and whenever reviewing, refactoring, or making an architectural
+  decision in that repo. Use it two ways: look up the recommended standard
+  before you build, or test an existing implementation against the standards
+  and flag deviations. Reach for it whenever unsure whether an approach
+  matches how this codebase is meant to be built, even if "architecture",
+  "standards", or "conformance" are never said. Scope: strictly appsmith-v2 /
+  Kite — do not apply elsewhere.
 ---
 
 # Kite Design System Standards

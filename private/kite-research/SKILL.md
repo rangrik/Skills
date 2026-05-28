@@ -3,19 +3,16 @@ name: kite-research
 description: >-
   Inspects the actual codebase to answer the research questions for ONE
   planned Kite slice — what already exists to reuse, what is missing, and
-  where new code should go — and records the answers in a feature-wide
-  `codebase-research.md`. It gathers the slice's questions from the slice
-  plan ("Slice research questions") cross-checked against the system-design
-  spec's "Open Questions for the Codebase", then answers each against the
-  real code. On every iteration it ALSO refreshes the research doc:
-  re-inspects prior findings whose code area overlaps this slice and updates
-  any answer that went stale (e.g. a capability that was MISSING earlier and
-  now EXISTS because a prior slice built it). Use as the stage immediately
-  after kite-planner-with-taxonomy, or when the user says "research the
-  codebase for this slice", "find what we already have", "check what exists
-  before we build", or "refresh the research doc". The only Kite
-  planning-phase skill permitted to read source code. Scope: appsmith-v2 /
-  Kite platform.
+  where new code should go — recording answers in a feature-wide
+  `codebase-research.md`. Gathers the slice's questions from its plan and the
+  system-design spec's "Open Questions for the Codebase", then answers each
+  against real code. Each run also refreshes the doc: re-inspects prior
+  findings overlapping this slice and updates any that went stale (e.g. a
+  capability that was missing earlier but now exists). Use right after
+  kite-planner-with-taxonomy, or when the user says "research the codebase for
+  this slice", "find what we already have", or "refresh the research doc". The
+  only Kite planning-phase skill permitted to read source. Scope:
+  appsmith-v2/Kite.
 ---
 
 # Kite Research

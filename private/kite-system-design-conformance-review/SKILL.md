@@ -1,21 +1,18 @@
 ---
 name: kite-system-design-conformance-review
 description: >-
-  The end-of-feature CRITIC WORKER of the kite-solution-design phase: a
-  fresh-eyes, code-blind audit of the per-slice system-design specs
-  (`slice-N-<short>-system-design.md`) from kite-system-design-blueprint-slices
-  against the behavior slice each was derived from and each spec's template +
-  autonomy bar — catching scenarios undesigned, guarantees weakened, scope
-  drift, hollow template sections, and user-answerable unknowns left
-  unresolved. Re-derives coverage rather than trusting the designer's own
-  checklists, applies the fixes it owns to the specs, and YIELDS its other
-  dispositions to the orchestrator: ask-the-USER (FORK), return-to-designer
-  (a Family-C reality contradiction), or report-only. The orchestrator supplies
-  the firewalled whole-set code-aware backstop findings (this worker does not
-  read code or spawn sub-agents) and spawns a fresh verifier afterward. Invoked
-  BY kite-solution-design once every slice has a design, not standalone. NOT for
+  The end-of-feature critic of the kite-solution-design phase: a fresh-eyes,
+  code-blind audit of the per-slice system-design specs
+  (`slice-N-<short>-system-design.md`) against the behavior slice each was
+  derived from and its template — catching scenarios left undesigned, weakened
+  guarantees, scope drift, hollow sections, and unresolved user-answerable
+  unknowns. Re-derives coverage rather than trusting the designer's
+  checklists, applies the fixes it owns, and yields the rest (ask-the-user,
+  return-to-designer, report-only) to the orchestrator. Invoked by
+  kite-solution-design once every slice has a design, not standalone. Not for
   behavior slices (slice-conformance-review), implemented features
-  (kite-feature-review), or product behavior (the blueprint).
+  (kite-feature-review), or product behavior (the blueprint). Scope:
+  appsmith-v2/Kite.
 ---
 
 # Kite System-Design Conformance Review
