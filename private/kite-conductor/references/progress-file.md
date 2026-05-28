@@ -28,11 +28,11 @@ detail.
 
 ## Build loop (Phase 4) — one slice at a time
 
-| Slice           | Planned? | Built? | Status                |
-| --------------- | -------- | ------ | --------------------- |
-| slice-1-<short> | yes      | yes    | committed             |
-| slice-2-<short> | yes      | no     | in progress (S3 of 5) |
-| slice-3-<short> | no       | no     | pending               |
+| Slice           | Demo line ("user does X, sees Y") | Planned? | Built? | Status                |
+| --------------- | --------------------------------- | -------- | ------ | --------------------- |
+| slice-1-<short> | _one-line demo, flag on, no seed_ | yes      | yes    | committed             |
+| slice-2-<short> | _one-line demo, flag on, no seed_ | yes      | no     | in progress (S3 of 5) |
+| slice-3-<short> | _one-line demo, flag on, no seed_ | no       | no     | pending               |
 
 ## Notes
 

@@ -198,9 +198,14 @@ Advance only on approval.
 **Phase 2 — Slice.** Delegate to a sub-agent that runs `slice-blueprint` on the
 approved blueprint (output into `<feature>-slices/` inside the project dir) and
 then `slice-conformance-review` over those slices to catch anything the cut
-dropped, weakened, or duplicated. It works autonomously and returns a summary plus
-the paths. Present the slices and the conformance report and **gate**: approve, or
-send it back to slice again.
+dropped, weakened, duplicated, or **left non-demoable**. It works autonomously and
+returns a summary plus the paths. Require it to return, **per slice, a one-line
+demo script** — "a user does X and sees Y, from a clean state, flag on, nothing
+hand-seeded." A slice with no honest demo line, or one the conformance review
+flagged non-demoable (its defect 10 / verdict "Re-cut required"), is a failed cut.
+Present the slices, the per-slice demo lines, and the conformance report, and
+**gate**: approve only if *every* slice has a real demo line; otherwise send it
+back to slice again.
 
 **Phase 3 — Solution Design.** Delegate to a sub-agent that runs
 `kite-solution-design` pointed at the `<feature>-slices/` directory.
@@ -293,3 +298,13 @@ When every slice is built and the user has the final-review report, the pipeline
 done. Point the user at `feature-review-<feature>.md` and stop. Acting on the
 review's findings — fixing, re-slicing, or shipping — is a fresh decision, not part
 of this run.
+
+**What to hand a human reviewer (the review packet).** The docs under
+`kite-conductor/<project-title>/` — coverage and carried-content ledgers,
+conformance reviews, progress files — are *your* working memory, not a human
+review artifact; never ask a reviewer to wade through them. Per slice, the
+deliverable a human actually reviews is small: the slice's one-line demo script
+(so they can exercise it themselves) plus that slice's PR diff. If a slice's only
+honest demo line is "nothing visible until a later slice," that is the signal the
+cut failed Phase 2's gate — fix the cut, don't hand over an un-testable PR and a
+pile of ledgers.

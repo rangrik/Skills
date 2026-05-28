@@ -160,12 +160,21 @@ Lay out the rest of the feature as slices that each add **one coherent
 capability** on top of what earlier slices already built. Order them by:
 
 1. **Dependency** — a slice may only rely on capabilities that earlier slices
-   created. The stack only grows upward.
+   created, _and_ on preconditions a real user can already reach — either through
+   an earlier slice of this feature or through pre-existing product capability
+   they already have. The stack only grows upward. A slice may **not** assume a
+   precondition that only a _later_ slice of this feature produces, or that
+   engineering has to hand-seed: that is the most common backwards cut (a consumer
+   shipped before its producer), and the Reachability check in Phase 4 exists to
+   catch it.
 2. **Risk** — pull risky integrations (an external paid provider, a tricky
    concurrency guarantee) earlier rather than later, so you learn the hard parts
    while there is still room to react.
-3. **Value** — each slice should be independently demoable, and ideally
-   shippable on its own.
+3. **Value** — among orders that satisfy dependency and risk, prefer the one that
+   delivers user-visible value soonest. (That each slice be independently demoable
+   is not a preference to weigh here — it is a hard bar enforced by the
+   Reachability check in Phase 4; this force only breaks ties between cuts that
+   already clear it.)
 
 Then assign **every** scenario from the Phase 1 inventory to exactly one slice —
 happy paths _and_ deviations. The rule for deviations is simple and strict:
@@ -198,13 +207,26 @@ examples of placing deviations by behavior ownership.
 
 ### Phase 4 — Validate the cut before writing anything
 
-Run these four checks across your planned slices. If any fails, re-cut — it is
+Run these checks across your planned slices. If any fails, re-cut — it is
 far cheaper to fix the partition now than after you have written N files.
 
 - **Vertical check.** For every slice, can you complete _"after this slice the
   user can/sees \_\_\_"_? Does it touch the layers that sentence requires (not a
   single isolated layer)? A slice failing this is horizontal — merge it into a
   neighbor or re-cut.
+- **Reachability check.** From a clean state, can a _real end user_ reach this
+  slice's happy-path precondition using only this slice and earlier ones (or
+  product capability they already have) — with the feature flag **on** and
+  **nothing hand-seeded**? If the only honest answer is "after a later slice
+  ships," "once engineering seeds a row," or "with the flag off until slice N,"
+  the slice is not independently demoable and the cut is wrong. Pull the producer
+  of that precondition into this slice — the cheapest end-to-end mechanism is
+  fine, e.g. a synchronous build a later slice replaces with an async one — or
+  merge. Naming the gap as a boundary assumption does **not** discharge it: a
+  precondition the _feature itself_ is responsible for creating is not a boundary
+  state, it is a missing earlier slice (the Boundary-state check below draws the
+  line). The litmus: if you cannot honestly write "a user does X and sees Y, from
+  a clean state, flag on, nothing seeded," this slice is mis-cut.
 - **Robustness / shippability check.** For each slice, does it handle the
   realistic failure modes of the behavior it introduces — or did its risk
   scenarios get deferred elsewhere? A slice that ships a happy path while its
@@ -246,10 +268,19 @@ far cheaper to fix the partition now than after you have written N files.
   raise it to the user when it needs a defined product behavior. (This is not
   authoring: the feature's behavior is conserved; the boundary state exists only
   because of the ordering _you_ introduced, so naming it is part of slicing
-  honestly.)
+  honestly.) **But sort boundary states into two kinds.** A _benign_ one leaves
+  the slice fully usable — stale data until caching ships, no movement-delta on
+  the first snapshot; flag it and move on. A _fatal_ one makes the slice
+  impossible for a user to exercise at all — its happy path needs a precondition
+  only a later slice or hand-seeding can produce, or it needs the feature flag
+  held off until a later slice. A fatal boundary state is a failed Reachability
+  check, not a flag-and-move-on: re-cut. "The flag stays off until slice N" never
+  excuses a non-demoable slice.
 - **Independence check.** Could each slice be merged and shipped on its own as a
   coherent, robust product increment? If a slice only makes sense bundled with
-  another, they are one slice.
+  another, they are one slice. The quick test: can you write its one-line demo —
+  "a user does X and sees Y, from a clean state, flag on, nothing seeded"? If you
+  can't write that line honestly, the slice failed the Reachability check above.
 
 ### Phase 5 — Confirm the cut with the user before writing the files
 

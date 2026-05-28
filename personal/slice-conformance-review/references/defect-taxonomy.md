@@ -1,12 +1,14 @@
 # Slice Conformance Defect Taxonomy
 
-The nine recurring ways a vertical-slice cut fails to conserve its source
-blueprint. For each: **how to detect it**, a **worked example** (drawn from real
+The ten recurring ways a vertical-slice cut fails — nine where it fails to
+conserve its source blueprint, plus one (the last) where the slice conserves
+everything yet still can't be delivered, because no user can exercise it on its
+own. For each: **how to detect it**, a **worked example** (drawn from real
 slicing of a "Growth tab — SEO keyword rankings" blueprint), and **what the fix
 looks like**. Read this before the Stage-1 hunt; the subtle modes (3 and 4) are
 the ones a self-graded ledger never catches.
 
-A quick mental model: defects split into three families.
+A quick mental model: defects split into four families.
 - **Coverage** (1, 2, 5) — something the blueprint named lands in zero or many
   slices. A careful ledger *can* catch these, but only if the ledger is derived
   independently rather than trusted.
@@ -14,6 +16,9 @@ A quick mental model: defects split into three families.
   means. No ledger catches these; only reading the actual Gherkin does.
 - **Forward-reference** (4, 8) — a promise or a stacking-induced state has no
   owner. Caught only by following every "→ Slice N" pointer to its destination.
+- **Deliverability** (10) — a slice no real user can exercise on its own. Caught
+  only by tracing each slice's happy path from a clean state, flag on, nothing
+  seeded. This is the one family that can block the whole cut.
 
 ---
 
@@ -193,6 +198,36 @@ conserved set. A slicer conserves; it does not author.
 
 ---
 
+## 10. Non-demoable slice (unreachable / undeliverable)  *(deliverability)*
+
+**Detect:** For each slice, start from a clean state and trace its happy path. Can
+a real user reach the precondition that path needs using only this slice and
+earlier ones (or capability they already have), with the feature flag **on** and
+**nothing hand-seeded**? If reaching it requires a *later* slice's output, an
+engineering-seeded row, or the flag staying off until a later slice, the slice is
+non-demoable.
+
+**Example:** Slice 1 "Generate a page from a *ready* business context" — but the
+pipeline that produces a ready context is Slice 2, and the feature flag stays off
+until Slice 3. Slice 1 only runs if engineering hand-seeds the context row. Three
+review passes called this "well-scoped" because it was *documented* — yet a user
+handed Slice 1 alone clicks Generate and nothing happens. Documentation does not
+make a slice demoable.
+
+**This is not a defect-8 boundary state.** Defect 8's "flag it and move on" is for
+states that leave the slice *usable* (stale data until caching ships). A slice a
+user cannot exercise *at all* on its own is fatal, not benign — the
+consumer-before-producer cut, not an interim degraded mode.
+
+**Fix:** None *by the critic* — you cannot re-cut, and you must not paper over it
+with a flagged assumption. Escalate to the user with the failing slice named and
+the precondition that has no reachable producer. The resolution is the slicer's:
+pull the producer earlier (even a cheap synchronous version a later slice
+replaces), or merge. Record it as a blocking finding; the report verdict is
+"Re-cut required."
+
+---
+
 ## Adjudication reference (Stage 2)
 
 Map each candidate gap to a verdict and a meaningfulness call:
@@ -208,6 +243,7 @@ Map each candidate gap to a verdict and a meaningfulness call:
 | 7 Internal inconsistency | Real | Always — the slice contradicts itself. |
 | 8 Undefined boundary state | Real *only if unnamed* | When a user actually hits the state while the slice ships alone. |
 | 9 Invented behavior | Real | When it expands scope beyond the conserved blueprint. |
+| 10 Non-demoable slice | Real (blocking) | Always — a slice no user can run on its own. Never fixed by the critic; escalate, verdict "Re-cut required". |
 
 Defensible judgment calls that look like defects but are not: a mechanism the
 source named but the feature never scoped, reframed to a real mechanism the slice

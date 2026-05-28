@@ -69,7 +69,13 @@ zero keywords — since all of those are failure modes of the fetch-and-render b
 introduces. It deliberately omits *other behaviors*: the no-custom-domain input flow,
 freshness/caching, manual refresh, and the deviations that belong to those. On day one you can
 open the tab, see real keywords, and trust it won't shatter on the first bad response — and
-you have de-risked the riskiest part, the paid external call.
+you have de-risked the riskiest part, the paid external call. *(Why assuming "already has a
+custom domain" is legitimate here: a custom domain comes from the existing app-creation flow —
+pre-existing capability the user already has — not from a later slice of *this* feature. That
+is the line. Assuming a precondition the user can already reach is fine; assuming one this
+feature is itself responsible for creating, and deferring its producer to a later slice, is the
+consumer-before-producer backwards cut — see the dependency constraint above and "How to
+recognize a bad cut" below.)*
 
 ## Ordering the rest of the stack
 
@@ -78,13 +84,19 @@ roughly this priority:
 
 1. **Dependency (hard constraint).** A slice may only use what earlier slices built. This
    alone often fixes most of the order. The stack only grows upward — never plan slice 2 to
-   depend on something slice 4 introduces.
+   depend on something slice 4 introduces. This includes *preconditions*, not just code: a
+   slice may assume a precondition only if a user can reach it via an earlier slice or
+   pre-existing product capability — never one a *later* slice of this feature produces, and
+   never one engineering must hand-seed. Shipping a consumer before its producer is the most
+   common backwards cut.
 2. **Risk (pull forward).** If a capability carries real uncertainty — an external dependency,
    a concurrency guarantee, a performance unknown — schedule it early so you learn the hard
    truth while there is still time and budget to respond. Late risk is expensive risk.
-3. **Value (each slice demoable).** Prefer an order where every slice is something you could
-   show a stakeholder and, ideally, ship. If two orderings are equally valid on dependency and
-   risk, pick the one that delivers user-visible value soonest.
+3. **Value (each slice demoable).** Every slice must be something you could actually show a
+   stakeholder from a clean state — that is a hard bar, not a "nice to have." A slice you
+   cannot demo without an unshipped slice or hand-seeded data is a bad cut (see "How to
+   recognize a bad cut"). Among orders that all clear that bar, pick the one that delivers
+   user-visible value soonest.
 
 A reasonable continuation of the growth example, after the skeleton. Notice there is **no
 "resilience" slice** — each slice carries the failure modes of the behavior it introduces:
@@ -230,6 +242,13 @@ Re-cut if you see any of these:
   shippable. Pull the risk scenarios back to the slice that owns the behavior.
 - **A slice that cannot be demoed without another unshipped slice.** They are really one
   slice — merge them.
+- **A slice whose happy path needs a precondition only a *later* slice produces.**
+  Consumer-before-producer: the slice "generates a page from a ready context" while the
+  pipeline that produces the context is a later slice. Re-cut so the producer ships first, or
+  fold the cheapest viable producer into this slice.
+- **A slice that only works if engineering hand-seeds data, or only with the feature flag held
+  off until a later slice.** A non-demoable slice wearing a "documented boundary state"
+  disguise — writing it down does not make it demoable. Re-cut.
 - **Slices so fine-grained that none is independently shippable.** Over-slicing produces
   ceremony without value. Each slice should be a coherent increment, not a single function.
 - **A deviation with no home.** Every section-7 scenario must land somewhere. If one truly

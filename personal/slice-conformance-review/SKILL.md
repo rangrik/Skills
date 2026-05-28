@@ -70,7 +70,7 @@ three roles, and two of them are delegated to fresh sub-agents on purpose:
 
 - **The review sub-agent** (Stage 1 + a first-pass Stage 2). Spawn a sub-agent
   whose only context is the source blueprint and the slice files — *not* your
-  reasoning, not the slicer's. It derives coverage independently, hunts the nine
+  reasoning, not the slicer's. It derives coverage independently, hunts the ten
   defect classes, and returns candidate findings each with a proposed verdict and
   meaningfulness. Fresh eyes are the entire value; an agent that already "knows"
   how the slices were built will rationalize the subtle defects away (we have seen
@@ -144,6 +144,13 @@ looking for:
 9. **Invented behavior (scope drift)** — a slice's Gherkin asserts something the
    source never said about the feature; the slicer authored instead of
    partitioned.
+10. **Non-demoable slice (unreachable / undeliverable)** — a slice's happy path
+   cannot be exercised end-to-end by a real user from a clean state, because it
+   needs a *later* slice's output, an engineering-seeded row, or the feature flag
+   held off until a later slice. A *named* boundary state does **not** absolve
+   this — that exemption (defect 8) is only for boundary states that leave the
+   slice still usable. This is the one class that can block the whole cut, not
+   just flag a single slice.
 
 Record every candidate gap with the source evidence and the slice evidence side
 by side. Within the hunt, still hunt first and judge second — surface every
@@ -163,7 +170,7 @@ Do not fix anything.
 - Slices directory: <absolute path> (slice-N-*.md + SLICES.md)
 
 Build your own scenario + commitments inventory from the SOURCE before reading
-SLICES.md. Then hunt the nine defect classes. Return every candidate gap with:
+SLICES.md. Then hunt the ten defect classes. Return every candidate gap with:
 source evidence, slice evidence, a proposed verdict (real / false-positive /
 defensible judgment call), and a proposed meaningfulness call. Do not edit files.
 ```
@@ -200,6 +207,13 @@ scrutiny *on your own findings*. For each candidate gap, write three things:
 Everything else lives in the report with its verdict and reasoning. The value of
 this gate is that the report stays honest about *why* something was or wasn't
 touched.
+
+**Defect 10 is the exception to "fix it": it is always meaningful, and it is
+never in the *fix* list.** A critic cannot re-cut — that is the slicer's job. When
+a slice is non-demoable, escalate it to the user with the failing slice named and
+the precondition that has no reachable producer, and make the verdict "Re-cut
+required." Do not author a new cut, and do not paper over it with a flagged
+boundary assumption.
 
 ### Stage 3 — Fix: surgical edits to the survivors only
 
@@ -268,7 +282,10 @@ Write `CONFORMANCE-REVIEW.md` in the slices directory using this structure:
 
 ## Verdict
 <2–3 sentences: is the cut faithful? how many meaningful defects, how many fixed,
-how many defensible divergences left as-is.>
+how many defensible divergences left as-is. **If any slice is non-demoable
+(defect 10), say so first and make the verdict "Re-cut required" — a non-demoable
+slice is never "Pass with fixes," and the critic surfaces it to the user rather
+than auto-resolving it.**>
 
 ## Findings
 <One subsection per candidate gap. For each: defect type, source evidence, slice

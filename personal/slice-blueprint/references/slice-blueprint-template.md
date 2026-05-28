@@ -21,7 +21,11 @@ content; never copy the italic guidance into the file.
 
 _The part of the overall problem **this slice** resolves, in two or three sentences — not the
 whole feature's problem restated. State this slice's own primary success outcome in one line:
-what can the user do or see once this slice ships that they could not before._
+what can the user do or see once this slice ships that they could not before. Then give a
+one-line **demo script**: the concrete steps a real user takes, from a clean state, to reach
+and observe that outcome — using only this slice and earlier ones, with the feature flag on and
+nothing hand-seeded. If you cannot write that line honestly, this slice is mis-cut (see the
+Reachability check in `SKILL.md`)._
 
 ### 2. Actors
 
