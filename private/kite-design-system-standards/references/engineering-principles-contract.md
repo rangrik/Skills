@@ -73,7 +73,7 @@ An operation that runs twice must not cause harm twice. Idempotency keys on gene
 Multi-step work that crosses process boundaries or external services is not a single blocking call; it is an explicit sequence of states that commits each transition and can resume from where it stopped. Domain purchase (`pending → purchased → setup → active`), Search Console verification, and generation jobs all work this way. A crash mid-flow leaves a recoverable state, not a corrupt one.
 
 **17. Make transaction and ownership boundaries explicit.**
-Who opens, commits, and rolls back a transaction is a deliberate, documented decision. Database modules flush and leave the commit to the caller; request-scoped sessions commit at dependency teardown before the response is sent; queue dispatch and drain commit internally and say so. Sessions are cancellation-safe so a cancelled request or task cannot contaminate the connection pool.
+Who opens, commits, and rolls back a transaction is a deliberate, documented decision. Database modules flush and leave the commit to the caller; request-scoped sessions commit at dependency teardown before the response is sent; queue dispatch and drain commit internally and say so; and a route or service commits explicitly when state must be durable before a background/Celery task reads it in a separate session, where the teardown commit would fire too late. Sessions are cancellation-safe so a cancelled request or task cannot contaminate the connection pool.
 
 **18. Persisted contracts stay backward-compatible.**
 Once data is written, future code must still be able to read it. Stored workflow events are reconstructed into typed models and must remain decodable across schema evolution; compatibility validators absorb field changes. Schema changes are sequential, idempotent migrations, verified against the models at startup. You may evolve a schema; you may not strand the rows already written under the old one.
@@ -176,11 +176,12 @@ Each meaningful part of the product is listed below against the exact principles
 _The thin HTTP adapter edge of the platform API (`backend/app/routes/*_routes.py`)._
 
 - **1 — Separation of concerns.** The top layer; they accept a request and delegate downward, never reaching past services into persistence.
-- **2 — Thin edges.** Parse, validate, authorize, delegate to one service, shape the response — no business logic.
-- **7 — Typed contracts.** Request, response, and event bodies are Pydantic schemas, some with `extra="forbid"` strictness.
+- **2 — Thin edges.** Parse, validate, authorize, delegate to **one** service, shape the response — where "shape" is a field-to-field map of that one service's typed result, never multi-source enrichment, envelope decoding, or untyped-dict re-parsing at the edge. No business logic and no side-effects (analytics, background-task spawn) from the handler. Error translation is part of shaping: map known service exceptions to specific statuses with a static `detail` and let everything else bubble to the centralized 500 handler — never a broad `except Exception`, never `str(e)` in client-facing `detail`. `fork_routes` is the reference shape; `analytics_routes` for error handling (see `docs/rules/error-handling.md`).
+- **5 — Single source of truth.** Object-level ownership is resolved through the one centralised `has_access()` / scoped `website_service.get_website` (owner or active collaborator), not re-derived per handler.
+- **7 — Typed contracts.** Request, response, and event bodies are Pydantic schemas (`extra="forbid"` only on the inputs that must be strict — not the norm). Responses declare an explicit `response_model=` / typed return, never `-> dict`, `response_model=None`, or an inline dict literal, and never echo user/owner identifiers; `slack_routes` is the reference shape (schema-less file/HTML/redirect edges are documented `-> Response` deviations).
 - **8 — Shared vocabulary.** Consistent `*_routes.py` naming and `APIRouter(prefix=..., tags=...)` structure.
 - **12 — Convention over configuration.** Auto-discovered from `routes/*_routes.py`; no manual registration.
-- **28 — Trust boundaries.** Public and internal routes are explicitly separated; internal routes carry their own bearer/JWT/TOTP auth.
+- **28 — Trust boundaries.** Public and internal routes are explicitly separated; internal routes carry their own bearer/JWT/TOTP auth. A caller-supplied resource id (`application_id`/`thread_id`) is untrusted input: authentication is not authorization, so a resource-scoped handler must bind that id to the caller through the centralized ownership gate — the scoped `website_service.get_website` or `has_access()` (P5) — not resolve it unscoped.
 
 ## 2. Backend Services
 
@@ -384,7 +385,7 @@ _The change-safety surface._
 
 | Component | Core principles |
 | --- | --- |
-| Backend HTTP Routes | 1, 2, 7, 8, 12, 28 |
+| Backend HTTP Routes | 1, 2, 5, 7, 8, 12, 28 |
 | Backend Services | 1, 2, 6, 9, 11, 16, 20 |
 | Database Modules & Models | 1, 5, 7, 14, 17, 18 |
 | Application Startup / Lifespan | 1, 12, 22, 24, 31 |

@@ -39,14 +39,18 @@ checklist.
 
 ---
 
-## 1. Backend HTTP Routes — principles 1, 2, 7, 8, 12, 28
+## 1. Backend HTTP Routes — principles 1, 2, 5, 7, 8, 12, 28
 
-- [ ] **[P1]** Does the route delegate downward to a service, never reaching past it into `database/` modules or models directly?
-- [ ] **[P2]** Is the handler limited to parsing, validation, authorization, one service call, and response shaping — with no business logic?
-- [ ] **[P7]** Are request, response, and event bodies declared as Pydantic schemas, with `extra="forbid"` on inputs that should be strict?
+- [ ] **[P1]** Does the route delegate downward to a service, never reaching past it into `database/` modules or models directly — including via a function-scoped `from app.database import ...` (a lazy import, even one tagged `# noqa: PLC0415`, is the same coupling, not an exception) or by importing model enums/constants to branch on at the edge (also a `[P2]` business-logic finding)?
+- [ ] **[P2]** Is the handler limited to parsing, validation, authorization, one service call, and response shaping — where "response shaping" is a field-to-field map of that **single** service result, **not** multi-source assembly/enrichment — with no business logic and no side-effects (analytics emission, background-task spawn) at the edge?
+- [ ] **[P2]** Does the handler let unexpected exceptions bubble to the centralized 500 handler — no broad `except Exception`-into-`HTTPException(500, detail=str(e))` wrap (which leaks the raw exception across the trust boundary), catching only to map a concrete service exception to a specific status (e.g. `ValueError`→400, `Timeout`/`Connection`→503), keeping any 500 `detail` a static message, and using `logger.exception` (not `logger.error`)? (per `docs/rules/error-handling.md`, which lists `detail=str(e)` under "What NOT to do"; exemplar `analytics_routes`)
+- [ ] **[P7]** Are request, response, and event bodies declared as Pydantic schemas defined in `app/schemas` (not inline in the route module)? (`extra="forbid"` is a deliberate minority — its absence is **not** by itself a finding.)
+- [ ] **[P7]** Is the **response** typed — an explicit `response_model=` / typed return, never `-> dict`/`dict[str, Any]`, `response_model=None`, or an inline dict literal — and does it never echo identifiers the caller didn't already own (`user_email`, `application_owner_email`, …)? (schema-less file/HTML/redirect edges are documented `-> Response` deviations; reference shape `slack_routes`)
+- [ ] **[P7]** Does the called service hand back a **typed object** the handler maps field-to-field, rather than an untyped `dict[str, Any]` read with `.get()` + string-literal defaults?
 - [ ] **[P8]** Does the file follow `*_routes.py` naming with a single `APIRouter(prefix=..., tags=[...])`?
 - [ ] **[P12]** Is the router auto-discovered — no manual registration line added anywhere?
 - [ ] **[P28]** Are internal routes kept explicitly separate from public ones, each carrying the correct auth dependency?
+- [ ] **[P28]/[P5]** For every handler taking a caller-supplied resource id (`application_id`, `thread_id`, `message_id`, draft/website id), is that id bound to the caller before read or mutate — via the scoped `website_service.get_website` (`None`→404) or by resolving the owning `application_id` and calling `has_access()` (the `chat_routes._enforce_send_authz` pattern) — rather than `website_db.get_website(..., owner_email=None)`? (Being logged in is not authorization; a genuinely-public route is conformant only as a documented carve-out, as `preview_routes` does.)
 
 ## 2. Backend Services — principles 1, 2, 6, 9, 11, 16, 20
 
