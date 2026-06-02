@@ -1,0 +1,22 @@
+{
+  "name": "kite-testing",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Standalone agentic Gherkin scenario runner for testing Kite environments end-to-end.",
+  "scripts": {
+    "scenarios": "NODE_OPTIONS='--import tsx' cucumber-js",
+    "scenarios:headed": "HEADED=1 NODE_OPTIONS='--import tsx' cucumber-js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
+    "@cucumber/cucumber": "^12",
+    "@playwright/test": "^1.50",
+    "dotenv": "^16.4"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.0",
+    "tsx": "^4",
+    "typescript": "^5.7"
+  }
+}
