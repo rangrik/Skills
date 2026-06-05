@@ -1,0 +1,135 @@
+/* visual-plan-html — shared design system.
+   Single source of the look. Inline this whole file into the <style> of every
+   generated HTML so the output stays standalone. Each work-type profile sets
+   --accent (and the badge); everything else is shared.
+   To change the global look, edit THIS file. */
+
+:root{
+  color-scheme: light dark;
+  /* per-type profiles override --accent + --accent-bg */
+  --accent:#5aa9ff; --accent-bg:rgba(90,169,255,.12);
+
+  --bg:#0f1115; --card:#191c23; --ink:#e9ecf1; --muted:#98a2b3; --faint:#6b7280;
+  --line:#272c36; --line-soft:#1f242d;
+  --good:#46d18b; --good-bg:rgba(70,209,139,.12);
+  --bad:#ff6b6b;  --bad-bg:rgba(255,107,107,.12);
+  --warn:#f0b860; --warn-bg:rgba(240,184,96,.12);
+  --neu:#7f8aa3;  --neu-bg:rgba(127,138,163,.10);
+
+  --r:12px; --r-sm:8px;
+  --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:light){
+  :root{ --bg:#f7f8fa; --card:#fff; --ink:#1a1d23; --muted:#5b6470; --faint:#8a93a3;
+         --line:#e4e7ec; --line-soft:#eef0f3; }
+}
+
+*{box-sizing:border-box}
+body{font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+     margin:0;padding:0;background:var(--bg);color:var(--ink);
+     -webkit-font-smoothing:antialiased;}
+.wrap{max-width:840px;margin:0 auto;padding:2.5rem 1.4rem 5rem}
+
+/* ── header ── */
+.hd{display:flex;align-items:flex-start;gap:.9rem;margin-bottom:.4rem}
+.badge{flex:none;font-size:.72rem;font-weight:800;letter-spacing:.04em;
+       padding:.3em .7em;border-radius:999px;color:var(--accent);
+       background:var(--accent-bg);border:1px solid var(--accent);white-space:nowrap}
+h1{font-size:1.55rem;line-height:1.25;margin:.05rem 0 0}
+.sub{color:var(--muted);font-size:.85rem;margin:.5rem 0 1.6rem}
+.sub code{font-family:var(--mono);font-size:.92em}
+
+/* ── section headers ── generous rhythm, accent rule ── */
+h2{font-size:1.08rem;margin:2.8rem 0 1rem;padding-bottom:.45rem;
+   border-bottom:1px solid var(--line);display:flex;align-items:center;gap:.6rem}
+h2 .n{flex:none;width:1.5rem;height:1.5rem;border-radius:50%;background:var(--accent);
+      color:#fff;font-size:.82rem;font-weight:700;display:flex;align-items:center;justify-content:center}
+p{margin:.6rem 0}
+code{font-family:var(--mono);font-size:.9em;background:var(--neu-bg);
+     padding:.08em .35em;border-radius:5px}
+
+/* ── legend ── */
+.legend{display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;font-size:.78rem;color:var(--muted);margin:.2rem 0 .4rem}
+.legend span{display:inline-flex;align-items:center;gap:.4rem}
+.dot{width:11px;height:11px;border-radius:3px;flex:none}
+
+/* ── flow nodes (vertical + horizontal) ── */
+.flow{display:flex;flex-direction:column;align-items:stretch;gap:0}
+.node{border:1.5px solid var(--neu);background:var(--neu-bg);border-radius:var(--r-sm);
+      padding:.6rem .8rem;font-size:.86rem;text-align:center}
+.node small{display:block;color:var(--muted);font-size:.74rem;margin-top:.2rem;font-weight:400}
+.node.bad{border-color:var(--bad);background:var(--bad-bg)}
+.node.good{border-color:var(--good);background:var(--good-bg)}
+.node.act{border-color:var(--accent);background:var(--accent-bg)}
+.node.ghost{border-style:dashed;background:transparent;color:var(--muted)}
+.arrow{align-self:center;color:var(--faint);margin:.35rem 0;font-size:1rem;line-height:1}
+.arrow.bad{color:var(--bad)} .arrow.good{color:var(--good)} .arrow.act{color:var(--accent)}
+.hflow{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.hflow .node{flex:1;min-width:120px} .hflow .ha{color:var(--faint);flex:none}
+.forklabel{align-self:center;font-size:.74rem;color:var(--muted);font-style:italic;margin:.4rem 0 .15rem}
+.split{display:flex;gap:.8rem} .branch{flex:1;display:flex;flex-direction:column}
+.outcome{font-size:.82rem;font-weight:600;text-align:center;padding:.4rem;border-radius:var(--r-sm)}
+.outcome.good{color:var(--good);background:var(--good-bg)} .outcome.bad{color:var(--bad);background:var(--bad-bg)}
+
+/* ── comparison panels (n-up) ── */
+.panels{display:flex;gap:1rem;flex-wrap:wrap}
+.panel{flex:1 1 300px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:1.1rem}
+.panel h3{margin:0 0 .9rem;font-size:.92rem;display:flex;align-items:center;gap:.5rem}
+.tag{font-size:.66rem;font-weight:800;letter-spacing:.04em;padding:.18em .55em;border-radius:5px}
+.tag.bad{color:var(--bad);background:var(--bad-bg)} .tag.good{color:var(--good);background:var(--good-bg)}
+
+/* ── matrix / comparison table ── breathes ── */
+.matrix{border-collapse:collapse;width:100%;font-size:.86rem;margin:.6rem 0}
+.matrix th,.matrix td{border-bottom:1px solid var(--line);padding:.6rem .7rem;text-align:left;vertical-align:top}
+.matrix th{font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700;border-bottom-color:var(--neu)}
+.matrix tr:last-child td{border-bottom:0}
+.matrix .yes{color:var(--good);font-weight:600} .matrix .no{color:var(--bad)} .matrix .meh{color:var(--warn)}
+
+/* ── callout ── FIXED: label is a kicker ABOVE the body; body is full-width ── */
+.callout{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);
+         border-radius:var(--r-sm);padding:.85rem 1.05rem;margin:1.1rem 0}
+.callout.good{border-left-color:var(--good)} .callout.warn{border-left-color:var(--warn)} .callout.bad{border-left-color:var(--bad)}
+.callout .k{display:block;font-size:.7rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+            color:var(--accent);margin-bottom:.4rem}
+.callout.good .k{color:var(--good)} .callout.warn .k{color:var(--warn)} .callout.bad .k{color:var(--bad)}
+.callout p{margin:.25rem 0}
+.callout pre{margin:.4rem 0 0;background:var(--neu-bg);border-radius:6px;padding:.55rem .7rem;
+             overflow-x:auto;font-family:var(--mono);font-size:.82rem;line-height:1.5}
+
+/* ── stat row ── for metrics; never inline numbers in prose ── */
+.stats{display:flex;gap:.7rem;flex-wrap:wrap;margin:.5rem 0}
+.stat{background:var(--neu-bg);border-radius:var(--r-sm);padding:.5rem .85rem;min-width:84px}
+.stat b{display:block;font-size:1.25rem;line-height:1.1;color:var(--ink)}
+.stat span{font-size:.72rem;color:var(--muted)}
+.stat.good b{color:var(--good)}
+
+/* ── test checklist ── do → expect, scannable in seconds ── */
+.checks{display:flex;flex-direction:column;gap:.6rem;margin:.6rem 0}
+.check{border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--r-sm);
+       background:var(--card);padding:.7rem .9rem}
+.check .top{display:flex;align-items:center;gap:.55rem;margin-bottom:.4rem}
+.check .top b{font-size:.9rem} .check .kind{font-size:.62rem;font-weight:800;letter-spacing:.05em;
+       padding:.16em .5em;border-radius:5px;color:var(--accent);background:var(--accent-bg)}
+.check .ln{display:flex;gap:.55rem;font-size:.84rem;margin:.18rem 0}
+.check .ln .lab{flex:none;width:3.6rem;color:var(--muted);font-size:.74rem;padding-top:.05rem;text-transform:uppercase;letter-spacing:.03em}
+.check .ln.exp .v{color:var(--good)}
+
+/* ── numbered steps ── */
+.steps{display:flex;gap:.7rem;flex-wrap:wrap;counter-reset:s;margin:.6rem 0}
+.step{flex:1 1 190px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:.8rem .9rem;font-size:.83rem;position:relative}
+.step::before{counter-increment:s;content:counter(s);position:absolute;top:-10px;left:-10px;width:25px;height:25px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;font-size:.8rem;display:flex;align-items:center;justify-content:center}
+.step b{display:block;margin-bottom:.25rem}
+.step.done{border-color:var(--good)} .step.done::before{background:var(--good)}
+
+/* ── tree ── */
+.tree,.tree ul{list-style:none;margin:0;padding-left:1.15rem}
+.tree li{position:relative;padding:.2rem 0 .2rem .9rem;font-size:.85rem}
+.tree li::before{content:"";position:absolute;left:0;top:-.15rem;bottom:.65rem;border-left:1px solid var(--line)}
+.tree li::after{content:"";position:absolute;left:0;top:.9rem;width:.7rem;border-top:1px solid var(--line)}
+.tree>li:last-child::before{height:1rem;bottom:auto}
+
+/* ── code path list (e.g. "where the tests live") ── */
+.paths{list-style:none;margin:.5rem 0;padding:0;display:flex;flex-direction:column;gap:.3rem}
+.paths li{font-family:var(--mono);font-size:.82rem;background:var(--neu-bg);border-radius:6px;padding:.35rem .6rem}
+
+svg{max-width:100%;height:auto}
