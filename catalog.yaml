@@ -155,6 +155,15 @@ skills:
       suite: private/_evals/kite-conductor/suite
       results: private/_evals/kite-conductor/results
 
+  - id: visual-plan-html
+    name: visual-plan-html
+    bucket: private
+    path: private/visual-plan-html
+    install: true
+    evals:
+      suite: private/_evals/visual-plan-html/suite
+      results: private/_evals/visual-plan-html/results
+
   - id: vendor-anthropic-skill-creator
     name: skill-creator
     bucket: vendor
