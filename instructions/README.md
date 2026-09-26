@@ -23,9 +23,10 @@ on Opus, QA on Astra.
 you         → manager       say what you want; it restates, nudges, asks "Go?"
 manager     → wayfinder     new worktree workspace + brief.md
 wayfinder   → you           the simplest UX first (Mobbin references), then N decisions, one at a time; then "What you asked / What you'll get" → your go
-wayfinder   → implementor   plan.md; it reports every subtask in its own session
-wayfinder   → QA            fresh agent, often on another model; uses the app like a person; qa-report.md with proof, a UX check + a test guide
-QA          → you           verdict; open the implementor session and say ship
+wayfinder   → implementor   plan.md; it builds, tests, one short smoke; its questions come back to you through the wayfinder
+wayfinder   → QA            fresh agent, often on another model; the only full live pass; qa-report.md with proof, a UX check + a test guide
+wayfinder   → implementor   fix first → sent back on its own; clean → delivery per the repo's ship rule
+wayfinder   → you           shipped: how it works now in three lines, the test guide, and one question: archive the workspace?
 ```
 
 ## Once per project — setup
@@ -49,13 +50,19 @@ Paseo profiles are not used.
   `You are the manager. Read config instructions from /abs/path/to/repo/agents.json.`
 - Talk to it. Children appear in its **Subagents track**; open any of them to steer it. Every agent
   starts with the same one-line prompt — who it is + the config path.
-- **Where's what's left**: any agent's session shows its task list, and every message starts with
-  `N of M done · next: <step>`.
-- Every question comes with options, a recommendation, and what waits if you don't answer. Say
-  **your call** to take the recommendation. Silence never decides anything.
+- **Where's what's left**: every message starts with `N of M done · next: <step>` (Paseo sessions
+  have no task-list tool, so that line is the dashboard).
+- Every question comes through the harness's question tool with options, the recommended one first,
+  and what waits if you don't answer, so Paseo flags the session "needs you". Only the manager and
+  the wayfinders ask; the implementor and QA route theirs through the wayfinder. Silence never
+  decides anything.
 - Ship: the project's `AGENTS.md` sets the rule and overrides the role files. With the default in
   `preferences.md`, clean QA ships on its own and failing QA goes back to the implementor. You say
-  **ship** only when QA asks you to test it yourself.
+  **ship** in the wayfinder's session only when QA asks you to test it yourself.
+- Live testing: one pass per repo at a time on a lock, short bursts, your installed app and real
+  preferences untouched. Nobody asks you who goes first.
+- Codex agents cannot flag "needs you" (their question tool is off in the default mode); keep the
+  manager and wayfinder on Claude models.
 
 ## `workspace_management/` (worktree root, never committed)
 
@@ -63,7 +70,12 @@ Paseo profiles are not used.
 |---------------------|-------------|-------------|-----------------------------------------------------------|
 | `brief.md`          | manager     | wayfinder   | your ask, restatement, out of scope, addenda, agent ids   |
 | `plan.md`           | wayfinder   | implementor | what you asked / what you'll get, decisions, acceptance criteria, `- [ ]` subtasks |
-| `implementation.md` | implementor | QA          | `Status:` / `Revision:`, what changed, how to run, tested |
-| `qa-report.md`      | QA          | you         | `Verdict:`, evidence table, manual test guide, issues     |
+| `implementation.md` | implementor | QA, wayfinder | `Status:` / `Revision:`, what changed, how to run, tested |
+| `qa-report.md`      | QA          | wayfinder, you | `Verdict:`, evidence table, manual test guide, issues   |
 | `qa-evidence/`      | QA          | you         | logs and screenshots the report points to                 |
 | `questions.md`      | everyone    | everyone    | Q&A log; agent-answered entries are marked as such        |
+| `roles/<role>.md`   | the parent  | the child   | the child's role file, fetched fresh at spawn (for sandboxed children) |
+| `delivery.md`       | implementor | wayfinder   | `Status:`, then one line of evidence per delivery step    |
+
+Before any merge the whole folder is copied to `<repo>/.git/agent-handoff/<slug>/`, because Paseo can
+delete a worktree the moment its PR merges. The live-test lock lives at `<repo>/.git/agent-live.lock`.

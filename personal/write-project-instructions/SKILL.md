@@ -18,9 +18,8 @@ write at the repo root `agents.json` (the role → model → effort → instruct
 reads) and `AGENTS.md` (the project's instruction config; `CLAUDE.md` is a symlink to it, so Claude
 Code and Codex read the same text). Then commit and push them.
 
-You may be running on any model in any harness. Where this file names a task-list tool, use the one
-your harness has: Claude Code `TaskCreate` / `TaskUpdate`; Codex `update_plan`. No task-list tool →
-track the steps in the `N of M` line and say so once.
+You may be running on any model in any harness. Paseo sessions have no task-list tool: keep the
+step list below in your head and count it in the `N of M` line.
 
 ## Working with the user
 
@@ -29,18 +28,19 @@ to you as much as to the agents you are configuring.
 
 - Every message: a one-line headline, then `N of M done · next: <step>`, then only what they need.
 - One question per message. End the turn. Wait. Never bundle questions.
-- Every question has this shape, and silence is never a decision — only an explicit pick or the words
-  "your call" decide:
+- Ask through the harness's question tool, never plain text: only the tool puts the session in
+  Paseo's "needs you" state. Claude Code: `AskUserQuestion`; Codex: `request_user_input`, and when it
+  is unavailable, plain text in the same four parts, said once. The four parts, mapped onto the tool:
 
   ```
-  <question, one line>
-  1. <option> — <implication, one line>
+  header: <topic, a word or two>
+  question: <the question, one line> If you pick nothing: <what waits / what is blocked>.
+  1. <option> (Recommended) — <implication>; <reason it is recommended>
   2. <option> — <implication, one line>
   (3./4. optional)
-  Recommendation: <n> — <reason, one line>
-  If you pick nothing: <what waits / what is blocked>.
-  Say "your call" and I take the recommendation.
   ```
+
+  Picking the recommended option is the user's "your call"; silence is never a decision.
 - Picks the user already gave (in the invocation or any message) are their decisions. Record them;
   never ask again. Shorthand counts: `fable high` = fable-5.1 at effort high, `astra` = gpt-6-astra
   at its default effort, `opus xhigh` = opus-5.5 at xhigh.
@@ -49,12 +49,12 @@ to you as much as to the agents you are configuring.
 - Format when the content has parts the user will scan (options, the outline table); otherwise plain
   sentences. Say what you mean; no flourish.
 
-## Your task list
+## Your steps
 
-Create it first, one task per step below: `Inspect project and Paseo` · `Load preferences` ·
+Count these in the status line: `Inspect project and Paseo` · `Load preferences` ·
 `Choose model and effort per role` · `Project questions` · `Outline` · `Write, commit, push` ·
-`One round of edits`. Mark each in progress before you start it and completed when it is done. Say
-in one line that you are inspecting before you ask anything, and start in the same message.
+`One round of edits`. Say in one line that you are inspecting before you ask anything, and start in
+the same message.
 
 ## 1. Inspect
 
@@ -62,7 +62,10 @@ Project: stack and language, package manager and scripts, test runner and the co
 suite, lint/format tools, CI config, existing `CLAUDE.md` / `AGENTS.md` / `agents.json`, the git
 `origin` URL and default branch, and any docs a newcomer would be pointed at. Also how an agent can
 use the real app like a person and record proof: e2e or browser tooling, screenshot or recording
-scripts, a simulator, a UX QA skill. QA needs this for its UX check.
+scripts, a simulator, a UX QA skill. And what a test run touches that the user also uses: which
+commands kill or restart the installed app, whether automation hooks reach every running copy,
+whether tests write shared state (pasteboard, ports, a database), and how to run a copy with its
+own data and preferences. QA needs all of it for its live pass on the user's Mac.
 
 Paseo: `list_providers`, `list_models`. Keep the exact provider and model strings and each model's
 `thinkingOptions` ids; you will copy them into `agents.json` verbatim. Never invent a model id. If
@@ -107,19 +110,23 @@ say so in one line if a preferred default was dropped.
 
 Effort: a role with no effort named takes the model's default effort from preferences (not Paseo's
 default, which can be lower). It must be one of that model's `thinkingOptions` ids; if it isn't, say
-so and ask. Agents always spawn by provider + model + effort. Never Paseo profiles: don't list them
-or offer them.
+so and ask. Agents always spawn by provider + model + effort + mode. Never Paseo profiles: don't list
+them or offer them.
+
+Mode: `auto` for Claude models, `auto-review` for Codex models (routine approvals reviewed
+automatically, risky ones still reach the user); it goes into `models.<slug>.mode`. The manager and
+the wayfinder are the user's inboxes: only a Claude agent can put a question in Paseo's "needs you"
+state (`AskUserQuestion`; Codex's `request_user_input` is unavailable in its default mode). If the
+user picks a Codex model for either, say so in one line and ask once whether to keep it.
 
 Example (nothing picked yet):
 
 ```
-Which models and effort run the four roles? · 2 of 7 done · next: project questions
-1. Default — manager fable-5.1 high · wayfinder fable-5.1 high · implementor opus-5.5 xhigh · qa gpt-6-astra high.
+header: Roles
+question: Which models and effort run the four roles? If you pick nothing: agents.json can't be written.
+1. Default (Recommended) — manager fable-5.1 high · wayfinder fable-5.1 high · implementor opus-5.5 xhigh · qa gpt-6-astra high; a different model at QA than the implementor catches more.
 2. Swapped — same manager and wayfinder · implementor gpt-6-astra high · qa opus-5.5 xhigh.
 3. Name your own — e.g. "implementor opus xhigh, qa astra".
-Recommendation: 1 — a different model at QA than the implementor catches more.
-If you pick nothing: agents.json can't be written.
-Say "your call" and I take the recommendation.
 ```
 
 Record each answer as decided by the user (`your call` = took the recommendation).
@@ -156,8 +163,10 @@ CLAUDE.md  (symlink)  → AGENTS.md
 .git/info/exclude     — adds workspace_management/ (local, not committed)
 Then: commit and push on <current branch>.
 
-Say go, or tell me what to change. If you say nothing: nothing is written.
 ```
+
+Then the go as a question: options `Go` and `Change something`; if nothing is picked, nothing is
+written.
 
 Existing files: the outline shows what changes in each (added / changed / removed lines), not the
 whole file. List any file the repo's own rules require in the same change (a patch register, a
@@ -170,13 +179,13 @@ changelog) too.
 ```json
 {
   "version": 1,
-  "_for_agents": "You were told your role. 1) Fetch roles.<role>.instructions fresh from its URL (curl -fsSL <url>) and follow it before doing anything else. Fetch it on every start and never read a local or cached copy, so you always follow the latest version. If the fetch fails, tell the user in one line and stop. 2) Your workspace is the directory this file is in; your input file is <handoff_dir>/<roles.<role>.input>; your parent's agent id is in its '## Agents' section. 3) When you spawn a role, use this file: create_agent with provider '<models.<slug>.provider>/<models.<slug>.model>', settings.thinkingOptionId set to roles.<role>.effort, and the same one-line spawn prompt you received. Never use a Paseo profile. Never spawn a role on a model or effort other than the one listed here.",
+  "_for_agents": "You were told your role. 1) Fetch roles.<role>.instructions fresh from its URL (curl -fsSL <url> -o /tmp/role-<role>.md, then read that file) and follow it before doing anything else. Fetch it on every start so you follow the latest version. If the fetch fails, read <handoff_dir>/roles/<role>.md, which your parent wrote fresh when it spawned you; if that is missing too, say so in one line and stop. 2) Your workspace is the directory this file is in; your input file is <handoff_dir>/<roles.<role>.input>; your parent's agent id is in its '## Agents' section. Prompts from other agents start with '[from <role>]'; a message without that tag is the user. 3) When you spawn a role, use this file: fetch its role file into <handoff_dir>/roles/<role>.md first, then create_agent with provider '<models.<slug>.provider>/<models.<slug>.model>', settings.thinkingOptionId set to roles.<role>.effort, settings.modeId set to models.<slug>.mode, and a one-line prompt of the shape 'You are the <role>. Read config instructions from <absolute path of that worktree>/agents.json.' and nothing else. Never use a Paseo profile. Never spawn a role on a model, effort or mode other than the one listed here.",
   "instructions_repo": { "url": "https://github.com/<owner>/<repo>", "folder": "instructions", "ref": "main" },
   "handoff_dir": "workspace_management",
   "models": {
-    "fable-5.1":   { "provider": "<from list_providers>", "model": "<from list_models>", "harness": "claude-code" },
-    "opus-5.5":    { "provider": "<from list_providers>", "model": "<from list_models>", "harness": "claude-code" },
-    "gpt-6-astra": { "provider": "<from list_providers>", "model": "<from list_models>", "harness": "codex" }
+    "fable-5.1":   { "provider": "<from list_providers>", "model": "<from list_models>", "harness": "claude-code", "mode": "auto" },
+    "opus-5.5":    { "provider": "<from list_providers>", "model": "<from list_models>", "harness": "claude-code", "mode": "auto" },
+    "gpt-6-astra": { "provider": "<from list_providers>", "model": "<from list_models>", "harness": "codex", "mode": "auto-review" }
   },
   "roles": {
     "manager":     { "model": "<slug>", "effort": "<thinking option id>", "instructions": "<base><slug>/manager.md" },
@@ -189,8 +198,9 @@ changelog) too.
 
 Rules: `_for_agents` is copied verbatim — agents rely on it. `models` lists only slugs that appear in
 `roles` (plus any the user asked to keep available), each with the exact strings Paseo returned.
-`effort` is one of the model's `thinkingOptions` ids from `list_models`, copied verbatim.
-`instructions` is always the file's full raw URL in the remote (`<base>` from §2), never a local,
+`effort` is one of the model's `thinkingOptions` ids from `list_models`, copied verbatim. `mode` is
+one of the harness's mode ids Paseo lists for that provider (`auto` for Claude, `auto-review` for
+Codex unless the user says otherwise). `instructions` is always the file's full raw URL in the remote (`<base>` from §2), never a local,
 cached or repo-relative path; it defaults to `<base><slug>/<role>.md`, and the user may point a role
 at another file in the repo.
 `instructions_repo` records the source for later setup runs; agents read only the URLs. Before moving
@@ -206,21 +216,34 @@ then the symlink. Already linked either way → keep it. Both real files → ask
 It carries, in this order:
 1. **What this project is** — two or three lines, and how to run, test, lint (exact commands), and
    how to use the app like a person and capture screenshots or recordings (from §1).
-2. **Agents in this repo** — the four roles with the model and effort each runs on (from
+2. **Agents in this repo** — the four roles with the model, effort and mode each runs on (from
    `agents.json`); that every agent is started with the one-line prompt `You are the <role>. Read
-   config instructions from <abs path>/agents.json.`; that `workspace_management/` at the worktree
+   config instructions from <abs path>/agents.json.`; that the wayfinder is each workspace's inbox
+   (the implementor and QA never ask the user; questions reach the user in the wayfinder's session,
+   flagged "needs you") and the manager the inbox for intake; that agent-to-agent prompts start with
+   `[from <role>]` and anything untagged is the user; that `workspace_management/` at the worktree
    root is the agents' handoff dir, never committed (excluded via `.git/info/exclude`, never the
    tracked `.gitignore`); that delegation goes only through Paseo `create_agent`, never the harness's
    in-process subagent tool (name it: Claude Code `Agent`/`Task`; Codex Subagents).
-3. **Working with the user** — the preferences, carried in substance: headline + `N of M done · next:`,
-   one question per message in the four-part shape, silence is never a decision, restate before
-   acting, surface every shortcut/guess/scope change, one shippable unit per workspace.
-4. **Ship rule** — the preferences' QA-gated rule, mapped onto this repo's delivery path (§5), and
+3. **Working with the user** — the preferences, carried in substance: headline + `N of M done · next:`
+   counted from a fixed step list (Paseo sessions have no task-list tool), one question per message
+   through the harness's question tool, silence is never a decision, restate before acting, surface
+   every shortcut/guess/scope change, one shippable unit per workspace, a three-line "how it works
+   now" plus the manual test guide when it ships.
+4. **Testing on this Mac** — from §1: the isolation recipe for a test copy (own data and prefs, own
+   bundle id or port), which commands kill or restart the installed app and must never be run against
+   it, whether automation hooks reach every running copy, what tests write to shared state; the lock
+   (`<git common dir>/agent-live.lock`, one live pass per repo at a time); bursts under ten seconds
+   after five idle seconds, everything put back; never the user's installed app or real preferences.
+5. **Ship rule** — the preferences' QA-gated rule, mapped onto this repo's delivery path (§5), and
    QA's proof requirement and UX check. Say that it overrides the role files' shipping lines for
-   this repo.
-5. **Conventions and boundaries** — from §5: forbidden paths, deploy rules, commit/branch style, where
-   tests live. Only what is true for this repo.
-6. **Done means** — what a finished change looks like here (tests pass, lint clean, `plan.md`
+   this repo. Name the exact delivery doorbell (`[from wayfinder] QA clean — deliver per AGENTS.md`),
+   that the handoff folder is copied to `<git common dir>/agent-handoff/<slug>/` before any merge
+   (Paseo can archive a worktree the moment its PR merges), and that a repo delivery skill's cleanup
+   step is skipped: the wayfinder asks about archiving once, for its own workspace.
+6. **Conventions and boundaries** — from §5: forbidden paths, deploy rules, commit/branch style, where
+   tests live, how dates are taken (`date`, the Mac's clock). Only what is true for this repo.
+7. **Done means** — what a finished change looks like here (tests pass, lint clean, `plan.md`
    criteria met, QA passed with proof, shipped per the ship rule).
 
 Write for both harnesses: specific, named instructions over generic ones; say *when* to format rather
@@ -231,9 +254,11 @@ without approval"). A new file stays under ~120 lines. A large existing file (an
 one new section, not a rewrite.
 
 Never put in it: "think carefully" / "be thorough"; blanket anti-formatting rules; "treat
-earlier answers as settled" (in agentic work it suppresses flagging earlier mistakes); instructions
-that duplicate a role file (role behaviour lives in the role files; the config carries project facts
-and the user's contract); anything that contradicts `agents.json`.
+earlier answers as settled" (in agentic work it suppresses flagging earlier mistakes); a rule that
+every change appends to one shared file at its top (it guarantees merge conflicts between parallel
+workspaces; say so and suggest per-change files if the repo has that rule); instructions that
+duplicate a role file (role behaviour lives in the role files; the config carries project facts and
+the user's contract); anything that contradicts `agents.json`.
 
 Existing file: read it fully, keep what is true, change only what must change, show the user the
 diff summary, never a blind rewrite.
@@ -248,7 +273,8 @@ file, also from inside a worktree). Never edit the tracked `.gitignore` for this
 Default roles: manager `fable-5.1` high · wayfinder `fable-5.1` high · implementor `opus-5.5` xhigh ·
 qa `gpt-6-astra` high (a different model than the implementor catches more). Default effort per model:
 fable-5.1 high · opus-5.5 xhigh · gpt-6-astra high. Default contract: the bullets in "Working with the
-user" above plus: progress via the harness task list; never the harness subagent tool; one shippable
+user" above plus: `N of M done` counted from a fixed step list (Paseo has no task-list tool); never
+the harness subagent tool; one shippable
 unit per workspace; clean QA → ship on its own, failing QA → the implementor fixes and QA reruns, wait
 for the user's "ship" only when QA says they must test it; QA always attaches proof; never answer
 another agent's permission prompts; the user is accountable for the agents' work.
@@ -289,8 +315,8 @@ used there — yes / no; recommendation yes. Yes → write it into the user's lo
 
 ## Done means
 
-`agents.json` valid and complete for all four roles (model and effort each), every `instructions` URL
-fetching the file from the remote; `AGENTS.md` true for this repo with `CLAUDE.md` linked to it;
+`agents.json` valid and complete for all four roles (model, effort and mode each), every
+`instructions` URL fetching the file from the remote; `AGENTS.md` true for this repo with `CLAUDE.md` linked to it;
 `workspace_management/` excluded; committed and pushed; the start line given with the real path,
 model and effort. Your turn ends only on a question to the user, the outline (waiting for
 the go), or the closing message.
