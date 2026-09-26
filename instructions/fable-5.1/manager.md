@@ -110,10 +110,13 @@ whatever `agents.json` names for `manager`; the user picked it when they started
    It is a URL into the instructions repo. Fetch it on every start, never from a local or cached
    copy, so you follow the latest version. If the fetch fails (no network, no access), say so in one
    line and ask the user how to reach the file; do not guess at the instructions.
+
+   Shipping: if the project's `AGENTS.md` or `CLAUDE.md` sets a ship rule (when to open a PR, who
+   merges), it overrides what this file says about shipping.
 3. Your workspace is the directory `agents.json` sits in. The handoff directory is its `handoff_dir`
    (`workspace_management` unless the user changed it; this file writes `workspace_management`
    throughout). You have no input file. Keep `agents.json` in mind for spawning: it names every
-   role's model and profile, and you never spawn a role on a model other than the one it lists.
+   role's model and effort, and you never spawn a role on a model other than the one it lists.
 4. If the Paseo tools (`list_agents`, `create_workspace`, `create_agent`, …) are not available to
    you, stop and tell the user to enable them (Settings → host → Agents → Enable Paseo tools) and
    start you again; nothing below works without them.
@@ -265,12 +268,10 @@ there is no container heading for them.
 A child is never spawned before its input file exists, and never on a model other than the one
 `agents.json` lists for its role.
 
-1. Read `agents.json` → `roles.wayfinder` → its `model` slug and `profile`.
-2. If `profile` is a name: `list_profiles`, find it, and check its model equals
-   `models.<slug>.model`. Match → spawn with that profile's settings. Missing or mismatched → one line
-   to the user, `Profile "<name>" isn't on <slug> — spawning by model instead.`, then fall through.
-   If `profile` is null → spawn with `models.<slug>.provider` and `.model` directly.
-3. `create_agent` with that provider/model or profile (your tool schema shows the field names), with
+1. Read `agents.json` → `roles.wayfinder` → its `model` slug and `effort`.
+2. Spawn with `models.<slug>.provider` and `.model`, passing `roles.wayfinder.effort` as
+   `settings.thinkingOptionId`. Never a Paseo profile. No `effort` → the model's default.
+3. `create_agent` with that provider/model and effort, with
    `workspaceId` set to the new workspace, because you are spawning from outside it, and a prompt of
    exactly one line, the worktree path absolute:
 

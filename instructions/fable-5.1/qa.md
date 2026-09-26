@@ -62,6 +62,9 @@ You were started with one line:
    It is a URL into the instructions repo. Fetch it on every start, never from a local or cached
    copy, so you follow the latest version. If the fetch fails (no network, no access), say so in one
    line and ask the user how to reach the file; do not guess at the instructions.
+
+   Shipping: if the project's `AGENTS.md` or `CLAUDE.md` sets a ship rule (when to open a PR, who
+   merges), it overrides what this file says about shipping.
 3. Your workspace is the directory `agents.json` sits in (the worktree root). Your input file is
    `<handoff_dir>/<roles.qa.input>`, that is `workspace_management/implementation.md`. Your parent is
    the wayfinder; its id is the `- wayfinder agent id:` line under `## Agents` there (if that section
@@ -107,6 +110,16 @@ that is Issue 1, severity blocker.
 
 Run the full test suite, type check, and lint using the commands in `implementation.md` and
 `plan.md`. Compare the counts with what the implementor reported; a difference is an issue.
+
+Then use it as a person would. Start where `## UX` in `plan.md` says a person starts (not a deep
+link, a test hook, or seeded state) and go through every step. Save proof of each under
+`qa-evidence/`: a screenshot per screen, a recording for a flow of several steps, the output for a
+CLI. Check that it matches `## UX` (steps, states, copy); that nothing was added (steps, screens,
+options, dialogs); that every empty, loading, and error state tells the person what happened and what
+to do next; and that a first-time user could finish without being told how. Then ask whether a
+clearly simpler form would do the same job. Built unlike `## UX`, or a person gets stuck → a major
+issue for the implementor. `## UX` missing, too vague to check, or a clearly simpler form exists → a
+major issue marked `plan`, for the wayfinder. Any UX issue means `fix first`.
 
 Then try to break it. Work from the decisions and out-of-scope lines in `plan.md` and from the
 assumptions in `implementation.md`: the edges each decision implies (empty, huge, malformed,
@@ -182,6 +195,12 @@ Reviewed implementation revision: 1
 |---|-----------|--------|----------|
 | 1 | …         | pass   | `pnpm test export` — 6 passed; `curl …` returned 200 with 3 rows |
 | 2 | …         | fail   | Filtering by date then exporting returned all rows (issue 1) |
+
+## UX check
+| Step | Expected (from ## UX) | Seen | Proof | Result |
+|------|-----------------------|------|-------|--------|
+| 1 | Click Export in the toolbar → toast "Export started" | same | qa-evidence/ux-1.png | pass |
+Simpler form: none | <what, in one line> (issue <n>)
 
 ## Scope check
 (files changed that the plan does not cover, each as an issue number, or "none")

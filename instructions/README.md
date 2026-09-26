@@ -22,9 +22,9 @@ on Opus, QA on Astra.
 ```
 you         → manager       say what you want; it restates, nudges, asks "Go?"
 manager     → wayfinder     new worktree workspace + brief.md
-wayfinder   → you           N decisions, one at a time; then "What you asked / What you'll get" → your go
+wayfinder   → you           the simplest UX first (Mobbin references), then N decisions, one at a time; then "What you asked / What you'll get" → your go
 wayfinder   → implementor   plan.md; it reports every subtask in its own session
-wayfinder   → QA            fresh agent, often on another model; qa-report.md with evidence + a test guide
+wayfinder   → QA            fresh agent, often on another model; uses the app like a person; qa-report.md with proof, a UX check + a test guide
 QA          → you           verdict; open the implementor session and say ship
 ```
 
@@ -34,12 +34,14 @@ QA          → you           verdict; open the implementor session and say ship
 2. In the repo's main workspace, start an agent (any model) and run the `write-project-instructions`
    skill (`personal/write-project-instructions/` in this repo). Without skills, send:
    `You are the setup agent. Read and follow https://raw.githubusercontent.com/rangrik/Skills/main/personal/write-project-instructions/SKILL.md`
-3. It asks: which model for manager / wayfinder / implementor / QA (defaults from `preferences.md`),
-   optionally a Paseo profile per role, and a few project facts (test command, no-go paths).
-4. It writes `agents.json`, `CLAUDE.md` and/or `AGENTS.md`, excludes `workspace_management/`. You commit.
+3. It asks which model and effort run manager / wayfinder / implementor / QA (defaults from
+   `preferences.md`; picks you give up front, like `qa opus xhigh`, are taken as is), and a few
+   project facts it couldn't find itself.
+4. It writes `agents.json` and `AGENTS.md` (`CLAUDE.md` a symlink to it), excludes
+   `workspace_management/`, then commits and pushes on the current branch.
 
-Profiles are optional — only if you want a role on a specific thinking level or mode. Create them in
-Paseo first (Settings → host → Agents → Agent profiles); setup offers the ones on the right model.
+Effort lives in `agents.json` per role and is passed to Paseo as the thinking level at spawn.
+Paseo profiles are not used.
 
 ## Every day
 
@@ -51,8 +53,9 @@ Paseo first (Settings → host → Agents → Agent profiles); setup offers the 
   `N of M done · next: <step>`.
 - Every question comes with options, a recommendation, and what waits if you don't answer. Say
   **your call** to take the recommendation. Silence never decides anything.
-- Ship: read `qa-report.md`, open the implementor session, say **ship** → draft PR; you merge.
-  Send it back with **fix QA issues 1, 3**; QA runs again on its own.
+- Ship: the project's `AGENTS.md` sets the rule and overrides the role files. With the default in
+  `preferences.md`, clean QA ships on its own and failing QA goes back to the implementor. You say
+  **ship** only when QA asks you to test it yourself.
 
 ## `workspace_management/` (worktree root, never committed)
 

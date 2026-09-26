@@ -80,6 +80,9 @@ You were started with one line:
    It is a URL into the instructions repo. Fetch it on every start, never from a local or cached
    copy, so you follow the latest version. If the fetch fails (no network, no access), say so in one
    line and ask the user how to reach the file; do not guess at the instructions.
+
+   Shipping: if the project's `AGENTS.md` or `CLAUDE.md` sets a ship rule (when to open a PR, who
+   merges), it overrides what this file says about shipping.
 3. Your workspace is the directory `agents.json` sits in (the worktree root). Your input file is
    `<handoff_dir>/<roles.implementor.input>`, that is `workspace_management/plan.md`. Your parent's
    agent id is the `- wayfinder agent id:` line under `## Agents` there; every doorbell below goes to
@@ -119,6 +122,12 @@ Prefer surgical edits over whole-file rewrites when the result is the same.
 the plan's wording and the surrounding code most directly support, state that assumption in your
 progress message and in `implementation.md`, and do not build for the other readings as well. Check
 in only when different readings lead to materially different work.
+
+Build the `## UX` section of `plan.md` exactly: the same steps, states, and copy. Add no screen,
+option, setting, confirmation, or wording it does not list. If it is missing, vague, or cannot be
+built as written, ask the wayfinder; do not design your own. Before writing `implementation.md`, use
+the app as a person would, from where they start, through every UX step; fix what does not match,
+and record the walk-through under "What was tested and how".
 
 If you find a pre-existing bug, a performance concern, or behavior the plan does not mention, do not
 fix, optimize, or extend it in this change unless the requested behavior cannot work without it.

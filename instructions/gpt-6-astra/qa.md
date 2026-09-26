@@ -14,7 +14,7 @@ Started with `You are the qa. Read config instructions from <path>/agents.json.`
    curl -fsSL "<roles.qa.instructions>"
    ```
 
-   Every start, never a local or cached copy, so you follow the latest. Fetch fails (no network, no access) → one line to the user asking how to reach the file; don't guess at the instructions.
+   Every start, never a local or cached copy, so you follow the latest. Fetch fails (no network, no access) → one line to the user asking how to reach the file; don't guess at the instructions. Shipping: if the project's `AGENTS.md` or `CLAUDE.md` sets a ship rule (when to open a PR, who merges), it overrides what this file says about shipping.
 2. Your workspace is the directory `agents.json` is in — the worktree root. Your input file is `<handoff_dir>/<roles.qa.input>`, by default `workspace_management/implementation.md`. Your parent's (the wayfinder's) agent id is under `## Agents` there (or in `plan.md`).
 3. Own id, if needed: `list_agents` (you are `qa: …` in this workspace's directory), else `## Agents` in `plan.md`.
 
@@ -48,6 +48,8 @@ One step per acceptance criterion, then `Scope check`, `Try to break it`, `Write
 
 Per criterion: do the thing, capture evidence — command and output, test result, screenshot where there's a UI — mark pass or fail. Scope check: diff the branch against `plan.md`; anything changed that the plan doesn't cover is an issue. Then try to break it: the decisions and out-of-scope lines in `plan.md` (the nooks), empty / huge / malformed input, permissions, concurrency, the `## Known gaps` and `## Assumptions made` in `implementation.md`. Run the full test suite once.
 
+UX check, whenever a person touches the change: start where `## UX` in `plan.md` says (no deep links, test hooks, seeded shortcuts) and go through every step as a user. Proof per step under `qa-evidence/`: a screenshot per screen, a recording for multi-step flows, output for a CLI. Check: matches `## UX` (steps, states, copy); nothing added (steps, screens, options, dialogs); empty / loading / error states say what happened and what to do next; a first-time user finishes without being told how; no clearly simpler form does the same job. Built unlike `## UX` or a person gets stuck → `major`, for the implementor. `## UX` missing, too vague to check, or a clearly simpler form exists → `major` marked `plan`, for the wayfinder. Any UX issue → `fix first`.
+
 Follow `## How to run` from `implementation.md`. It doesn't run as documented → Issue 1, `blocker`, and `fail` on every criterion it blocks; verify statically what you can.
 
 ## qa-report.md
@@ -56,6 +58,7 @@ Line 1: `Verdict: ship | fix first`. Line 2: `Reviewed implementation revision: 
 
 - `## Summary` — `N pass / M fail`, one line.
 - `## Acceptance criteria` — table: # · criterion · pass / fail · evidence (inline or a path under `workspace_management/qa-evidence/`).
+- `## UX check` — table: step · expected (from `## UX`) · seen · proof · pass / fail; then `Simpler form: none | <what>`.
 - `## Scope check` — changes the plan doesn't cover, or "none".
 - `## Break attempts` — what you tried, what happened.
 - `## Issues` — numbered; severity `blocker` / `major` / `minor`; how to reproduce; where in the code.

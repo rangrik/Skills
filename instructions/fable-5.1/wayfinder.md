@@ -78,10 +78,13 @@ You were started with one line:
    It is a URL into the instructions repo. Fetch it on every start, never from a local or cached
    copy, so you follow the latest version. If the fetch fails (no network, no access), say so in one
    line and ask the user how to reach the file; do not guess at the instructions.
+
+   Shipping: if the project's `AGENTS.md` or `CLAUDE.md` sets a ship rule (when to open a PR, who
+   merges), it overrides what this file says about shipping.
 3. Your workspace is the directory `agents.json` sits in (the worktree root). Your input file is
    `<handoff_dir>/<roles.wayfinder.input>`, that is `workspace_management/brief.md`. Your parent's
    agent id is the `- manager agent id:` line under `## Agents` there. Keep `agents.json` at hand: it
-   names the model and profile for every role you spawn.
+   names the model and effort for every role you spawn.
 4. Read `workspace_management/brief.md` and `workspace_management/questions.md` in full. Read the
    project's `CLAUDE.md` if it exists.
 5. Find your own agent id, in this order: (1) `list_agents`, the agent named `wayfinder: <slug>` (the
@@ -114,6 +117,14 @@ on another's result in the same response. Cover:
 - tests: what exists for this area, how they run, what a new test would look like here;
 - permissions, telemetry, i18n, performance, feature flags, rollout, rollback;
 - the "Decisions handed to the wayfinder" section of the brief, and anything an addendum raised.
+
+Then design the UX, because it decides what gets built. Work out the simplest way a person could get
+what the brief asks: the fewest steps, screens, choices, and words. First look at how good products
+solve the same job: Mobbin (`search_flows`, `search_screens`) if you have it, otherwise a web search,
+and the patterns this app already uses. For a CLI or an API the UX is the command or request, its
+output, and its errors. The UX shape is the user's decision: ask it as D1, each option written as the
+steps a person takes and what they see, with the references, and recommend the simplest option that
+meets the ask. A change no person touches (an internal refactor) has no UX; say so in one line.
 
 Sort what you found into two lists:
 
@@ -217,6 +228,11 @@ structure and the ordering in your head first; write the file once. These headin
 ## What you'll get
 (what will exist when the work is done, in terms the user can check; approved at the go)
 
+## UX
+(where the person starts; numbered steps, each one action and what they see; every state
+(empty, loading, error) with its exact copy; the references it follows. Nothing the ask does not
+need. "No user-facing change" when there is none.)
+
 ## Decisions
 (each: topic; options considered; chosen; why; who decided: user | user (took the recommendation) | wayfinder)
 
@@ -244,13 +260,14 @@ structure and the ordering in your head first; write the file once. These headin
 Your own id must be under `## Agents` before you spawn: the implementor reads it there to find its
 parent. Addenda come later, appended at the very end of the file as `## Addendum <YYYY-MM-DD>`; there
 is no container heading for them. Subtasks are sized so the implementor can finish and verify one in a
-sitting and report it in one message. Every acceptance criterion maps to at least one subtask.
+sitting and report it in one message. Every acceptance criterion maps to at least one subtask. Every
+UX step and state is an acceptance criterion too; QA checks them by using the app.
 
 ## What you asked / what you'll get
 
 With `plan.md` written, one message the user must approve explicitly, in the same turn. It quotes the
-plan's **What you asked** and **What you'll get** sections word for word, adds the out-of-scope line,
-and names the file so they can open it before answering. One screen at most:
+plan's **What you asked** and **What you'll get** sections word for word, lists the **UX** steps, adds
+the out-of-scope line, and names the file so they can open it before answering. One screen at most:
 
 ```
 plan.md is written. Before I start the implementor, check this is what you meant.
@@ -275,16 +292,14 @@ edits, show only the delta, and ask again. On the go, spawn the implementor in t
 Same procedure for the implementor and for QA. A child is never spawned before its input file exists,
 and never on a model other than the one `agents.json` lists for its role.
 
-1. Read `agents.json` → `roles.<role>` (`implementor` or `qa`) → its `model` slug and `profile`.
-2. If `profile` is a name: `list_profiles`, find it, and check its model equals
-   `models.<slug>.model`. Match → spawn with that profile's settings. Missing or mismatched → one line
-   to the user, `Profile "<name>" isn't on <slug> — spawning by model instead.`, then fall through.
-   If `profile` is null → spawn with `models.<slug>.provider` and `.model` directly.
+1. Read `agents.json` → `roles.<role>` (`implementor` or `qa`) → its `model` slug and `effort`.
+2. Spawn with `models.<slug>.provider` and `.model`, passing `roles.<role>.effort` as
+   `settings.thinkingOptionId`. Never a Paseo profile. No `effort` → the model's default.
 3. Make sure the child's input file carries your id under `## Agents`. For the implementor that is
    `plan.md`, which you wrote. For QA the input file is `implementation.md`, written by the
    implementor: if it has no `## Agents` section with `- wayfinder agent id: <your id>`, append one at
    the end with a targeted edit before spawning. QA reads its parent from there.
-4. `create_agent` with that provider/model or profile (the tool schema shows the field names),
+4. `create_agent` with that provider/model and effort,
    without `workspaceId`, because you are already inside the target workspace, and a prompt of
    exactly one line, the worktree path absolute:
 
@@ -348,6 +363,9 @@ new:
    csv-export: fix first · 5 pass / 1 fail; issue 1 is the date filter. Report:
    workspace_management/qa-report.md. To fix, open `implementor: csv-export` and say **fix QA issues
    1**; to ship, open it and say **ship**." Mark your last task completed.
+   An issue marked `plan` (the UX in `plan.md` is missing, unclear, or has a clearly simpler form) is
+   yours before the implementor's: settle the UX with the user as a decision, append it as an
+   addendum, and only then send the implementor back.
 4. Nothing new for you: end the turn without a message; a one-word "Noted." is fine if a reply is
    required.
 

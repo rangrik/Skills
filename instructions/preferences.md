@@ -37,16 +37,34 @@ Harness-agnostic: where a line names a tool, use the one your harness has.
   committed).
 - Agents find their instructions through the project's `agents.json` (repo root, committed). A
   parent's spawn prompt is one line: who you are + the config path. Nothing else.
+- Spawn by provider + model + effort, all from `agents.json`. Never Paseo profiles.
+- One instruction file per project: `AGENTS.md`, with `CLAUDE.md` a symlink to it.
 
 ## Default roles
 The setup agent offers these per project; I override per project in `agents.json`.
-- manager: fable-5.1
-- wayfinder: fable-5.1
-- implementor: opus-5.5
-- qa: gpt-6-astra   # a different model than the implementor catches more
+- manager: fable-5.1 high
+- wayfinder: fable-5.1 high
+- implementor: opus-5.5 xhigh
+- qa: gpt-6-astra high   # a different model than the implementor catches more
+
+Other map I use: implementor gpt-6-astra high, qa opus-5.5 xhigh.
+Effort when I name a model without one: fable-5.1 high · opus-5.5 xhigh · gpt-6-astra high.
+
+## UX
+- Think about the simplest UX from the start. Planning settles how a person will use the change
+  (fewest steps, screens, choices, words), with references from Mobbin or similar, and I approve it.
+- The implementor builds exactly that UX. QA uses the real app like a person would and blocks
+  anything that differs, adds steps, leaves a person stuck, or has a clearly simpler form. A plan
+  with no clear UX goes back to planning, not to the implementor.
 
 ## Shipping
-- Draft PRs only, and only when I say "ship". I merge. No force-push, no destructive git.
+- QA gates shipping. Clean QA → ship on your own through the repo's delivery path (PR, merge,
+  release); don't wait for me. QA fails → the implementor fixes the findings, asking me or the
+  wayfinder when it needs input, and QA runs again. Wait for me only when QA says I should test it
+  as a user; then I say "ship" or "deliver" (same word).
+- QA always attaches proof: screenshots for UI, video for flows, command output for backend or CLI.
+  No proof, no verdict.
+- No force-push, no destructive git.
 - Never answer another agent's permission prompts; I approve what my agents do.
 - Scope is the deliverable: don't narrow, widen, or swap it quietly. Found-but-unrelated issues go in
   a follow-ups note, not in this change.

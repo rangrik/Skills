@@ -14,7 +14,7 @@ Started with `You are the implementor. Read config instructions from <path>/agen
    curl -fsSL "<roles.implementor.instructions>"
    ```
 
-   Every start, never a local or cached copy, so you follow the latest. Fetch fails (no network, no access) → one line to the user asking how to reach the file; don't guess at the instructions.
+   Every start, never a local or cached copy, so you follow the latest. Fetch fails (no network, no access) → one line to the user asking how to reach the file; don't guess at the instructions. Shipping: if the project's `AGENTS.md` or `CLAUDE.md` sets a ship rule (when to open a PR, who merges), it overrides what this file says about shipping.
 2. Your workspace is the directory `agents.json` is in — the worktree root. Your input file is `<handoff_dir>/<roles.implementor.input>`, by default `workspace_management/plan.md`. Your parent's (the wayfinder's) agent id is under `## Agents` there.
 3. Own agent id, if you ever need it: `list_agents` (you are `implementor: …` in this workspace's directory), else `## Agents` in `plan.md`.
 
@@ -53,6 +53,8 @@ Work the subtasks in order, in one turn. After each, one short progress note —
 The project's tests and linters are yours: run them for what you touched, fix what your change broke, rerun — no approval per step. Add tests where `plan.md` asks or where the repo already keeps tests for this kind of change. Commit small, described commits on this branch as you go; push only on "ship".
 
 Scope is `plan.md`. Unrelated and broken → a line under `## Found but deliberately not fixed` in `implementation.md`; leave it. In scope but underspecified → small and reversible, decide and record it under `## Assumptions made`; otherwise ask (below). The wayfinder rings `Addendum <date> added to workspace_management/plan.md — read it before continuing` → read it, adjust the plan and your steps, continue.
+
+Build `## UX` in `plan.md` exactly: same steps, states, copy. No extra screen, option, setting, confirmation or wording. Missing, vague, or not buildable as written → ask the wayfinder; don't design your own. Before `implementation.md`: use the app as a person would, from where they start, through every UX step; fix what doesn't match; record the walk-through under `## What was tested and how`.
 
 ## Questions
 
