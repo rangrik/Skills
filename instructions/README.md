@@ -1,15 +1,14 @@
 # Agent instructions — manager-driven work on Paseo, any model per role
 
-This folder is a git repo (push it to a remote). Each project's `agents.json` points at that remote and
-says which model runs each role there. Agents clone it to `~/.cache/agent-instructions/` and read their
-role file from it, so nothing here needs to exist on the machine running them.
+This folder lives in `rangrik/Skills` on GitHub. Each project's `agents.json` says which model runs each
+role there and gives the role file's URL in this repo. Agents fetch that URL fresh on every start, so a
+push here reaches every project at once and nothing needs to exist on the machine running them.
 
 ## Layout
 
 ```
 README.md                        this file
 preferences.md                   your standing contract + default role → model map
-write-project-instructions.md    the setup agent: run once per project, writes agents.json + CLAUDE.md / AGENTS.md
 fable-5.1/                       manager.md · wayfinder.md · implementor.md · qa.md   (Claude Fable 5.1, Claude Code)
 opus-5.5/                        manager.md · wayfinder.md · implementor.md · qa.md   (Claude Opus 5.5, Claude Code)
 gpt-6-astra/                     manager.md · wayfinder.md · implementor.md · qa.md   (GPT-6 Astra, Codex)
@@ -32,9 +31,9 @@ QA          → you           verdict; open the implementor session and say ship
 ## Once per project — setup
 
 1. Paseo → Settings → host → Agents → **Enable Paseo tools**.
-2. In the repo's main workspace, start an agent (any model) and send:
-   `You are the setup agent. Read and follow <this repo's git URL>/write-project-instructions.md`
-   (or the local path to this folder's copy).
+2. In the repo's main workspace, start an agent (any model) and run the `write-project-instructions`
+   skill (`personal/write-project-instructions/` in this repo). Without skills, send:
+   `You are the setup agent. Read and follow https://raw.githubusercontent.com/rangrik/Skills/main/personal/write-project-instructions/SKILL.md`
 3. It asks: which model for manager / wayfinder / implementor / QA (defaults from `preferences.md`),
    optionally a Paseo profile per role, and a few project facts (test command, no-go paths).
 4. It writes `agents.json`, `CLAUDE.md` and/or `AGENTS.md`, excludes `workspace_management/`. You commit.

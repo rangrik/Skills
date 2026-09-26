@@ -8,17 +8,13 @@ You don't fix code. Issues go in the report; the user decides whether to send th
 
 Started with `You are the qa. Read config instructions from <path>/agents.json.` → read that file (`version` isn't 1 → stop and tell the user it is from a newer setup). Then:
 
-1. Resolve the instructions repo to a local cache and read your file (skip if already done to get here):
+1. Fetch your role file fresh from its URL and follow it (skip if already done to get here):
 
    ```
-   url=<instructions_repo.url>; ref=<instructions_repo.ref>
-   slug="$(basename "${url%.git}")"; cache="$HOME/.cache/agent-instructions/$slug"
-   [ -d "$cache/.git" ] || git clone --quiet "$url" "$cache"
-   git -C "$cache" fetch --quiet origin && git -C "$cache" checkout --quiet "$ref" && \
-     git -C "$cache" pull --quiet --ff-only origin "$ref" 2>/dev/null || true
+   curl -fsSL "<roles.qa.instructions>"
    ```
 
-   Then read `$cache/<roles.qa.instructions>` and follow it. Clone fails (no network, no credentials) → one line to the user asking for a local path to the instructions repo; don't guess at the instructions.
+   Every start, never a local or cached copy, so you follow the latest. Fetch fails (no network, no access) → one line to the user asking how to reach the file; don't guess at the instructions.
 2. Your workspace is the directory `agents.json` is in — the worktree root. Your input file is `<handoff_dir>/<roles.qa.input>`, by default `workspace_management/implementation.md`. Your parent's (the wayfinder's) agent id is under `## Agents` there (or in `plan.md`).
 3. Own id, if needed: `list_agents` (you are `qa: …` in this workspace's directory), else `## Agents` in `plan.md`.
 

@@ -98,22 +98,18 @@ The user started you, in the repo's main workspace, with one line:
 whatever `agents.json` names for `manager`; the user picked it when they started you in Paseo.
 
 1. Read that `agents.json`. If there is no readable `agents.json` at that path, stop and reply with
-   exactly: `No agents.json here. Run the setup agent first: You are the setup agent. Read and follow
-   <instructions repo>/write-project-instructions.md.` If its `version` is not 1, stop and tell the
-   user the file is from a newer setup than these instructions.
-2. Resolve the instructions repo to a local cache and read your role file from it (this file is
+   exactly: `No agents.json here. Run the write-project-instructions skill first.` If its `version`
+   is not 1, stop and tell the user the file is from a newer setup than these instructions.
+2. Fetch your role file fresh from the remote and follow it (this file is
    `roles.manager.instructions`; if you are reading it from anywhere else, do this step now):
 
    ```
-   url=<instructions_repo.url>; ref=<instructions_repo.ref>
-   slug="$(basename "${url%.git}")"; cache="$HOME/.cache/agent-instructions/$slug"
-   [ -d "$cache/.git" ] || git clone --quiet "$url" "$cache"
-   git -C "$cache" fetch --quiet origin && git -C "$cache" checkout --quiet "$ref" && \
-     git -C "$cache" pull --quiet --ff-only origin "$ref" 2>/dev/null || true
+   curl -fsSL "<roles.manager.instructions>"
    ```
 
-   If the clone fails (no network, no credentials), say so in one line and ask the user for a local
-   path to the instructions repo; do not guess at the instructions.
+   It is a URL into the instructions repo. Fetch it on every start, never from a local or cached
+   copy, so you follow the latest version. If the fetch fails (no network, no access), say so in one
+   line and ask the user how to reach the file; do not guess at the instructions.
 3. Your workspace is the directory `agents.json` sits in. The handoff directory is its `handoff_dir`
    (`workspace_management` unless the user changed it; this file writes `workspace_management`
    throughout). You have no input file. Keep `agents.json` in mind for spawning: it names every

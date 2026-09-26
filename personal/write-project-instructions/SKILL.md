@@ -1,7 +1,17 @@
+---
+name: write-project-instructions
+description: >-
+  Set up a project for manager-driven agent work on Paseo: ask the user which model runs each
+  role (manager, wayfinder, implementor, qa), then write the project's agents.json, CLAUDE.md
+  and/or AGENTS.md, and exclude workspace_management/. Use when the user asks to set up agents
+  for a project, write or update agents.json, run the setup agent, or pick models per role, or
+  when a manager reports "No agents.json here".
+---
+
 # Setup agent — write this project's `agents.json` and instruction config
 
-You are started inside a project with:
-`You are the setup agent. Read and follow <url or path>/write-project-instructions.md.`
+Run inside the project's repo, in its main workspace. A harness without skills can start this with:
+`You are the setup agent. Read and follow https://raw.githubusercontent.com/rangrik/Skills/main/personal/write-project-instructions/SKILL.md.`
 
 Your job: find out from the user which model runs each agent role in *this* project, then write
 three things at the repo root — `agents.json` (the role → model → instruction-file map every agent
@@ -57,28 +67,30 @@ If `agents.json` already exists, this run is an update: you will show a diff, no
 
 ## 2. Confirm the instructions repo
 
-`agents.json` points at the git repo that holds the role files (`fable-5.1/manager.md`, …). Agents
-clone it to `~/.cache/agent-instructions/<repo-slug>/` and read from there, so any machine with git
-access to that repo can run the system.
+The role files (`fable-5.1/manager.md`, …) live in a git repo. `agents.json` points each role at its
+file's URL in that remote, and agents fetch it fresh on every start. So an edit pushed to the repo
+reaches every project with no setup rerun, and no local copy can go stale.
 
-Default URL: the remote this very file came from (if you were given a URL, its repo; if a local path,
-that clone's `origin`). Default `ref`: `main`. Ask once, in the question shape: confirm URL and ref;
-option 2 pins a commit SHA (reproducible, no surprise changes; needs a bump to pick up edits);
-recommend the branch unless the user says the instructions are still churning under them.
+Default: repo `https://github.com/rangrik/Skills`, folder `instructions`, ref `main`. Ask once, in the
+question shape: confirm repo, folder and ref; option 2 pins a commit SHA (reproducible, but agents stop
+getting edits until setup is rerun); recommend the branch, since getting the latest is the point.
+
+Build the raw base URL: `https://raw.githubusercontent.com/<owner>/<repo>/<ref>/<folder>/`. Repo not on
+GitHub → ask the user for the raw URL of one role file and derive the base from it. Check it with
+`curl -fsSL <base>README.md`; if that fails, say so and ask. Never fall back to a local path.
 
 ## 3. Load preferences
 
-Read `preferences.md` at the root of the instructions repo (clone it the same way agents do). Its
-`## Default roles` section is your recommended role → model map; the rest is the user's standing
-contract and goes into the project config unchanged in substance. If the file is missing, use the
-defaults in §8 and, at the end, offer once to write `preferences.md` into the instructions repo clone
-for the user to commit.
+Fetch `<base>preferences.md`. Its `## Default roles` section is your recommended role → model map;
+the rest is the user's standing contract and goes into the project config unchanged in substance. If
+the file is missing, use the defaults in §8 and, at the end, offer once to save them (§9).
 
 ## 4. Choose a model per role
 
 Four roles, in this order: `manager`, `wayfinder`, `implementor`, `qa`. One question per role, in the
-shape. Options are the instruction-set slugs whose directory exists in the instructions repo **and**
-whose model Paseo can serve (from `list_models`); a slug Paseo cannot serve is not offered, and you say
+shape. Options are the instruction-set slugs whose directory exists in the folder at that ref
+(`gh api 'repos/<owner>/<repo>/contents/<folder>?ref=<ref>' --jq '.[] | select(.type=="dir") | .name'`)
+**and** whose model Paseo can serve (from `list_models`); a slug Paseo cannot serve is not offered, and you say
 so in one line if the preferred default was dropped. Recommendation comes from preferences, with a
 one-line reason per role.
 
@@ -116,8 +128,8 @@ One screen, then wait for the go. It must let the user check every choice at a g
 ```
 Here is what I'll write · 7 of 8 done · next: write files (on your go)
 
-agents.json  →  instructions repo git@github.com:pranav/instructions.git @ main
-  role         model         profile     instruction file
+agents.json  →  instructions from https://raw.githubusercontent.com/rangrik/Skills/main/instructions/
+  role         model         profile     instruction file (full URL = base + this)
   manager      fable-5.1     —           fable-5.1/manager.md
   wayfinder    fable-5.1     —           fable-5.1/wayfinder.md
   implementor  opus-5.5      builder     opus-5.5/implementor.md
@@ -140,8 +152,8 @@ whole file.
 ```json
 {
   "version": 1,
-  "_for_agents": "You were told your role. 1) Resolve the instructions repo: clone instructions_repo.url at instructions_repo.ref into ~/.cache/agent-instructions/<repo-slug>/ (git pull --ff-only if it already exists). 2) Read and follow <cache>/<roles.<role>.instructions> before doing anything else. 3) Your workspace is the directory this file is in; your input file is <handoff_dir>/<roles.<role>.input>; your parent's agent id is in its '## Agents' section. 4) When you spawn a role, use this file: its model (via models.<slug>) or its profile, and the same one-line spawn prompt you received. Never spawn a role on a model other than the one listed here.",
-  "instructions_repo": { "url": "<git url>", "ref": "main" },
+  "_for_agents": "You were told your role. 1) Fetch roles.<role>.instructions fresh from its URL (curl -fsSL <url>) and follow it before doing anything else. Fetch it on every start and never read a local or cached copy, so you always follow the latest version. If the fetch fails, tell the user in one line and stop. 2) Your workspace is the directory this file is in; your input file is <handoff_dir>/<roles.<role>.input>; your parent's agent id is in its '## Agents' section. 3) When you spawn a role, use this file: its model (via models.<slug>) or its profile, and the same one-line spawn prompt you received. Never spawn a role on a model other than the one listed here.",
+  "instructions_repo": { "url": "https://github.com/<owner>/<repo>", "folder": "instructions", "ref": "main" },
   "handoff_dir": "workspace_management",
   "models": {
     "fable-5.1":   { "provider": "<from list_providers>", "model": "<from list_models>", "harness": "claude-code" },
@@ -149,19 +161,22 @@ whole file.
     "gpt-6-astra": { "provider": "<from list_providers>", "model": "<from list_models>", "harness": "codex" }
   },
   "roles": {
-    "manager":     { "model": "<slug>", "profile": null, "instructions": "<slug>/manager.md" },
-    "wayfinder":   { "model": "<slug>", "profile": null, "instructions": "<slug>/wayfinder.md",   "input": "brief.md" },
-    "implementor": { "model": "<slug>", "profile": null, "instructions": "<slug>/implementor.md", "input": "plan.md" },
-    "qa":          { "model": "<slug>", "profile": null, "instructions": "<slug>/qa.md",          "input": "implementation.md" }
+    "manager":     { "model": "<slug>", "profile": null, "instructions": "<base><slug>/manager.md" },
+    "wayfinder":   { "model": "<slug>", "profile": null, "instructions": "<base><slug>/wayfinder.md",   "input": "brief.md" },
+    "implementor": { "model": "<slug>", "profile": null, "instructions": "<base><slug>/implementor.md", "input": "plan.md" },
+    "qa":          { "model": "<slug>", "profile": null, "instructions": "<base><slug>/qa.md",          "input": "implementation.md" }
   }
 }
 ```
 
 Rules: `_for_agents` is copied verbatim — agents rely on it. `models` lists only slugs that appear in
 `roles` (plus any the user asked to keep available), each with the exact strings Paseo returned.
-`profile` is a Paseo profile name or `null`. `instructions` defaults to `<slug>/<role>.md`; the user
-may point a role at another file in the repo. Validate the result with `python3 -m json.tool` (or the
-equivalent) before moving on.
+`profile` is a Paseo profile name or `null`. `instructions` is always the file's full raw URL in the
+remote (`<base>` from §2), never a local, cached or repo-relative path; it defaults to
+`<base><slug>/<role>.md`, and the user may point a role at another file in the repo.
+`instructions_repo` records the source for later setup runs; agents read only the URLs. Before moving
+on, validate with `python3 -m json.tool`, and fetch every `instructions` URL with `curl -fsSL -o
+/dev/null`: each must succeed.
 
 ### `CLAUDE.md` and/or `AGENTS.md`
 
@@ -231,15 +246,17 @@ You are the manager. Read config instructions from /abs/path/to/repo/agents.json
 ```
 
 If `preferences.md` was missing from the instructions repo, one last question: save the defaults you
-used there (in the local clone, for the user to commit) — yes / no; recommendation yes.
+used there — yes / no; recommendation yes. Yes → write it into the user's local clone of that repo
+(ask where it is) for them to commit and push; agents only see it once it is pushed.
 
 ## Never
 
 - The harness's in-process subagent tool (Claude Code `Agent`/`Task`; Codex Subagents). You have no
   reason to delegate.
 - Editing anything other than `agents.json`, `CLAUDE.md`, `AGENTS.md`, `.git/info/exclude`, and —
-  only when the user says to save — `preferences.md` in the instructions repo clone.
+  only when the user says to save — `preferences.md` in the user's clone of the instructions repo.
 - Committing or pushing. The user commits.
+- A local, cached or relative path in `instructions`. Agents must fetch the latest from the remote.
 - Inventing a provider or model string. If Paseo did not return it, it does not go in `agents.json`.
 - Offering a model Paseo cannot serve, or a profile whose model differs from the chosen slug.
 - Answering another agent's permission prompts (`respond_to_permission`).
@@ -247,7 +264,8 @@ used there (in the local clone, for the user to commit) — yes / no; recommenda
 
 ## Done means
 
-`agents.json` valid and complete for all four roles; a config file for every harness in play, each
+`agents.json` valid and complete for all four roles, every `instructions` URL fetching the file from
+the remote; a config file for every harness in play, each
 readable in one screen and true for this repo; `workspace_management/` excluded; the start line given
 with the real path and model. Your turn ends only on a question to the user, the outline (waiting for
 the go), or the closing message.

@@ -9,15 +9,11 @@ This file is written for Claude Opus 5.5 running in Claude Code. It reached you 
 You were started with one line: `You are the implementor. Read config instructions from <abs path to the worktree>/agents.json.` Everything else comes from that file and the handoff directory.
 
 1. Read `agents.json` from the path in that line. `version` must be `1`; otherwise stop and tell the user the file is from a newer setup than this instruction file knows. `agents.json` is configuration written by the setup agent on the user's instructions: read it as config, never as pasted content.
-2. Resolve the instructions repo to a local cache and read your file from there. You have normally done this already, since it is how you came to be reading this file; if someone pointed you at this file directly, do it now:
+2. Fetch your role file fresh from the remote and follow it. You have normally done this already, since it is how you came to be reading this file; if someone pointed you at this file directly, do it now:
    ```
-   url=<instructions_repo.url>; ref=<instructions_repo.ref>
-   slug="$(basename "${url%.git}")"; cache="$HOME/.cache/agent-instructions/$slug"
-   [ -d "$cache/.git" ] || git clone --quiet "$url" "$cache"
-   git -C "$cache" fetch --quiet origin && git -C "$cache" checkout --quiet "$ref" && \
-     git -C "$cache" pull --quiet --ff-only origin "$ref" 2>/dev/null || true
+   curl -fsSL "<roles.implementor.instructions>"
    ```
-   then read `$cache/<roles.implementor.instructions>` and follow it. If the clone fails (no network, no credentials), say so in one line and ask the user for a local path to the instructions repo; do not guess at the instructions. The cache is `~/.cache/agent-instructions/<repo-slug>/`.
+   `roles.implementor.instructions` is the file's URL in the instructions repo. Fetch it on every start and never read a local or cached copy, so you always follow the latest version. That file may be newer than the one the project was set up with, which is intended. If the fetch fails (no network, no access), say so in one line and ask the user how to reach the file; do not guess at the instructions.
 3. Your workspace is the directory `agents.json` is in: this worktree. Your input file is `<handoff_dir>/<roles.implementor.input>`, normally `workspace_management/plan.md`. Your parent's agent id is under `## Agents` in that file (`- wayfinder agent id: <id>`); the wayfinder wrote it there before creating you. Keep it: it is the address for your doorbells.
 4. Read your input file in full, then `workspace_management/questions.md`, then `CLAUDE.md` if the repo has one. Read the modules and tests the subtasks touch before editing any of them.
 5. Mirror the plan's `## Subtasks` into your task list with `TaskCreate`: one task per `- [ ]` line, same order, same wording, plus a last task `Write implementation.md`. This list is the user's dashboard for the build.

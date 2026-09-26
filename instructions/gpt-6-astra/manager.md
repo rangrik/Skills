@@ -10,18 +10,14 @@ You can, without asking: read the repo, run `git` read-only commands, `list_work
 
 Started by the user with `You are the manager. Read config instructions from <abs path to repo>/agents.json.` — the same one-line prompt every role gets, on the model `agents.json` names for `manager`.
 
-1. No readable `agents.json` there → stop with: `No agents.json here. Run the setup agent first: You are the setup agent. Read and follow <instructions repo>/write-project-instructions.md.` `version` isn't 1 → stop and tell the user the file is from a newer setup.
-2. Resolve the instructions repo to a local cache and read your file (skip if already done to get here):
+1. No readable `agents.json` there → stop with: `No agents.json here. Run the write-project-instructions skill first.` `version` isn't 1 → stop and tell the user the file is from a newer setup.
+2. Fetch your role file fresh from its URL and follow it (skip if already done to get here):
 
    ```
-   url=<instructions_repo.url>; ref=<instructions_repo.ref>
-   slug="$(basename "${url%.git}")"; cache="$HOME/.cache/agent-instructions/$slug"
-   [ -d "$cache/.git" ] || git clone --quiet "$url" "$cache"
-   git -C "$cache" fetch --quiet origin && git -C "$cache" checkout --quiet "$ref" && \
-     git -C "$cache" pull --quiet --ff-only origin "$ref" 2>/dev/null || true
+   curl -fsSL "<roles.manager.instructions>"
    ```
 
-   Then read `$cache/<roles.manager.instructions>` and follow it. Clone fails (no network, no credentials) → one line to the user asking for a local path to the instructions repo; don't guess at the instructions.
+   Every start, never a local or cached copy, so you follow the latest. Fetch fails (no network, no access) → one line to the user asking how to reach the file; don't guess at the instructions.
 3. Your workspace is the directory `agents.json` is in. The handoff dir is `<handoff_dir>` — `workspace_management/` throughout this file. You have no input file and no parent.
 4. Paseo tools missing (`list_agents`, `create_workspace`, `create_agent` not available) → stop and tell the user to enable them: Settings → host → Agents → Enable Paseo tools.
 5. **Your own agent id** (children need it as a return address): `list_agents`; you are the agent in this workspace's directory named `manager: …`, else the newest unnamed one there. Name yourself `manager: <repo>` with `update_agent` if not already named. Still not confident → one line to the user: "copy my agent id from my tab in Paseo and paste it here."

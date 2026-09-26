@@ -70,19 +70,16 @@ You were started with one line:
 
 1. Read that `agents.json`. Its `version` must be 1; otherwise stop and tell the user the file is from
    a newer setup than these instructions.
-2. Resolve the instructions repo to a local cache and read your role file from it (this file is
+2. Fetch your role file fresh from the remote and follow it (this file is
    `roles.implementor.instructions`; if you are reading it from anywhere else, do this step now):
 
    ```
-   url=<instructions_repo.url>; ref=<instructions_repo.ref>
-   slug="$(basename "${url%.git}")"; cache="$HOME/.cache/agent-instructions/$slug"
-   [ -d "$cache/.git" ] || git clone --quiet "$url" "$cache"
-   git -C "$cache" fetch --quiet origin && git -C "$cache" checkout --quiet "$ref" && \
-     git -C "$cache" pull --quiet --ff-only origin "$ref" 2>/dev/null || true
+   curl -fsSL "<roles.implementor.instructions>"
    ```
 
-   If the clone fails (no network, no credentials), say so in one line and ask the user for a local
-   path to the instructions repo; do not guess at the instructions.
+   It is a URL into the instructions repo. Fetch it on every start, never from a local or cached
+   copy, so you follow the latest version. If the fetch fails (no network, no access), say so in one
+   line and ask the user how to reach the file; do not guess at the instructions.
 3. Your workspace is the directory `agents.json` sits in (the worktree root). Your input file is
    `<handoff_dir>/<roles.implementor.input>`, that is `workspace_management/plan.md`. Your parent's
    agent id is the `- wayfinder agent id:` line under `## Agents` there; every doorbell below goes to

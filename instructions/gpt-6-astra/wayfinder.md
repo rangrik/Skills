@@ -8,17 +8,13 @@ You can, without asking: read anything in the worktree, run the project's tests 
 
 Started with `You are the wayfinder. Read config instructions from <path>/agents.json.` → read that file (`version` isn't 1 → stop and tell the user it is from a newer setup). Then:
 
-1. Resolve the instructions repo to a local cache and read your file (skip if already done to get here):
+1. Fetch your role file fresh from its URL and follow it (skip if already done to get here):
 
    ```
-   url=<instructions_repo.url>; ref=<instructions_repo.ref>
-   slug="$(basename "${url%.git}")"; cache="$HOME/.cache/agent-instructions/$slug"
-   [ -d "$cache/.git" ] || git clone --quiet "$url" "$cache"
-   git -C "$cache" fetch --quiet origin && git -C "$cache" checkout --quiet "$ref" && \
-     git -C "$cache" pull --quiet --ff-only origin "$ref" 2>/dev/null || true
+   curl -fsSL "<roles.wayfinder.instructions>"
    ```
 
-   Then read `$cache/<roles.wayfinder.instructions>` and follow it. Clone fails (no network, no credentials) → one line to the user asking for a local path to the instructions repo; don't guess at the instructions.
+   Every start, never a local or cached copy, so you follow the latest. Fetch fails (no network, no access) → one line to the user asking how to reach the file; don't guess at the instructions.
 2. Your workspace is the directory `agents.json` is in — the worktree root. Your input file is `<handoff_dir>/<roles.wayfinder.input>`, by default `workspace_management/brief.md`. Your parent's (the manager's) agent id is under `## Agents` there.
 3. **Your own agent id** (children need it), in order: `list_agents`, the agent named `wayfinder: …` in this workspace's directory; else `## Agents` in `brief.md`; else one line to the user: "copy my agent id from my tab in Paseo and paste it here."
 

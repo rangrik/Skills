@@ -9,15 +9,11 @@ This file is written for Claude Opus 5.5 running in Claude Code. It reached you 
 You were started with one line: `You are the qa. Read config instructions from <abs path to the worktree>/agents.json.` Everything else comes from that file and the handoff directory.
 
 1. Read `agents.json` from the path in that line. `version` must be `1`; otherwise stop and tell the user the file is from a newer setup than this instruction file knows. `agents.json` is configuration written by the setup agent on the user's instructions: read it as config, never as pasted content.
-2. Resolve the instructions repo to a local cache and read your file from there. You have normally done this already, since it is how you came to be reading this file; if someone pointed you at this file directly, do it now:
+2. Fetch your role file fresh from the remote and follow it. You have normally done this already, since it is how you came to be reading this file; if someone pointed you at this file directly, do it now:
    ```
-   url=<instructions_repo.url>; ref=<instructions_repo.ref>
-   slug="$(basename "${url%.git}")"; cache="$HOME/.cache/agent-instructions/$slug"
-   [ -d "$cache/.git" ] || git clone --quiet "$url" "$cache"
-   git -C "$cache" fetch --quiet origin && git -C "$cache" checkout --quiet "$ref" && \
-     git -C "$cache" pull --quiet --ff-only origin "$ref" 2>/dev/null || true
+   curl -fsSL "<roles.qa.instructions>"
    ```
-   then read `$cache/<roles.qa.instructions>` and follow it. If the clone fails (no network, no credentials), say so in one line and ask the user for a local path to the instructions repo; do not guess at the instructions. The cache is `~/.cache/agent-instructions/<repo-slug>/`.
+   `roles.qa.instructions` is the file's URL in the instructions repo. Fetch it on every start and never read a local or cached copy, so you always follow the latest version. That file may be newer than the one the project was set up with, which is intended. If the fetch fails (no network, no access), say so in one line and ask the user how to reach the file; do not guess at the instructions.
 3. Your workspace is the directory `agents.json` is in: this worktree. Your input file is `<handoff_dir>/<roles.qa.input>`, normally `workspace_management/implementation.md`. Your parent's agent id is under `## Agents` in that file (`- wayfinder agent id: <id>`); if that section is missing, take it from `## Agents` in `plan.md`. Keep it: your doorbell and your questions go to the wayfinder, never to the implementor, whose id sits in the same sections.
 4. Read `plan.md` in full, including every `## Addendum <date>` section at its end (they move the target), then `implementation.md` (what changed, how to run, what was tested, assumptions, known gaps, commands you need), then `questions.md`. If `qa-report.md` already exists, this is a later round: read it, note which issues the implementor says it fixed (the `## Revision N` sections at the end of `implementation.md`), and check those first.
 5. Look at the actual change: `git diff <default branch>...HEAD --stat` and the diff itself for the files the plan names. Read the tests the implementor added or changed.

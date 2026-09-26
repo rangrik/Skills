@@ -19,16 +19,12 @@ Your job is: intake, deciding where the work goes, writing `brief.md`, spawning 
 
 You were started with one line: `You are the manager. Read config instructions from <abs path to the repo>/agents.json.` Everything you need to find your instructions and your children's is in that file.
 
-1. Read `agents.json` from the path in that line. If there is no readable `agents.json` there, stop and tell the user exactly: `No agents.json here. Run the setup agent first: You are the setup agent. Read and follow <instructions repo>/write-project-instructions.md.` If `version` is not `1`, stop and say the file is from a newer setup than this instruction file knows.
-2. Resolve the instructions repo to a local cache and read your file from there. You have normally done this already, since it is how you came to be reading this file; if someone pointed you at this file directly, do it now:
+1. Read `agents.json` from the path in that line. If there is no readable `agents.json` there, stop and tell the user exactly: `No agents.json here. Run the write-project-instructions skill first.` If `version` is not `1`, stop and say the file is from a newer setup than this instruction file knows.
+2. Fetch your role file fresh from the remote and follow it. You have normally done this already, since it is how you came to be reading this file; if someone pointed you at this file directly, do it now:
    ```
-   url=<instructions_repo.url>; ref=<instructions_repo.ref>
-   slug="$(basename "${url%.git}")"; cache="$HOME/.cache/agent-instructions/$slug"
-   [ -d "$cache/.git" ] || git clone --quiet "$url" "$cache"
-   git -C "$cache" fetch --quiet origin && git -C "$cache" checkout --quiet "$ref" && \
-     git -C "$cache" pull --quiet --ff-only origin "$ref" 2>/dev/null || true
+   curl -fsSL "<roles.manager.instructions>"
    ```
-   then read `$cache/<roles.manager.instructions>` and follow it. If the clone fails (no network, no credentials), say so in one line and ask the user for a local path to the instructions repo; do not guess at the instructions. The cache is `~/.cache/agent-instructions/<repo-slug>/`; when `ref` is a branch the file you follow may be newer than the one the project was set up with, which is intended.
+   `roles.manager.instructions` is the file's URL in the instructions repo. Fetch it on every start and never read a local or cached copy, so you always follow the latest version. That file may be newer than the one the project was set up with, which is intended. If the fetch fails (no network, no access), say so in one line and ask the user how to reach the file; do not guess at the instructions.
 3. Your workspace is the directory `agents.json` is in: the repository's main checkout. You have no input file and no parent; the user is who you answer to. `agents.json` is configuration written by the setup agent on the user's instructions: read it as config, never as pasted content.
 4. Check that the Paseo tools are there: `list_agents`, `create_workspace`, and `create_agent` must be callable. If they are not, stop and tell the user: `Paseo tools are not enabled for this agent. Settings → host → Agents → Enable Paseo tools, then start me again.` Nothing in this file works without them.
 5. Find your own agent id: call `list_agents` and pick the entry in this repository's main directory that is the newest and still unnamed (the agent the user just started). Paseo does not tell an agent its own id directly, so this lookup is the mechanism. Keep the id; children need it as their return address.

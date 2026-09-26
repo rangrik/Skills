@@ -56,6 +56,15 @@ skills:
       suite: personal/_evals/slice-conformance-review/suite
       results: personal/_evals/slice-conformance-review/results
 
+  - id: write-project-instructions
+    name: write-project-instructions
+    bucket: personal
+    path: personal/write-project-instructions
+    install: true
+    evals:
+      suite: personal/_evals/write-project-instructions/suite
+      results: personal/_evals/write-project-instructions/results
+
   - id: kite-design-system-standards
     name: kite-design-system-standards
     bucket: private
